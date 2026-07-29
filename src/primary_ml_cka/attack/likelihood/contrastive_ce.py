@@ -21,6 +21,37 @@ class ProxyClassificationLoss:
     logits: torch.Tensor
 
 
+@dataclass(frozen=True, slots=True)
+class ProxyTargetDiagnostics:
+    hit_count: int
+    denominator: int
+    all_hit: bool
+    minimum_logit_margin: float
+
+
+def proxy_target_diagnostics(
+    logits: torch.Tensor,
+    *,
+    target_index: int,
+) -> ProxyTargetDiagnostics:
+    if logits.ndim != 2 or logits.shape[1] != 10:
+        raise ValueError(f"Expected ten-class logits [B,10], got {tuple(logits.shape)}")
+    logits_fp32 = logits.float()
+    target_logits = logits_fp32[:, target_index]
+    other_mask = torch.arange(10, device=logits.device) != target_index
+    maximum_other = logits_fp32[:, other_mask].max(dim=1).values
+    margins = target_logits - maximum_other
+    hits = margins > 0
+    hit_count = int(hits.sum().item())
+    denominator = logits.shape[0]
+    return ProxyTargetDiagnostics(
+        hit_count=hit_count,
+        denominator=denominator,
+        all_hit=hit_count == denominator,
+        minimum_logit_margin=float(margins.min().item()),
+    )
+
+
 def proxy_classification_loss(
     logits: torch.Tensor,
     *,

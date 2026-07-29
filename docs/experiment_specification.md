@@ -62,3 +62,8 @@ The target receives the fixed prompt and returns decoded text. The evaluator
 keeps raw output, parses only an exact integer on the first non-empty line, and
 reports clean-conditioned TASR/ASR with hit counts and denominators. Target
 outputs never influence lambda selection.
+
+Target evaluation is gated on the frozen adversarial PNGs. Every image must
+have the configured target class strictly above each of the other nine proxy
+classes. Rows that do not reach `batch_size / batch_size` are recorded as
+`proxy_target_not_reached` and are never sent to the target.

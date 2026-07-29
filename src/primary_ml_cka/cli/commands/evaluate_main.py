@@ -49,7 +49,15 @@ def run(context: CommandContext) -> str:
             generator = TransformersTargetGenerator(model, processor)
             raw_records = []
             for row in rows:
-                if row["pair_id"] != pair_id or row["phase"] != "main" or row["status"] != "ok":
+                proxy_gate_passed = row.get("proxy_target_all_hit") == "True" and row.get(
+                    "proxy_target_hit_count"
+                ) == row.get("proxy_target_hit_denominator")
+                if (
+                    row["pair_id"] != pair_id
+                    or row["phase"] != "main"
+                    or row["status"] != "ok"
+                    or not proxy_gate_passed
+                ):
                     continue
                 artifact_dir = (
                     context.output_dir

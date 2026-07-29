@@ -10,6 +10,7 @@ from primary_ml_cka.artifacts.png import load_png_tensor, save_png_tensor
 from primary_ml_cka.artifacts.schemas import ALL_RESULTS_COLUMNS, ResultRow
 from primary_ml_cka.artifacts.writers import write_json
 from primary_ml_cka.attack.cka.batches import fixed_reference_batch
+from primary_ml_cka.attack.likelihood.contrastive_ce import proxy_target_diagnostics
 from primary_ml_cka.attack.losses.component_gradients import component_gradient_diagnostics
 from primary_ml_cka.attack.losses.primary import primary_loss
 from primary_ml_cka.attack.optimization.momentum_pgd import MomentumPGDState, descent_step
@@ -18,6 +19,7 @@ from primary_ml_cka.config.schema import AttackConfig, DataConfig
 from primary_ml_cka.data.manifests import ImageRecord, read_manifest
 from primary_ml_cka.data.preprocessing import ensure_canvas
 from primary_ml_cka.domain.identifiers import MODEL_REVISIONS, ModelPair
+from primary_ml_cka.domain.labels import human_label_to_index
 from primary_ml_cka.evaluation.representation_metrics import representation_metrics
 from primary_ml_cka.infrastructure.memory import peak_memory, reset_peak_memory
 from primary_ml_cka.infrastructure.timing import Timer
@@ -38,6 +40,10 @@ class AttackRunResult:
     target_reference_ids: tuple[str, ...]
     proxy_target_nll: float
     proxy_target_probability: float
+    proxy_target_hit_count: int
+    proxy_target_hit_denominator: int
+    proxy_target_all_hit: bool
+    proxy_min_target_logit_margin: float
     proxy_max_other_probability: float
     proxy_target_probability_margin: float
     proxy_classification_ce: float
@@ -84,7 +90,7 @@ def _save_png_batch(
     clean: torch.Tensor,
     adversarial: torch.Tensor,
     epsilon: float,
-) -> tuple[float, float]:
+) -> tuple[float, float, torch.Tensor]:
     linf_float = float((adversarial - clean).abs().max())
     for index in range(clean.shape[0]):
         save_png_tensor(clean[index], root / f"{index:02d}_clean.png")
@@ -98,7 +104,7 @@ def _save_png_batch(
     linf_png = float((adversarial_reloaded - clean_reloaded).abs().max())
     if linf_png > epsilon + 1e-7:
         raise RuntimeError(f"Serialized perturbation exceeds epsilon: {linf_png}")
-    return linf_float, linf_png
+    return linf_float, linf_png, adversarial_reloaded
 
 
 def attack_one_batch(
@@ -201,7 +207,24 @@ def attack_one_batch(
         / f"batch_{source_batch_index:02d}"
         / f"lambda_{lambda_cka:g}"
     )
-    linf_float, linf_png = _save_png_batch(artifact_dir, clean, adversarial, attack_config.epsilon)
+    linf_float, linf_png, adversarial_png = _save_png_batch(
+        artifact_dir,
+        clean,
+        adversarial,
+        attack_config.epsilon,
+    )
+    with torch.no_grad():
+        png_proxy = proxy.target_loss(
+            adversarial_png,
+            data_config.target_human_label,
+            CLASSIFICATION_PROMPT,
+        )
+    if png_proxy.class_logits is None or not torch.isfinite(png_proxy.class_logits).all():
+        raise RuntimeError("Frozen PNG proxy class logits are missing or non-finite")
+    proxy_diagnostics = proxy_target_diagnostics(
+        png_proxy.class_logits,
+        target_index=human_label_to_index(data_config.target_human_label),
+    )
     memory = peak_memory()
     zero = 0.0
     result = AttackRunResult(
@@ -213,15 +236,19 @@ def attack_one_batch(
         target_human_label=data_config.target_human_label,
         source_image_ids=tuple(record.image_id for record in source_records),
         target_reference_ids=tuple(record.image_id for record in references),
-        proxy_target_nll=float(final_proxy.target_nll),
-        proxy_target_probability=float(final_proxy.target_probability),
-        proxy_max_other_probability=float(final_proxy.max_other_probability),
+        proxy_target_nll=float(png_proxy.target_nll),
+        proxy_target_probability=float(png_proxy.target_probability),
+        proxy_target_hit_count=proxy_diagnostics.hit_count,
+        proxy_target_hit_denominator=proxy_diagnostics.denominator,
+        proxy_target_all_hit=proxy_diagnostics.all_hit,
+        proxy_min_target_logit_margin=proxy_diagnostics.minimum_logit_margin,
+        proxy_max_other_probability=float(png_proxy.max_other_probability),
         proxy_target_probability_margin=float(
-            final_proxy.target_probability - final_proxy.max_other_probability
+            png_proxy.target_probability - png_proxy.max_other_probability
         ),
-        proxy_classification_ce=float(final_proxy.classification_ce),
-        proxy_rank_loss=float(final_proxy.rank_loss),
-        proxy_other_suppression_loss=float(final_proxy.other_suppression_loss),
+        proxy_classification_ce=float(png_proxy.classification_ce),
+        proxy_rank_loss=float(png_proxy.rank_loss),
+        proxy_other_suppression_loss=float(png_proxy.other_suppression_loss),
         loss_cka=float(final_losses.cka),
         loss_total=float(final_losses.total),
         cka_clean_reference=representation.cka_clean_reference,
@@ -240,7 +267,13 @@ def attack_one_batch(
         peak_reserved_vram_gb=memory.reserved_gb,
         initial_total=initial_total,
         final_total=float(final_losses.total),
-        status="ok",
+        status="ok" if proxy_diagnostics.all_hit else "proxy_target_not_reached",
+        failure_reason=(
+            ""
+            if proxy_diagnostics.all_hit
+            else "Frozen PNG proxy target criterion reached for "
+            f"{proxy_diagnostics.hit_count}/{proxy_diagnostics.denominator} images"
+        ),
     )
     log_path = output_dir / "logs" / pair.pair_id / phase / f"{result.batch_id}_{lambda_cka:g}.json"
     write_json(log_path, result)
@@ -282,6 +315,10 @@ def result_row(pair: ModelPair, result: AttackRunResult, seed: int, steps: int) 
         "asr_percent": "",
         "proxy_target_nll": result.proxy_target_nll,
         "proxy_target_probability": result.proxy_target_probability,
+        "proxy_target_hit_count": result.proxy_target_hit_count,
+        "proxy_target_hit_denominator": result.proxy_target_hit_denominator,
+        "proxy_target_all_hit": result.proxy_target_all_hit,
+        "proxy_min_target_logit_margin": result.proxy_min_target_logit_margin,
         "proxy_max_other_probability": result.proxy_max_other_probability,
         "proxy_target_probability_margin": result.proxy_target_probability_margin,
         "proxy_classification_ce": result.proxy_classification_ce,

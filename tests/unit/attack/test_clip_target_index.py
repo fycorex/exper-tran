@@ -3,6 +3,7 @@ import torch
 from primary_ml_cka.attack.likelihood.contrastive_ce import (
     contrastive_target_ce,
     proxy_classification_loss,
+    proxy_target_diagnostics,
 )
 
 
@@ -28,3 +29,19 @@ def test_ranking_and_suppression_enforce_target_dominance() -> None:
     assert strong_loss.total < weak_loss.total
     assert strong_loss.target_probability > strong_loss.max_other_probability
     assert strong_loss.other_suppression < weak_loss.other_suppression
+
+
+def test_proxy_target_gate_requires_every_image_to_reach_target() -> None:
+    logits = torch.zeros(3, 10)
+    logits[:, 2] = torch.tensor([3.0, 2.0, 0.5])
+    logits[2, 4] = 0.6
+    failed = proxy_target_diagnostics(logits, target_index=2)
+    assert failed.hit_count == 2
+    assert failed.denominator == 3
+    assert not failed.all_hit
+    assert failed.minimum_logit_margin < 0
+
+    logits[2, 2] = 1.0
+    passed = proxy_target_diagnostics(logits, target_index=2)
+    assert passed.all_hit
+    assert passed.hit_count == passed.denominator == 3

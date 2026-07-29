@@ -50,6 +50,12 @@ def run_smoke(context: CommandContext) -> str:
                 attack_config=attack_config,
                 data_config=data_config,
             )
+            if not result.proxy_target_all_hit:
+                raise RuntimeError(
+                    "Frozen PNG proxy target criterion failed: "
+                    f"{result.proxy_target_hit_count}/"
+                    f"{result.proxy_target_hit_denominator}"
+                )
             if result.final_total >= result.initial_total:
                 raise RuntimeError(
                     "Smoke total loss did not decrease: "

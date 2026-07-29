@@ -19,5 +19,19 @@ def validate_data_config(config: DataConfig) -> None:
     human_label_to_index(config.target_human_label)
     if config.source_human_label == config.target_human_label:
         raise ValueError("Source and target labels must differ")
-    if config.candidate_count < 1 or config.target_reference_count < 2:
-        raise ValueError("Candidate and reference counts are too small")
+    counts = (
+        config.candidate_count,
+        config.target_reference_count,
+        config.main_max_count,
+        config.confirmation_max_count,
+    )
+    if any(count < 1 for count in counts):
+        raise ValueError("All configured image counts must be positive")
+    if config.main_max_count + config.confirmation_max_count > config.candidate_count:
+        raise ValueError("main_max_count + confirmation_max_count cannot exceed candidate_count")
+    required_references = config.main_max_count + config.confirmation_max_count
+    if config.target_reference_count < required_references:
+        raise ValueError(
+            "target_reference_count must cover disjoint main and confirmation "
+            f"references ({required_references})"
+        )

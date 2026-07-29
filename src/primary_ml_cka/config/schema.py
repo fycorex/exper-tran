@@ -32,5 +32,7 @@ class AttackConfig:
 class DataConfig:
     source_human_label: int
     target_human_label: int
-    candidate_count: int = 50
-    target_reference_count: int = 64
+    candidate_count: int
+    target_reference_count: int
+    main_max_count: int
+    confirmation_max_count: int

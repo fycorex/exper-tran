@@ -8,6 +8,8 @@ def clean_valid_split(
     candidates: Sequence[ImageRecord],
     parsed_labels: Sequence[int | None],
     source_human_label: int,
+    main_max_count: int,
+    confirmation_max_count: int,
     batch_size: int = BATCH_SIZE,
 ) -> tuple[tuple[ImageRecord, ...], tuple[ImageRecord, ...]]:
     if len(candidates) != len(parsed_labels):
@@ -17,11 +19,11 @@ def clean_valid_split(
         for item, label in zip(candidates, parsed_labels, strict=True)
         if label == source_human_label
     ]
-    main_count = min(32, len(valid))
+    main_count = min(main_max_count, len(valid))
     main_count -= main_count % batch_size
     main = tuple(valid[:main_count])
     remaining = valid[main_count:]
-    confirmation_count = min(16, len(remaining))
+    confirmation_count = min(confirmation_max_count, len(remaining))
     confirmation_count -= confirmation_count % batch_size
     return main, tuple(remaining[:confirmation_count])
 

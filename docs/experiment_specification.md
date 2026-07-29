@@ -21,6 +21,23 @@ Candidate discovery, clean screening, reference selection, proxy loss, and
 TASR/ASR evaluation all consume the same data configuration. Changing a target
 there does not require a source-code change.
 
+## Data Allocation
+
+All counts are required in `configs/data/imagenet_vehicle10.yaml`; the Python
+schema provides no duplicate defaults. The configured allocation is:
+
+- 48 target-class ImageNet training images as proxy CKA references;
+- 50 source-class ImageNet validation candidates for clean screening;
+- up to 32 clean-valid candidates for the main attack and evaluation;
+- the next up to 16 clean-valid candidates for disjoint confirmation.
+
+Main and confirmation counts are truncated to complete attack batches. This
+experiment does not train model parameters and does not use the unlabeled
+ImageNet test split.
+
+Reference allocation is also disjoint: main batches consume references 0–31,
+while confirmation batches consume references 32–47.
+
 ## Proxy CKA
 
 CKA is computed across batch rows using proxy image representations:

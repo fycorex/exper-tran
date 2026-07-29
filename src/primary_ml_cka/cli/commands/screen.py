@@ -25,8 +25,12 @@ from primary_ml_cka.prompts.classification import CLASSIFICATION_PROMPT
 
 
 def run(context: CommandContext) -> str:
+    data_config = resolve_data_config(context)
     if context.dry_run:
-        return "dry-run: screen 50 candidates per unique target with exact parser"
+        return (
+            f"dry-run: screen {data_config.candidate_count} candidates per unique "
+            f"target; retain label {data_config.source_human_label}"
+        )
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; CPU screening is forbidden")
     manifests = context.output_dir / "evaluation" / "manifests"
@@ -35,7 +39,6 @@ def run(context: CommandContext) -> str:
         raise RuntimeError("Candidate manifest missing; run `data prepare` first")
     candidates = read_manifest(candidates_path)
     attack_config = resolve_attack_config(context)
-    data_config = resolve_data_config(context)
     imagenet_root = Path(
         os.environ.get("IMAGENET_ROOT", context.project_root / "data/imagenet_vehicle_official")
     )
@@ -77,6 +80,8 @@ def run(context: CommandContext) -> str:
                 candidates,
                 labels,
                 data_config.source_human_label,
+                data_config.main_max_count,
+                data_config.confirmation_max_count,
                 attack_config.batch_size,
             )
             main_ok, confirmation_ok = require_minimum_sets(

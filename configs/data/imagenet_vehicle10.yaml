@@ -1,7 +1,9 @@
 source_human_label: 8
 target_human_label: 7
 candidate_count: 50
-target_reference_count: 64
+target_reference_count: 48
+main_max_count: 32
+confirmation_max_count: 16
 classes:
   1: {name: ambulance, synset: n02701002}
   2: {name: cab, synset: n02930766}

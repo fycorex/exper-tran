@@ -115,6 +115,7 @@ def attack_one_batch(
     steps: int,
     attack_config: AttackConfig,
     data_config: DataConfig,
+    reference_batch_index: int | None = None,
 ) -> AttackRunResult:
     batch_size = len(source_records)
     if batch_size < 2:
@@ -123,7 +124,14 @@ def attack_one_batch(
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; CPU attack execution is forbidden")
     imagenet_root = project_root / "data" / "imagenet_vehicle_official"
-    references = fixed_reference_batch(reference_records, source_batch_index, batch_size)
+    resolved_reference_batch = (
+        source_batch_index if reference_batch_index is None else reference_batch_index
+    )
+    references = fixed_reference_batch(
+        reference_records,
+        resolved_reference_batch,
+        batch_size,
+    )
     clean = _cuda_images(imagenet_root, source_records, attack_config.canvas_size)
     reference_images = _cuda_images(imagenet_root, references, attack_config.canvas_size)
     timer = Timer()

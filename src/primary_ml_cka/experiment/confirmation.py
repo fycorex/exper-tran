@@ -55,6 +55,9 @@ def run_confirmation(context: CommandContext) -> str:
                     source_records=source,
                     reference_records=references,
                     source_batch_index=batch_index,
+                    reference_batch_index=(
+                        data_config.main_max_count // config.batch_size + batch_index
+                    ),
                     lambda_cka=selected_values[pair.pair_id],
                     seed=context.seed if context.seed is not None else config.confirmation_seed,
                     steps=config.steps,

@@ -12,7 +12,14 @@ def test_human_label_conversions() -> None:
 
 
 def test_source_and_target_labels_are_configurable() -> None:
-    config = DataConfig(source_human_label=4, target_human_label=9)
+    config = DataConfig(
+        source_human_label=4,
+        target_human_label=9,
+        candidate_count=50,
+        target_reference_count=48,
+        main_max_count=32,
+        confirmation_max_count=16,
+    )
     validate_data_config(config)
     assert human_label_to_index(config.target_human_label) == 8
 

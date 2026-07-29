@@ -368,6 +368,7 @@ def blocked_result_row(
     seed: int,
     steps: int,
     error: Exception,
+    lambda_cka: float | None = None,
 ) -> ResultRow:
     values: dict[str, object] = {column: "" for column in ALL_RESULTS_COLUMNS}
     values.update(
@@ -379,6 +380,7 @@ def blocked_result_row(
             "proxy_revision": MODEL_REVISIONS[pair.proxy_model],
             "target_revision": MODEL_REVISIONS[pair.target_model],
             "phase": phase,
+            "lambda": "" if lambda_cka is None else lambda_cka,
             "seed": seed,
             "steps": steps,
             "status": "blocked",

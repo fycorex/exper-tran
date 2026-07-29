@@ -3,8 +3,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from primary_ml_cka.config.loader import load_config
-from primary_ml_cka.config.schema import AttackConfig, DataConfig
-from primary_ml_cka.config.validation import validate_attack_config, validate_data_config
+from primary_ml_cka.config.schema import AttackConfig, DataConfig, SmokeConfig
+from primary_ml_cka.config.validation import (
+    validate_attack_config,
+    validate_data_config,
+    validate_smoke_config,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,6 +41,20 @@ def resolve_data_config(context: CommandContext) -> DataConfig:
     values = {key: raw[key] for key in DataConfig.__dataclass_fields__ if key in raw}
     config = DataConfig(**values)
     validate_data_config(config)
+    return config
+
+
+def resolve_smoke_config(
+    context: CommandContext,
+    attack_config: AttackConfig,
+) -> SmokeConfig:
+    path = context.project_root / "configs" / "runs" / "smoke.yaml"
+    raw = load_config(path)
+    values = {key: raw[key] for key in SmokeConfig.__dataclass_fields__ if key in raw}
+    if "lambdas" in values:
+        values["lambdas"] = tuple(float(value) for value in values["lambdas"])
+    config = SmokeConfig(**values)
+    validate_smoke_config(config, attack_config)
     return config
 
 

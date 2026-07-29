@@ -36,3 +36,11 @@ class DataConfig:
     target_reference_count: int
     main_max_count: int
     confirmation_max_count: int
+
+
+@dataclass(frozen=True, slots=True)
+class SmokeConfig:
+    batch_size: int
+    lambdas: tuple[float, ...]
+    steps: int
+    seed: int

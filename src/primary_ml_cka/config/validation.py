@@ -1,4 +1,4 @@
-from primary_ml_cka.config.schema import AttackConfig, DataConfig
+from primary_ml_cka.config.schema import AttackConfig, DataConfig, SmokeConfig
 from primary_ml_cka.domain.constants import LAMBDAS
 from primary_ml_cka.domain.labels import human_label_to_index
 
@@ -35,3 +35,14 @@ def validate_data_config(config: DataConfig) -> None:
             "target_reference_count must cover disjoint main and confirmation "
             f"references ({required_references})"
         )
+
+
+def validate_smoke_config(config: SmokeConfig, attack_config: AttackConfig) -> None:
+    if config.batch_size != attack_config.batch_size:
+        raise ValueError("Smoke and attack batch sizes must match")
+    if config.steps < 1:
+        raise ValueError("Smoke steps must be positive")
+    if not config.lambdas:
+        raise ValueError("Smoke lambda scan cannot be empty")
+    if tuple(config.lambdas) != attack_config.lambdas:
+        raise ValueError("Smoke must scan the complete configured lambda grid")

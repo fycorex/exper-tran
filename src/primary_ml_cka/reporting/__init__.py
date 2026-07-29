@@ -1,0 +1,1 @@
+"""Typed result reporting."""

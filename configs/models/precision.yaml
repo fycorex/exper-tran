@@ -1,0 +1,8 @@
+generative_proxy:
+  language_quantization: nf4
+  compute_dtype: bfloat16
+  vision_dtype: bfloat16
+proxy_visual:
+  default_dtype: bfloat16
+cka_dtype: float32
+disable_kv_cache: true

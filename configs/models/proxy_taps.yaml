@@ -1,0 +1,18 @@
+Qwen/Qwen3.5-4B:
+  path: model.visual.merger.norm
+  representation: normalized proxy visual patch tokens before merger projection
+Qwen/Qwen3.5-2B:
+  path: model.visual.merger.norm
+  representation: normalized proxy visual patch tokens before merger projection
+OpenGVLab/InternVL3_5-2B-HF:
+  path: model.vision_tower.layernorm
+  representation: final normalized proxy InternViT patch tokens
+openai/clip-vit-large-patch14:
+  path: get_image_features
+  representation: native projected proxy image embedding
+google/siglip2-so400m-patch14-384:
+  path: get_image_features
+  representation: native projected proxy image embedding
+google/gemma-4-E2B-it:
+  path: unresolved
+  representation: blocked until a differentiable proxy-only image tap is validated

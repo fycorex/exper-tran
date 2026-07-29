@@ -1,4 +1,9 @@
 # Byte-compiled / optimized / DLL files
+AGENTS.md
+/data/
+/.hf-cache/
+/.venv-primary-ml-cka/
+/outputs/
 __pycache__/
 *.py[codz]
 *$py.class

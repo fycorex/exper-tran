@@ -1,0 +1,5 @@
+phase: smoke
+batch_size: 8
+lambda_cka: 1
+steps: 10
+seed: 42

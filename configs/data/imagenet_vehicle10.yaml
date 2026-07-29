@@ -1,0 +1,15 @@
+source_human_label: 8
+target_human_label: 7
+candidate_count: 50
+target_reference_count: 64
+classes:
+  1: {name: ambulance, synset: n02701002}
+  2: {name: cab, synset: n02930766}
+  3: {name: limousine, synset: n03670208}
+  4: {name: minivan, synset: n03770679}
+  5: {name: sports car, synset: n04285008}
+  6: {name: fire engine, synset: n03345487}
+  7: {name: garbage truck, synset: n03417042}
+  8: {name: pickup truck, synset: n03930630}
+  9: {name: tow truck, synset: n04461696}
+  10: {name: moving van, synset: n03796401}

@@ -1,0 +1,47 @@
+# Experiment Specification
+
+## Proxy Objective
+
+The attack canvas is RGB `224×224` in `[0,1]`. Source and target human labels
+are required settings in `configs/data/imagenet_vehicle10.yaml`; the target
+class index is always derived with `human_label_to_index`. For target index
+\(t\), ten proxy class logits \(\ell\), and probabilities \(p\):
+
+\[
+L_{cls}=CE(\ell,t)
++\alpha\,softplus(\max_{j\ne t}\ell_j-\ell_t+m)
++\beta\,\frac{1}{9}\sum_{j\ne t}p_j.
+\]
+
+Defaults are margin \(m=2\), \(\alpha=1\), and \(\beta=1\). This pushes the
+target class above every alternative while explicitly suppressing the mean
+probability of the other nine classes.
+
+Candidate discovery, clean screening, reference selection, proxy loss, and
+TASR/ASR evaluation all consume the same data configuration. Changing a target
+there does not require a source-code change.
+
+## Proxy CKA
+
+CKA is computed across batch rows using proxy image representations:
+
+\[
+L_{CKA}=CKA(Z_{adv},Z_{clean})-CKA(Z_{adv},Z_{reference}).
+\]
+
+The minimized objective is:
+
+\[
+L_{total}=L_{cls}+\lambda L_{CKA}.
+\]
+
+The CKA kernel accepts any equal batch size of at least two. The checked-in
+experiment configuration uses batch size 8, but it is a runtime setting rather
+than a mathematical hardcode.
+
+## Target Evaluation
+
+The target receives the fixed prompt and returns decoded text. The evaluator
+keeps raw output, parses only an exact integer on the first non-empty line, and
+reports clean-conditioned TASR/ASR with hit counts and denominators. Target
+outputs never influence lambda selection.

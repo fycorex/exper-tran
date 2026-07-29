@@ -1,0 +1,8 @@
+device: cuda
+required_gpu: NVIDIA RTX A4000
+required_vram_gb: 16
+canvas_size: 224
+cache_clean_embeddings_on_cpu: false
+cache_proxy_reference_embeddings_on_cpu: false
+load_one_proxy_during_attack: true
+target_access_during_attack: forbidden

@@ -1,0 +1,4 @@
+level: INFO
+json_lines: true
+record_raw_target_output: true
+atomic_writes: true

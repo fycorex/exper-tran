@@ -1,0 +1,4 @@
+project_root: .
+imagenet_root: ${IMAGENET_ROOT}
+hf_home: .hf-cache
+output_dir: outputs/primary_ml_cka_v1

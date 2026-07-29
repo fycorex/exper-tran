@@ -1,0 +1,5 @@
+phase: main
+steps: 100
+seed: 42
+require_tests: true
+require_validated_taps: true

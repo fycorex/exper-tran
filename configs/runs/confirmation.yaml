@@ -1,0 +1,5 @@
+phase: confirmation
+steps: 100
+seed: 43
+require_selected_positive_lambda: true
+require_disjoint_manifest: true

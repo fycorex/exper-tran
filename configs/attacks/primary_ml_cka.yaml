@@ -1,0 +1,17 @@
+epsilon: 0.06274509803921569
+norm: linf
+pixel_min: 0.0
+pixel_max: 1.0
+canvas_size: 224
+batch_size: 8
+steps: 100
+step_size: 0.00392156862745098
+momentum: 1.0
+random_start: true
+restarts: 1
+lambdas: [0, 0.01, 0.1, 1, 10, 100]
+main_seed: 42
+confirmation_seed: 43
+class_margin: 2.0
+rank_weight: 1.0
+other_suppression_weight: 1.0

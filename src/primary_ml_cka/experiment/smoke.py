@@ -1,6 +1,7 @@
-from primary_ml_cka.artifacts.writers import write_results_csv
+from primary_ml_cka.artifacts.writers import write_json, write_results_csv
 from primary_ml_cka.data.manifests import read_manifest
 from primary_ml_cka.domain.identifiers import MODEL_PAIRS
+from primary_ml_cka.evaluation.target_generation import evaluate_local_frozen_batch
 from primary_ml_cka.experiment.attack_generation import (
     attack_one_batch,
     blocked_result_row,
@@ -14,6 +15,7 @@ from primary_ml_cka.experiment.orchestration import (
     resolve_attack_config,
     resolve_data_config,
 )
+from primary_ml_cka.prompts.classification import CLASSIFICATION_PROMPT
 
 
 def run_smoke(context: CommandContext) -> str:
@@ -67,8 +69,30 @@ def run_smoke(context: CommandContext) -> str:
                     f"reference_gain={result.reference_cka_gain}, "
                     f"source_drop={result.source_cka_drop}"
                 )
-            rows.append(result_row(pair, result, 42, 10))
-            summaries.append(f"{pair.pair_id}: ok")
+            artifact_dir = (
+                context.output_dir / "attacks" / pair.pair_id / "smoke" / "batch_00" / "lambda_1"
+            )
+            target_evaluation = evaluate_local_frozen_batch(
+                model_id=pair.target_model,
+                hf_home=context.project_root / ".hf-cache",
+                artifact_dir=artifact_dir,
+                image_count=len(result.source_image_ids),
+                prompt=CLASSIFICATION_PROMPT,
+                source_human_label=data_config.source_human_label,
+                target_human_label=data_config.target_human_label,
+            )
+            write_json(
+                context.output_dir / "evaluation" / f"{pair.pair_id}__smoke_outputs.json",
+                target_evaluation,
+            )
+            rows.append(result_row(pair, result, 42, 10, target_evaluation.rates))
+            summaries.append(
+                f"{pair.pair_id}: ok "
+                f"TASR={target_evaluation.rates.targeted_hit_count}/"
+                f"{target_evaluation.rates.clean_valid_count} "
+                f"ASR={target_evaluation.rates.untargeted_hit_count}/"
+                f"{target_evaluation.rates.clean_valid_count}"
+            )
         except Exception as exc:
             rows.append(blocked_result_row(pair, phase="smoke", seed=42, steps=10, error=exc))
             summaries.append(f"{pair.pair_id}: BLOCKED {exc!r}")

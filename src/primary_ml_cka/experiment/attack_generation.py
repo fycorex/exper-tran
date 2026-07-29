@@ -20,6 +20,7 @@ from primary_ml_cka.data.manifests import ImageRecord, read_manifest
 from primary_ml_cka.data.preprocessing import ensure_canvas
 from primary_ml_cka.domain.identifiers import MODEL_REVISIONS, ModelPair
 from primary_ml_cka.domain.labels import human_label_to_index
+from primary_ml_cka.evaluation.attack_metrics import AttackRates
 from primary_ml_cka.evaluation.representation_metrics import representation_metrics
 from primary_ml_cka.infrastructure.memory import peak_memory, reset_peak_memory
 from primary_ml_cka.infrastructure.timing import Timer
@@ -289,7 +290,13 @@ def attack_one_batch(
     return result
 
 
-def result_row(pair: ModelPair, result: AttackRunResult, seed: int, steps: int) -> ResultRow:
+def result_row(
+    pair: ModelPair,
+    result: AttackRunResult,
+    seed: int,
+    steps: int,
+    rates: AttackRates | None = None,
+) -> ResultRow:
     if pair.proxy_model.startswith("Qwen/"):
         proxy_tap_path = "model.visual.merger.norm"
     elif pair.proxy_model.startswith("OpenGVLab/InternVL"):
@@ -314,11 +321,13 @@ def result_row(pair: ModelPair, result: AttackRunResult, seed: int, steps: int) 
         "lambda": result.lambda_cka,
         "seed": seed,
         "steps": steps,
-        "clean_valid_count": len(result.source_image_ids),
-        "targeted_hit_count": "",
-        "tasr_percent": "",
-        "untargeted_hit_count": "",
-        "asr_percent": "",
+        "clean_valid_count": (
+            rates.clean_valid_count if rates is not None else len(result.source_image_ids)
+        ),
+        "targeted_hit_count": rates.targeted_hit_count if rates is not None else "",
+        "tasr_percent": rates.tasr_percent if rates is not None else "",
+        "untargeted_hit_count": rates.untargeted_hit_count if rates is not None else "",
+        "asr_percent": rates.asr_percent if rates is not None else "",
         "proxy_target_nll": result.proxy_target_nll,
         "proxy_target_probability": result.proxy_target_probability,
         "proxy_target_hit_count": result.proxy_target_hit_count,

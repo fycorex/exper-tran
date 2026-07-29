@@ -16,6 +16,7 @@ ALL_RESULTS_COLUMNS = (
     "source_image_ids",
     "target_reference_ids",
     "lambda",
+    "cka_target_weight",
     "seed",
     "steps",
     "clean_valid_count",

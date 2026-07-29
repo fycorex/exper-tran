@@ -1,6 +1,7 @@
 import torch
 
 from primary_ml_cka.attack.cka.linear import linear_cka
+from primary_ml_cka.attack.losses.primary import primary_loss
 
 
 def cka_loss(z_adv: torch.Tensor, source: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -21,3 +22,19 @@ def test_gradient_descent_reduces_cka_loss() -> None:
     gradient = torch.autograd.grad(before, adversarial)[0]
     after = cka_loss(adversarial - 0.05 * gradient, source, target)
     assert after < before
+
+
+def test_target_cka_weight_changes_internal_balance() -> None:
+    source = torch.randn(8, 16)
+    target = torch.randn(8, 16)
+    adversarial = torch.randn(8, 16)
+    loss = primary_loss(
+        torch.tensor(0.0),
+        1.0,
+        adversarial,
+        source,
+        target,
+        target_cka_weight=5.0,
+    )
+    expected = linear_cka(adversarial, source) - 5.0 * linear_cka(adversarial, target)
+    assert torch.allclose(loss.cka, expected)

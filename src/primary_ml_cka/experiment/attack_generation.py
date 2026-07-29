@@ -35,6 +35,7 @@ class AttackRunResult:
     phase: str
     batch_id: str
     lambda_cka: float
+    cka_target_weight: float
     source_human_label: int
     target_human_label: int
     source_image_ids: tuple[str, ...]
@@ -129,6 +130,8 @@ def attack_one_batch(
     attack_config: AttackConfig,
     data_config: DataConfig,
     reference_batch_index: int | None = None,
+    cka_target_weight: float = 1.0,
+    objective_tag: str | None = None,
 ) -> AttackRunResult:
     batch_size = len(source_records)
     if batch_size < 2:
@@ -169,7 +172,14 @@ def attack_one_batch(
             losses = primary_loss(proxy_output.loss, 0)
         else:
             z_adv = proxy.image_embeddings(state.adversarial).embeddings
-            losses = primary_loss(proxy_output.loss, lambda_cka, z_adv, z_clean, z_reference)
+            losses = primary_loss(
+                proxy_output.loss,
+                lambda_cka,
+                z_adv,
+                z_clean,
+                z_reference,
+                target_cka_weight=cka_target_weight,
+            )
         if not torch.isfinite(losses.total):
             raise RuntimeError(f"Non-finite total loss at step {step}")
         if step == 0:
@@ -203,17 +213,14 @@ def attack_one_batch(
             z_adv_final if lambda_cka > 0 else None,
             z_clean if lambda_cka > 0 else None,
             z_reference if lambda_cka > 0 else None,
+            target_cka_weight=cka_target_weight,
         )
     assert_parameter_gradients_none(proxy.model)
     representation = representation_metrics(z_clean, z_adv_final, z_reference)
-    artifact_dir = (
-        output_dir
-        / "attacks"
-        / pair.pair_id
-        / phase
-        / f"batch_{source_batch_index:02d}"
-        / f"lambda_{lambda_cka:g}"
-    )
+    artifact_dir = output_dir / "attacks" / pair.pair_id / phase / f"batch_{source_batch_index:02d}"
+    if objective_tag is not None:
+        artifact_dir /= objective_tag
+    artifact_dir /= f"lambda_{lambda_cka:g}"
     linf_float, linf_png, adversarial_png = _save_png_batch(
         artifact_dir,
         clean,
@@ -239,6 +246,7 @@ def attack_one_batch(
         phase=phase,
         batch_id=f"{source_batch_index:02d}",
         lambda_cka=lambda_cka,
+        cka_target_weight=cka_target_weight,
         source_human_label=data_config.source_human_label,
         target_human_label=data_config.target_human_label,
         source_image_ids=tuple(record.image_id for record in source_records),
@@ -282,7 +290,10 @@ def attack_one_batch(
             f"{proxy_diagnostics.hit_count}/{proxy_diagnostics.denominator} images"
         ),
     )
-    log_path = output_dir / "logs" / pair.pair_id / phase / f"{result.batch_id}_{lambda_cka:g}.json"
+    log_name = f"{result.batch_id}_{lambda_cka:g}"
+    if objective_tag is not None:
+        log_name += f"_{objective_tag}"
+    log_path = output_dir / "logs" / pair.pair_id / phase / f"{log_name}.json"
     write_json(log_path, result)
     del proxy
     gc.collect()
@@ -319,6 +330,7 @@ def result_row(
         "source_image_ids": "|".join(result.source_image_ids),
         "target_reference_ids": "|".join(result.target_reference_ids),
         "lambda": result.lambda_cka,
+        "cka_target_weight": result.cka_target_weight,
         "seed": seed,
         "steps": steps,
         "clean_valid_count": (

@@ -20,7 +20,10 @@ def primary_loss(
     z_adv: torch.Tensor | None = None,
     z_clean: torch.Tensor | None = None,
     z_reference: torch.Tensor | None = None,
+    target_cka_weight: float = 1.0,
 ) -> PrimaryLoss:
+    if target_cka_weight <= 0:
+        raise ValueError("target_cka_weight must be positive")
     if lambda_cka == 0:
         zero = loss_ml.new_zeros(())
         return PrimaryLoss(loss_ml, loss_ml, zero, zero, zero)
@@ -30,7 +33,7 @@ def primary_loss(
         )
     cka_source = linear_cka(z_adv.float(), z_clean.float())
     cka_reference = linear_cka(z_adv.float(), z_reference.float())
-    loss_cka = cka_source - cka_reference
+    loss_cka = cka_source - target_cka_weight * cka_reference
     return PrimaryLoss(
         loss_ml + lambda_cka * loss_cka,
         loss_ml,

@@ -44,3 +44,11 @@ class SmokeConfig:
     lambdas: tuple[float, ...]
     steps: int
     seed: int
+
+
+@dataclass(frozen=True, slots=True)
+class AlphaScanConfig:
+    lambda_cka: float
+    alphas: tuple[float, ...]
+    steps: int
+    seed: int

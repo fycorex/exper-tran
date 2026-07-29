@@ -1,4 +1,11 @@
 from .loader import load_config
-from .schema import AttackConfig, DataConfig, PathsConfig, SmokeConfig
+from .schema import AlphaScanConfig, AttackConfig, DataConfig, PathsConfig, SmokeConfig
 
-__all__ = ["AttackConfig", "DataConfig", "PathsConfig", "SmokeConfig", "load_config"]
+__all__ = [
+    "AlphaScanConfig",
+    "AttackConfig",
+    "DataConfig",
+    "PathsConfig",
+    "SmokeConfig",
+    "load_config",
+]

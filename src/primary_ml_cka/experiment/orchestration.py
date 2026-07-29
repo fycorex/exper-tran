@@ -3,8 +3,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from primary_ml_cka.config.loader import load_config
-from primary_ml_cka.config.schema import AttackConfig, DataConfig, SmokeConfig
+from primary_ml_cka.config.schema import (
+    AlphaScanConfig,
+    AttackConfig,
+    DataConfig,
+    SmokeConfig,
+)
 from primary_ml_cka.config.validation import (
+    validate_alpha_scan_config,
     validate_attack_config,
     validate_data_config,
     validate_smoke_config,
@@ -55,6 +61,20 @@ def resolve_smoke_config(
         values["lambdas"] = tuple(float(value) for value in values["lambdas"])
     config = SmokeConfig(**values)
     validate_smoke_config(config, attack_config)
+    return config
+
+
+def resolve_alpha_scan_config(
+    context: CommandContext,
+    attack_config: AttackConfig,
+) -> AlphaScanConfig:
+    path = context.project_root / "configs" / "runs" / "clip_intra_alpha_scan.yaml"
+    raw = load_config(path)
+    values = {key: raw[key] for key in AlphaScanConfig.__dataclass_fields__ if key in raw}
+    if "alphas" in values:
+        values["alphas"] = tuple(float(value) for value in values["alphas"])
+    config = AlphaScanConfig(**values)
+    validate_alpha_scan_config(config, attack_config)
     return config
 
 

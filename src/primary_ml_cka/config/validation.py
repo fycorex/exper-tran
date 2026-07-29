@@ -1,4 +1,9 @@
-from primary_ml_cka.config.schema import AttackConfig, DataConfig, SmokeConfig
+from primary_ml_cka.config.schema import (
+    AlphaScanConfig,
+    AttackConfig,
+    DataConfig,
+    SmokeConfig,
+)
 from primary_ml_cka.domain.constants import LAMBDAS
 from primary_ml_cka.domain.labels import human_label_to_index
 
@@ -46,3 +51,15 @@ def validate_smoke_config(config: SmokeConfig, attack_config: AttackConfig) -> N
         raise ValueError("Smoke lambda scan cannot be empty")
     if tuple(config.lambdas) != attack_config.lambdas:
         raise ValueError("Smoke must scan the complete configured lambda grid")
+
+
+def validate_alpha_scan_config(
+    config: AlphaScanConfig,
+    attack_config: AttackConfig,
+) -> None:
+    if config.lambda_cka <= 0:
+        raise ValueError("Alpha scan requires a positive lambda")
+    if config.steps != attack_config.steps:
+        raise ValueError("Alpha scan must use the configured full attack steps")
+    if not config.alphas or any(alpha < 1 for alpha in config.alphas):
+        raise ValueError("Alpha scan values must all be at least one")

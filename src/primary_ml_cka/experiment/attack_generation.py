@@ -75,9 +75,15 @@ def _cuda_images(root: Path, records: tuple[ImageRecord, ...], canvas_size: int)
     decoded = []
     for record in records:
         with Image.open(root / record.relative_path) as image:
-            decoded.append(pil_to_tensor(image.convert("RGB")).float().div(255.0))
-    images = torch.stack(decoded).cuda(non_blocking=False)
-    canvas = ensure_canvas(images, canvas_size)
+            tensor = (
+                pil_to_tensor(image.convert("RGB"))
+                .cuda(non_blocking=False)
+                .float()
+                .div(255.0)
+                .unsqueeze(0)
+            )
+        decoded.append(ensure_canvas(tensor, canvas_size).squeeze(0))
+    canvas = torch.stack(decoded)
     return canvas.mul(255).round().div(255)
 
 

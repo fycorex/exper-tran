@@ -52,6 +52,7 @@ MODEL_REVISIONS = {
     "OpenGVLab/InternVL3_5-2B-HF": "3f301ffcf3dcbb47893afae6650ea3e78d96fb6d",
     "OpenGVLab/InternVL3_5-4B-HF": "6bd4487402110ef9889ba50eb7aefeb302526fed",
     "openai/clip-vit-large-patch14": "32bd64288804d66eefd0ccbe215aa642df71cc41",
+    "openai/clip-vit-base-patch32": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
     "google/siglip2-so400m-patch14-384": "e8e487298228002f3d8a82e0cd5c8ea9c567f57f",
 }
 

@@ -3,6 +3,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from primary_ml_cka.cli.commands import (
+    clip_intra,
     confirm,
     evaluate_main,
     inspect_taps,
@@ -28,6 +29,7 @@ COMMANDS: dict[tuple[str, str], Callable[[CommandContext], str]] = {
     ("evaluation", "main"): evaluate_main.run,
     ("attack", "confirm"): confirm.run,
     ("report", "summarize"): summarize.run,
+    ("diagnostics", "clip-intra"): clip_intra.run,
 }
 
 

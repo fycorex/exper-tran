@@ -1,4 +1,7 @@
+import torch
+
 from primary_ml_cka.evaluation.attack_metrics import attack_rates
+from primary_ml_cka.evaluation.representation_metrics import cross_model_cka
 
 
 def test_clean_conditioned_hit_counts_and_denominator() -> None:
@@ -13,3 +16,13 @@ def test_clean_conditioned_hit_counts_and_denominator() -> None:
     assert rates.untargeted_hit_count == 2
     assert rates.tasr_percent == 50
     assert rates.asr_percent == 100
+
+
+def test_cross_model_cka_has_explicit_dynamic_image_dimension() -> None:
+    proxy = torch.randn(7, 13)
+    target = torch.randn(7, 5)
+    result = cross_model_cka(proxy, target)
+    assert result.image_count == 7
+    assert result.proxy_embedding_dimension == 13
+    assert result.target_embedding_dimension == 5
+    assert 0.0 <= result.value <= 1.0 + 1e-6

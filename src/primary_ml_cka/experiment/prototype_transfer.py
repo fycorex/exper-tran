@@ -64,6 +64,19 @@ class PrototypeAttackResult:
     failure_reason: str
 
 
+@dataclass(frozen=True, slots=True)
+class PrototypeEmbeddingBatch:
+    lambda_prototype: float
+    clean: torch.Tensor
+    adversarial: torch.Tensor
+
+
+@dataclass(frozen=True, slots=True)
+class PrototypeScanOutput:
+    results: tuple[PrototypeAttackResult, ...]
+    embedding_batches: tuple[PrototypeEmbeddingBatch, ...]
+
+
 def _target_reference_embeddings(
     proxy: object,
     imagenet_root: Path,
@@ -110,7 +123,7 @@ def generate_prototype_scan(
     attack_config: AttackConfig,
     data_config: DataConfig,
     scan_config: PrototypeScanConfig,
-) -> tuple[PrototypeAttackResult, ...]:
+) -> PrototypeScanOutput:
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; CPU attack execution is forbidden")
     if len(source_records) != scan_config.batch_size:
@@ -137,6 +150,7 @@ def generate_prototype_scan(
     clean_target_similarity = clean_embeddings @ target_prototype
     cka_references = reference_embeddings[: scan_config.batch_size].detach()
     results = []
+    embedding_batches = []
     try:
         for lambda_prototype in scan_config.lambda_values:
             reset_peak_memory()
@@ -275,9 +289,16 @@ def generate_prototype_scan(
                     failure_reason=failure_reason,
                 )
             )
+            embedding_batches.append(
+                PrototypeEmbeddingBatch(
+                    lambda_prototype=lambda_prototype,
+                    clean=clean_embeddings.detach(),
+                    adversarial=png_embeddings.detach(),
+                )
+            )
     finally:
         assert_parameter_gradients_none(proxy.model)
         del proxy
         gc.collect()
         torch.cuda.empty_cache()
-    return tuple(results)
+    return PrototypeScanOutput(tuple(results), tuple(embedding_batches))

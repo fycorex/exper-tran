@@ -41,3 +41,34 @@ Results are written under
 be based on the recorded hit counts and denominators; incomplete runs are not
 reported as successful.
 
+Cross-model CKA is an evaluation-only diagnostic over matched image rows:
+
+```text
+proxy representations: [N_images, D_proxy]
+target representations: [N_images, D_target]
+```
+
+Run it on existing frozen PNGs with:
+
+```bash
+python -m primary_ml_cka.cli.main diagnostics cross-model-cka
+```
+
+## Findings
+
+All positive prototype weights passed the proxy gate on 8/8 images, but target
+TASR remained 0/8. For the same eight ordered images, clean proxy-target CKA
+was 0.972199. Adversarial CKA ranged from 0.919963 to 0.962558 and decreased
+for every scanned weight. Thus the attack fitted proxy-specific directions
+instead of preserving shared proxy-target structure.
+
+## Research basis
+
+- Kornblith et al., *Similarity of Neural Network Representations Revisited*
+  (ICML 2019), defines CKA across matched observations.
+- Inkawhich et al., *Feature Space Perturbations Yield More Transferable
+  Adversarial Examples* (CVPR 2019), motivates intermediate feature alignment.
+- Li et al., *Towards Transferable Targeted Attack* (CVPR 2020), combines
+  target attraction with movement away from the source class.
+- Wei et al., *Enhancing the Self-Universality for Transferable Targeted
+  Attacks* (CVPR 2023), motivates consistency across global and local views.

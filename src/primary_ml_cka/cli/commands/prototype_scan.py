@@ -5,10 +5,12 @@ from dataclasses import asdict
 
 import torch
 
+from primary_ml_cka.artifacts.png import load_png_batch_cuda
 from primary_ml_cka.artifacts.writers import write_json
 from primary_ml_cka.data.manifests import read_manifest, write_manifest
 from primary_ml_cka.data.selection import clean_valid_split
 from primary_ml_cka.evaluation.attack_metrics import attack_rates
+from primary_ml_cka.evaluation.representation_metrics import cross_model_cka
 from primary_ml_cka.evaluation.target_generation import evaluate_paths
 from primary_ml_cka.experiment.orchestration import (
     CommandContext,
@@ -94,7 +96,7 @@ def run(context: CommandContext) -> str:
         },
     )
 
-    attack_results = generate_prototype_scan(
+    scan_output = generate_prototype_scan(
         project_root=context.project_root,
         output_dir=context.output_dir,
         source_records=source,
@@ -103,6 +105,8 @@ def run(context: CommandContext) -> str:
         data_config=data_config,
         scan_config=scan_config,
     )
+    attack_results = scan_output.results
+    proxy_embeddings = {item.lambda_prototype: item for item in scan_output.embedding_batches}
 
     target = load_clip_target_generator(
         scan_config.target_model,
@@ -122,6 +126,12 @@ def run(context: CommandContext) -> str:
                     "tasr_percent": "",
                     "untargeted_hit_count": "",
                     "asr_percent": "",
+                    "cross_model_image_count": "",
+                    "proxy_embedding_dimension": "",
+                    "target_embedding_dimension": "",
+                    "cka_proxy_target_clean": "",
+                    "cka_proxy_target_adversarial": "",
+                    "cka_proxy_target_delta": "",
                 }
             )
             if not result.target_evaluation_eligible:
@@ -132,15 +142,35 @@ def run(context: CommandContext) -> str:
                 )
                 continue
             artifact_dir = _artifact_dir(context, result.lambda_prototype)
+            clean_paths = tuple(
+                artifact_dir / f"{index:02d}_clean.png" for index in range(len(source))
+            )
+            adversarial_paths = tuple(
+                artifact_dir / f"{index:02d}_adv.png" for index in range(len(source))
+            )
             clean_outputs = evaluate_paths(
                 target,
-                tuple(artifact_dir / f"{index:02d}_clean.png" for index in range(len(source))),
+                clean_paths,
                 CLASSIFICATION_PROMPT,
             )
             adversarial_outputs = evaluate_paths(
                 target,
-                tuple(artifact_dir / f"{index:02d}_adv.png" for index in range(len(source))),
+                adversarial_paths,
                 CLASSIFICATION_PROMPT,
+            )
+            clean_pixels = load_png_batch_cuda(clean_paths, attack_config.canvas_size)
+            adversarial_pixels = load_png_batch_cuda(adversarial_paths, attack_config.canvas_size)
+            with torch.no_grad():
+                target_clean_embeddings = target.classifier.image_embeddings(
+                    clean_pixels
+                ).embeddings.float()
+                target_adversarial_embeddings = target.classifier.image_embeddings(
+                    adversarial_pixels
+                ).embeddings.float()
+            proxy_batch = proxy_embeddings[result.lambda_prototype]
+            clean_alignment = cross_model_cka(proxy_batch.clean, target_clean_embeddings)
+            adversarial_alignment = cross_model_cka(
+                proxy_batch.adversarial, target_adversarial_embeddings
             )
             rates = attack_rates(
                 tuple(output.parsed_label for output in clean_outputs),
@@ -149,6 +179,16 @@ def run(context: CommandContext) -> str:
                 target_human_label=data_config.target_human_label,
             )
             row.update(asdict(rates))
+            row.update(
+                {
+                    "cross_model_image_count": clean_alignment.image_count,
+                    "proxy_embedding_dimension": clean_alignment.proxy_embedding_dimension,
+                    "target_embedding_dimension": clean_alignment.target_embedding_dimension,
+                    "cka_proxy_target_clean": clean_alignment.value,
+                    "cka_proxy_target_adversarial": adversarial_alignment.value,
+                    "cka_proxy_target_delta": (adversarial_alignment.value - clean_alignment.value),
+                }
+            )
             rows.append(row)
             raw_results.append(
                 {

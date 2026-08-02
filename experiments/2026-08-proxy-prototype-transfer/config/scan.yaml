@@ -1,0 +1,9 @@
+proxy_model: openai/clip-vit-large-patch14
+target_model: openai/clip-vit-base-patch32
+lambda_values: [0, 0.01, 0.1, 1, 10]
+steps: 100
+seed: 42
+batch_size: 8
+margin: 0.2
+separation_weight: 1.0
+

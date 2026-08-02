@@ -20,6 +20,11 @@ uses those values.
 
 Both data and model weights are intentionally excluded from Git.
 
+## Experiments
+
+- `experiments/2026-08-proxy-prototype-transfer`: replace target-reference
+  batch CKA optimization with per-image proxy prototype contrastive alignment.
+
 ## Setup and checks
 
 ```bash

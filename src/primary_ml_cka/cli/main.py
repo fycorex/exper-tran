@@ -10,6 +10,7 @@ from primary_ml_cka.cli.commands import (
     evaluate_main,
     inspect_taps,
     prepare,
+    prototype_scan,
     run_main,
     screen,
     select_lambda,
@@ -34,6 +35,7 @@ COMMANDS: dict[tuple[str, str], Callable[[CommandContext], str]] = {
     ("diagnostics", "clip-intra"): clip_intra.run,
     ("diagnostics", "clip-intra-scan"): clip_intra_scan.run,
     ("diagnostics", "clip-intra-alpha-scan"): clip_intra_alpha_scan.run,
+    ("diagnostics", "prototype-scan"): prototype_scan.run,
 }
 
 

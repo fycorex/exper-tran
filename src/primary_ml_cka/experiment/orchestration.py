@@ -7,12 +7,14 @@ from primary_ml_cka.config.schema import (
     AlphaScanConfig,
     AttackConfig,
     DataConfig,
+    PrototypeScanConfig,
     SmokeConfig,
 )
 from primary_ml_cka.config.validation import (
     validate_alpha_scan_config,
     validate_attack_config,
     validate_data_config,
+    validate_prototype_scan_config,
     validate_smoke_config,
 )
 
@@ -75,6 +77,26 @@ def resolve_alpha_scan_config(
         values["alphas"] = tuple(float(value) for value in values["alphas"])
     config = AlphaScanConfig(**values)
     validate_alpha_scan_config(config, attack_config)
+    return config
+
+
+def resolve_prototype_scan_config(
+    context: CommandContext,
+    attack_config: AttackConfig,
+) -> PrototypeScanConfig:
+    path = (
+        context.project_root
+        / "experiments"
+        / "2026-08-proxy-prototype-transfer"
+        / "config"
+        / "scan.yaml"
+    )
+    raw = load_config(path)
+    values = {key: raw[key] for key in PrototypeScanConfig.__dataclass_fields__ if key in raw}
+    if "lambda_values" in values:
+        values["lambda_values"] = tuple(float(value) for value in values["lambda_values"])
+    config = PrototypeScanConfig(**values)
+    validate_prototype_scan_config(config, attack_config)
     return config
 
 

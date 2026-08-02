@@ -2,6 +2,7 @@ from primary_ml_cka.config.schema import (
     AlphaScanConfig,
     AttackConfig,
     DataConfig,
+    PrototypeScanConfig,
     SmokeConfig,
 )
 from primary_ml_cka.domain.constants import LAMBDAS
@@ -63,3 +64,17 @@ def validate_alpha_scan_config(
         raise ValueError("Alpha scan must use the configured full attack steps")
     if not config.alphas or any(alpha < 1 for alpha in config.alphas):
         raise ValueError("Alpha scan values must all be at least one")
+
+
+def validate_prototype_scan_config(
+    config: PrototypeScanConfig,
+    attack_config: AttackConfig,
+) -> None:
+    if config.batch_size != attack_config.batch_size:
+        raise ValueError("Prototype scan and attack batch sizes must match")
+    if config.steps != attack_config.steps:
+        raise ValueError("Prototype scan must use the configured full attack steps")
+    if not config.lambda_values or any(value < 0 for value in config.lambda_values):
+        raise ValueError("Prototype lambda values must be non-negative")
+    if config.margin < 0 or config.separation_weight < 0:
+        raise ValueError("Prototype margin and separation weight must be non-negative")

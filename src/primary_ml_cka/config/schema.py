@@ -52,3 +52,15 @@ class AlphaScanConfig:
     alphas: tuple[float, ...]
     steps: int
     seed: int
+
+
+@dataclass(frozen=True, slots=True)
+class PrototypeScanConfig:
+    proxy_model: str
+    target_model: str
+    lambda_values: tuple[float, ...]
+    steps: int
+    seed: int
+    batch_size: int
+    margin: float
+    separation_weight: float

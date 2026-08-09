@@ -53,9 +53,33 @@ class ContrastiveProxy(BaseProxy):
         features = _pooled_feature(
             self.model.get_image_features(pixel_values=self.image_preprocess(images))
         )
+        return self._embedding_output(features, images.shape[0])
+
+    def image_embeddings_with_patches(
+        self, images: torch.Tensor
+    ) -> tuple[ImageEmbeddingOutput[torch.Tensor], torch.Tensor]:
+        """Return projected global and patch embeddings from one CLIP vision pass."""
+        vision_model = getattr(self.model, "vision_model", None)
+        projection = getattr(self.model, "visual_projection", None)
+        if vision_model is None or projection is None:
+            raise TypeError("Patch-token CKA requires a CLIP vision model and projection")
+        output = vision_model(pixel_values=self.image_preprocess(images))
+        hidden = getattr(output, "last_hidden_state", None)
+        pooled = getattr(output, "pooler_output", None)
+        if not isinstance(hidden, torch.Tensor) or not isinstance(pooled, torch.Tensor):
+            raise TypeError("CLIP vision output must expose last_hidden_state and pooler_output")
+        if hidden.ndim != 3 or hidden.shape[1] < 2:
+            raise ValueError("CLIP patch-token output must have shape [N,1+P,D]")
+        global_features = projection(pooled)
+        patch_features = functional.normalize(projection(hidden[:, 1:]).float(), dim=-1)
+        return self._embedding_output(global_features, images.shape[0]), patch_features
+
+    def _embedding_output(
+        self, features: torch.Tensor, image_count: int
+    ) -> ImageEmbeddingOutput[torch.Tensor]:
         embeddings = functional.normalize(features.float(), dim=-1)
         tokens = embeddings.unsqueeze(1)
-        mask = torch.ones((images.shape[0], 1), dtype=torch.bool, device=images.device)
+        mask = torch.ones((image_count, 1), dtype=torch.bool, device=features.device)
         tap = TapContract(
             self.model_id,
             MODEL_REVISIONS[self.model_id],
@@ -90,10 +114,17 @@ class ContrastiveProxy(BaseProxy):
     def target_loss(
         self, images: torch.Tensor, human_target_label: int, prompt: str
     ) -> ProxyLossOutput[torch.Tensor]:
-        target_index = human_label_to_index(human_target_label)
         image_features = _pooled_feature(
             self.model.get_image_features(pixel_values=self.image_preprocess(images))
         )
+        return self.target_loss_from_embeddings(image_features, human_target_label)
+
+    def target_loss_from_embeddings(
+        self,
+        image_features: torch.Tensor,
+        human_target_label: int,
+    ) -> ProxyLossOutput[torch.Tensor]:
+        target_index = human_label_to_index(human_target_label)
         scale = self.model.logit_scale.exp()
         bias_parameter = getattr(self.model, "logit_bias", None)
         bias = bias_parameter if bias_parameter is not None else None
@@ -109,10 +140,9 @@ class ContrastiveProxy(BaseProxy):
             rank_weight=self.rank_weight,
             suppression_weight=self.suppression_weight,
         )
-        target_nll = -output.logits.log_softmax(dim=-1)[:, target_index].mean()
         return ProxyLossOutput(
             loss=output.total,
-            target_nll=target_nll.detach(),
+            target_nll=output.cross_entropy,
             target_probability=output.target_probability.detach(),
             class_logits=output.logits,
             classification_ce=output.cross_entropy.detach(),

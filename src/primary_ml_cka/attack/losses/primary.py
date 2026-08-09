@@ -22,6 +22,14 @@ def primary_loss(
     z_reference: torch.Tensor | None = None,
     target_cka_weight: float = 1.0,
 ) -> PrimaryLoss:
+    """Build the proxy-only targeted transfer objective.
+
+    ``loss_ml`` is the proxy classification NLL for the target *class*.
+    All three representation tensors must come from the proxy image encoder;
+    minimizing ``CKA(adv, source) - alpha * CKA(adv, target_class)`` moves the
+    adversarial batch away from its source class and toward target-class
+    references.  The held-out target model is not part of this loss.
+    """
     if target_cka_weight <= 0:
         raise ValueError("target_cka_weight must be positive")
     if lambda_cka == 0:

@@ -8,6 +8,7 @@ from primary_ml_cka.config.schema import (
     AttackConfig,
     DataConfig,
     PrototypeScanConfig,
+    SharedCKAScanConfig,
     SmokeConfig,
 )
 from primary_ml_cka.config.validation import (
@@ -15,6 +16,7 @@ from primary_ml_cka.config.validation import (
     validate_attack_config,
     validate_data_config,
     validate_prototype_scan_config,
+    validate_shared_cka_scan_config,
     validate_smoke_config,
 )
 
@@ -97,6 +99,27 @@ def resolve_prototype_scan_config(
         values["lambda_values"] = tuple(float(value) for value in values["lambda_values"])
     config = PrototypeScanConfig(**values)
     validate_prototype_scan_config(config, attack_config)
+    return config
+
+
+def resolve_shared_cka_scan_config(
+    context: CommandContext,
+    attack_config: AttackConfig,
+) -> SharedCKAScanConfig:
+    path = (
+        context.project_root
+        / "experiments"
+        / "2026-08-proxy-prototype-transfer"
+        / "config"
+        / "shared_cka_scan.yaml"
+    )
+    raw = load_config(path)
+    values = {key: raw[key] for key in SharedCKAScanConfig.__dataclass_fields__ if key in raw}
+    for key in ("shared_clean_weights", "view_scales"):
+        if key in values:
+            values[key] = tuple(float(value) for value in values[key])
+    config = SharedCKAScanConfig(**values)
+    validate_shared_cka_scan_config(config, attack_config)
     return config
 
 

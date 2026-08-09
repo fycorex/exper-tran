@@ -49,3 +49,30 @@ def test_gradient_step_increases_target_source_margin() -> None:
         separation_weight=1.0,
     )
     assert after.target_source_margin.item() > before.target_source_margin.item()
+
+
+def test_own_clean_separation_moves_each_row_toward_target() -> None:
+    target = torch.tensor([1.0, 0.0, 0.0])
+    source = torch.tensor([0.0, 1.0, 0.0])
+    clean = torch.tensor([[0.0, 1.0, 0.0], [0.0, 0.8, 0.2]])
+    adversarial = clean.clone().requires_grad_()
+    before = prototype_contrastive_loss(
+        adversarial,
+        target,
+        source,
+        margin=0.2,
+        separation_weight=1.0,
+        clean_embeddings=clean,
+        clean_separation_weight=1.0,
+    )
+    gradient = torch.autograd.grad(before.total, adversarial)[0]
+    after = prototype_contrastive_loss(
+        adversarial - 0.1 * gradient,
+        target,
+        source,
+        margin=0.2,
+        separation_weight=1.0,
+        clean_embeddings=clean,
+        clean_separation_weight=1.0,
+    )
+    assert torch.all(after.target_clean_margin > before.target_clean_margin)

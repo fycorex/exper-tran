@@ -1,0 +1,8 @@
+prototype_lambda: 0.1
+clean_separation_weight: 1.0
+shared_clean_weights: [0, 0.01]
+view_consistency_weight: 1.0
+view_scales: [0.875, 0.75]
+steps: 100
+seed: 42
+batch_size: 8

@@ -14,11 +14,26 @@ proxy image embeddings. Target references are retained only when the proxy
 classifies them as the configured target class. The target model is never
 loaded during optimization.
 
+The shared-geometry variant adds three proxy-only terms:
+
+- per-image target attraction and separation from both the source prototype
+  and that image's own clean global embedding;
+- per-image linear CKA between the 256 projected L/14 patch tokens of the
+  adversarial and clean image; and
+- Self-Universality-style cosine alignment between each adversarial global
+  embedding and an independently random-resized local view.
+
+Standard cross-model CKA is still computed over matched image rows, never over
+a single global embedding. Proxy-target clean, adversarial, and concatenated
+state CKA are evaluation-only diagnostics and have no gradient path.
+
 Target evaluation is allowed only when every frozen PNG:
 
 - has the configured target as proxy text argmax;
 - increases target-prototype cosine similarity relative to its clean image;
-- is closer to the target prototype than the source prototype; and
+- is closer to the target prototype than the source prototype;
+- is closer to the target prototype than to its own clean global embedding
+  when own-clean separation is enabled; and
 - satisfies the configured pixel and PNG constraints.
 
 ## Inputs and environment
@@ -34,6 +49,7 @@ source .venv-primary-ml-cka/bin/activate
 export HF_HOME="$PWD/.hf-cache"
 export IMAGENET_ROOT="$PWD/data/imagenet_vehicle_official"
 python -m primary_ml_cka.cli.main diagnostics prototype-scan
+python -m primary_ml_cka.cli.main diagnostics shared-cka-scan
 ```
 
 Results are written under
@@ -62,6 +78,22 @@ was 0.972199. Adversarial CKA ranged from 0.919963 to 0.962558 and decreased
 for every scanned weight. Thus the attack fitted proxy-specific directions
 instead of preserving shared proxy-target structure.
 
+The preregistered eight-image smoke set did not produce a targeted target-model
+hit. In the corrected per-image patch-CKA and own-clean contrastive scan, both
+weights passed the strict frozen-PNG proxy gate on 8/8 images:
+
+| Patch-CKA weight | Proxy patch CKA | Adversarial cross-model CKA | State CKA | TASR | ASR |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 | 0.4709396 | 0.8859153 | 0.5971856 | 0/8 | 4/8 |
+| 0.01 | 0.5756472 | 0.8570698 | 0.6220186 | 0/8 | 5/8 |
+
+Clean cross-model CKA was 0.9721988. The patch-CKA term increased the optimized
+proxy-only similarity but decreased adversarial proxy-target CKA, while TASR
+remained constant at zero. Pearson and Spearman correlation with TASR are
+therefore undefined, and this smoke run does not support the hypothesis that
+raising proxy-only CKA raises TASR. It is not a full-main or confirmation-set
+conclusion.
+
 ## Research basis
 
 - Kornblith et al., *Similarity of Neural Network Representations Revisited*
@@ -72,3 +104,8 @@ instead of preserving shared proxy-target structure.
   target attraction with movement away from the source class.
 - Wei et al., *Enhancing the Self-Universality for Transferable Targeted
   Attacks* (CVPR 2023), motivates consistency across global and local views.
+- Xie et al., *Improving Transferability of Adversarial Examples With Input
+  Diversity* (CVPR 2019), motivates randomized input transformations.
+- Dong et al., *Evading Defenses to Transferable Adversarial Examples by
+  Translation-Invariant Attacks* (CVPR 2019), motivates gradient smoothing as
+  the next proxy-only ablation.

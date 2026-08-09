@@ -3,6 +3,7 @@ from primary_ml_cka.config.schema import (
     AttackConfig,
     DataConfig,
     PrototypeScanConfig,
+    SharedCKAScanConfig,
     SmokeConfig,
 )
 from primary_ml_cka.domain.constants import LAMBDAS
@@ -78,3 +79,25 @@ def validate_prototype_scan_config(
         raise ValueError("Prototype lambda values must be non-negative")
     if config.margin < 0 or config.separation_weight < 0:
         raise ValueError("Prototype margin and separation weight must be non-negative")
+
+
+def validate_shared_cka_scan_config(
+    config: SharedCKAScanConfig,
+    attack_config: AttackConfig,
+) -> None:
+    if config.batch_size != attack_config.batch_size:
+        raise ValueError("Shared-CKA scan and attack batch sizes must match")
+    if config.steps != attack_config.steps:
+        raise ValueError("Shared-CKA scan must use the configured full attack steps")
+    if config.prototype_lambda <= 0:
+        raise ValueError("Shared-CKA scan requires a positive prototype weight")
+    if config.clean_separation_weight < 0:
+        raise ValueError("Own-clean separation weight must be non-negative")
+    if not config.shared_clean_weights or any(
+        value < 0 for value in config.shared_clean_weights
+    ):
+        raise ValueError("Shared-clean weights must be non-empty and non-negative")
+    if config.view_consistency_weight < 0:
+        raise ValueError("View-consistency weight must be non-negative")
+    if not config.view_scales or any(not 0 < value <= 1 for value in config.view_scales):
+        raise ValueError("View scales must be in (0,1]")

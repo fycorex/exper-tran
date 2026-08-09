@@ -133,6 +133,12 @@ def attack_one_batch(
     cka_target_weight: float = 1.0,
     objective_tag: str | None = None,
 ) -> AttackRunResult:
+    """Optimize on the proxy, then save PNGs for held-out target evaluation.
+
+    Here ``target`` always means the configured target class.  Neither the
+    target model's likelihood nor its image embeddings enter the gradient
+    path.
+    """
     batch_size = len(source_records)
     if batch_size < 2:
         raise ValueError("An attack/CKA batch must contain at least two images")
@@ -169,11 +175,11 @@ def attack_one_batch(
             CLASSIFICATION_PROMPT,
         )
         if lambda_cka == 0:
-            losses = primary_loss(proxy_output.loss, 0)
+            losses = primary_loss(proxy_output.target_nll, 0)
         else:
             z_adv = proxy.image_embeddings(state.adversarial).embeddings
             losses = primary_loss(
-                proxy_output.loss,
+                proxy_output.target_nll,
                 lambda_cka,
                 z_adv,
                 z_clean,
@@ -208,7 +214,7 @@ def attack_one_batch(
         )
         z_adv_final = proxy.image_embeddings(adversarial).embeddings.float()
         final_losses = primary_loss(
-            final_proxy.loss,
+            final_proxy.target_nll,
             lambda_cka,
             z_adv_final if lambda_cka > 0 else None,
             z_clean if lambda_cka > 0 else None,

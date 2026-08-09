@@ -64,3 +64,15 @@ class PrototypeScanConfig:
     batch_size: int
     margin: float
     separation_weight: float
+
+
+@dataclass(frozen=True, slots=True)
+class SharedCKAScanConfig:
+    prototype_lambda: float
+    clean_separation_weight: float
+    shared_clean_weights: tuple[float, ...]
+    view_consistency_weight: float
+    view_scales: tuple[float, ...]
+    steps: int
+    seed: int
+    batch_size: int

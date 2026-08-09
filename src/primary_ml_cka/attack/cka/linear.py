@@ -16,10 +16,16 @@ def linear_cka(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         raise ValueError("CKA inputs must be finite")
     x_centered = x - x.mean(dim=0, keepdim=True)
     y_centered = y - y.mean(dim=0, keepdim=True)
-    cross = x_centered.T @ y_centered
-    xx = x_centered.T @ x_centered
-    yy = y_centered.T @ y_centered
+    if x.shape[0] < min(x.shape[1], y.shape[1]):
+        xx = x_centered @ x_centered.T
+        yy = y_centered @ y_centered.T
+        numerator = (xx * yy).sum()
+    else:
+        cross = x_centered.T @ y_centered
+        xx = x_centered.T @ x_centered
+        yy = y_centered.T @ y_centered
+        numerator = cross.square().sum()
     denominator = torch.linalg.matrix_norm(xx) * torch.linalg.matrix_norm(yy)
     if not torch.isfinite(denominator) or denominator <= 0:
         raise ValueError("CKA denominator must be finite and positive")
-    return cross.square().sum() / (denominator + 1e-12)
+    return numerator / (denominator + 1e-12)

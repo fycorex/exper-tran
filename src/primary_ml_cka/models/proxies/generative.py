@@ -61,10 +61,9 @@ class GenerativeProxy(BaseProxy):
         )
         if target_mask is None:
             raise AssertionError("Target answer mask was not constructed")
-        target_nll = -logits[:, target_index].mean()
         return ProxyLossOutput(
             loss=output.total,
-            target_nll=target_nll.detach(),
+            target_nll=output.cross_entropy,
             target_probability=output.target_probability.detach(),
             class_logits=output.logits,
             classification_ce=output.cross_entropy.detach(),

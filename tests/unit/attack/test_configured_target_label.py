@@ -1,6 +1,7 @@
 from types import MethodType, SimpleNamespace
 
 import torch
+import torch.nn.functional as functional
 
 from primary_ml_cka.models.proxies.generative import GenerativeProxy
 
@@ -29,7 +30,12 @@ def test_generative_proxy_selects_configured_target_answer() -> None:
     images = torch.rand(2, 3, 16, 16)
     output = proxy.target_loss(images, human_target_label=3, prompt="prompt")
 
-    assert output.target_nll.item() == -3.0
+    expected_logits = torch.arange(1, 11, dtype=torch.float32).repeat(2, 1)
+    expected_targets = torch.full((2,), 2, dtype=torch.long)
+    assert torch.allclose(
+        output.target_nll,
+        functional.cross_entropy(expected_logits, expected_targets),
+    )
     assert output.answer_token_ids == (103,)
     assert output.label_positions == (3,)
     assert output.rendered_prompt == "rendered:3"

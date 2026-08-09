@@ -6,6 +6,19 @@ black-box label generator and is queried only for clean screening and frozen-PNG
 evaluation. The six fixed model pairs and all attack constants live under
 `configs/`.
 
+The minimized attack objective is
+
+```text
+L = NLL_proxy(target class | adversarial image)
+    + lambda * [CKA(z_adv, z_source_class) - CKA(z_adv, z_target_class)]
+```
+
+Every `z` is computed only by the proxy model's frozen image encoder. Thus a
+positive CKA weight decreases similarity to source-class samples and increases
+similarity to target-class samples. In this formula, “target” means the target
+class; the held-out target MLLM never participates in optimization and is used
+only to measure transfer after the adversarial images have been serialized.
+
 The attack source and target classes are not embedded in the implementation.
 Set `source_human_label` and `target_human_label` in
 `configs/data/imagenet_vehicle10.yaml`; every data, loss, and evaluation stage

@@ -11,6 +11,7 @@ FORBIDDEN = {
     ),
     "primary_ml_cka.attack": (
         "primary_ml_cka.models.targets",
+        "primary_ml_cka.models.analysis",
         "primary_ml_cka.models.backends.target_transformers_generation",
         "primary_ml_cka.models.backends.vllm_generation",
     ),

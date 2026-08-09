@@ -1,10 +1,10 @@
-# Proxy Classification + Proxy CKA Transfer
+# Per-image Proxy CKA + Proxy-Selector Transfer
 
-Reproducible targeted image-attack experiment using one proxy-only classification
-objective and proxy-image-representation linear CKA. The target is treated as a
-black-box label generator and is queried only for clean screening and frozen-PNG
-evaluation. The six fixed model pairs and all attack constants live under
-`configs/`.
+Reproducible targeted image-attack experiment using a proxy-only classification
+objective and per-image token-level proxy CKA. Attack generation is proxy-only;
+target representations are used solely by a separate post-attack global/local
+CKA analysis that tests whether representation similarity predicts conditional
+TASR. The six fixed model pairs and all attack constants live under `configs/`.
 
 The attack source and target classes are not embedded in the implementation.
 Set `source_human_label` and `target_human_label` in

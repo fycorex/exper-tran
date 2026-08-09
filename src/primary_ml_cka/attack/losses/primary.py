@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import torch
 
-from primary_ml_cka.attack.cka.linear import linear_cka
+from primary_ml_cka.attack.cka.linear import paired_token_cka, token_cka_against_bank
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,6 +20,9 @@ def primary_loss(
     z_adv: torch.Tensor | None = None,
     z_clean: torch.Tensor | None = None,
     z_reference: torch.Tensor | None = None,
+    adv_mask: torch.Tensor | None = None,
+    clean_mask: torch.Tensor | None = None,
+    reference_mask: torch.Tensor | None = None,
     target_cka_weight: float = 1.0,
 ) -> PrimaryLoss:
     if target_cka_weight <= 0:
@@ -31,8 +34,12 @@ def primary_loss(
         raise ValueError(
             "Positive lambda requires adversarial, clean, and proxy-reference embeddings"
         )
-    cka_source = linear_cka(z_adv.float(), z_clean.float())
-    cka_reference = linear_cka(z_adv.float(), z_reference.float())
+    cka_source = paired_token_cka(
+        z_adv.float(), z_clean.float(), adv_mask, clean_mask
+    ).mean()
+    cka_reference = token_cka_against_bank(
+        z_adv.float(), z_reference.float(), adv_mask, reference_mask
+    ).mean()
     loss_cka = cka_source - target_cka_weight * cka_reference
     return PrimaryLoss(
         loss_ml + lambda_cka * loss_cka,

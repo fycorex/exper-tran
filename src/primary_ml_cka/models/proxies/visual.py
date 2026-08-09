@@ -1,6 +1,7 @@
 from functools import partial
 
 import torch
+from torch.utils.checkpoint import checkpoint
 
 from primary_ml_cka.data.preprocessing import resize_crop_normalize
 from primary_ml_cka.domain.identifiers import MODEL_REVISIONS
@@ -40,6 +41,18 @@ def qwen_visual_inputs(images: torch.Tensor) -> dict[str, torch.Tensor]:
 
 def internvl_visual_inputs(images: torch.Tensor) -> dict[str, torch.Tensor]:
     return {"pixel_values": INTERNVL_PREPROCESS(images).to(torch.bfloat16)}
+
+
+def gemma_visual_inputs(processor: object, images: torch.Tensor) -> dict[str, torch.Tensor]:
+    processed = processor.image_processor(
+        images=images,
+        do_rescale=False,
+        return_tensors="pt",
+    )
+    return {
+        "pixel_values": processed["pixel_values"].to(images.device, torch.bfloat16),
+        "image_position_ids": processed["image_position_ids"].to(images.device),
+    }
 
 
 def qwen_proxy_embeddings(model_id: str, visual: torch.nn.Module, images: torch.Tensor):
@@ -92,5 +105,42 @@ def internvl_proxy_embeddings(model_id: str, vision_tower: torch.nn.Module, imag
         "validated_by_forward",
         tuple(tokens.shape),
         "non-CLS tokens from one valid 448x448 tile per image",
+    )
+    return ImageEmbeddingOutput(embeddings, tokens, mask, tap)
+
+
+def gemma_proxy_embeddings(
+    model_id: str, model: torch.nn.Module, processor: object, images: torch.Tensor
+):
+    def extract(image_chunk: torch.Tensor) -> torch.Tensor:
+        inputs = gemma_visual_inputs(processor, image_chunk)
+        output = model.get_image_features(**inputs, return_dict=True)
+        tokens_flat = output.pooler_output
+        if tokens_flat.ndim != 2 or tokens_flat.shape[0] % image_chunk.shape[0]:
+            raise RuntimeError(
+                f"Expected evenly packed Gemma visual tokens [B*T,D], got {tokens_flat.shape}"
+            )
+        return tokens_flat.reshape(image_chunk.shape[0], -1, tokens_flat.shape[-1])
+
+    token_chunks = []
+    for image_chunk in images.split(1):
+        if torch.is_grad_enabled() and images.requires_grad:
+            token_chunks.append(checkpoint(extract, image_chunk, use_reentrant=False))
+        else:
+            token_chunks.append(extract(image_chunk))
+    tokens = torch.cat(token_chunks)
+    mask = torch.ones(tokens.shape[:2], dtype=torch.bool, device=tokens.device)
+    embeddings = masked_mean_l2(tokens, mask)
+    tap = TapContract(
+        model_id,
+        MODEL_REVISIONS[model_id],
+        "model.embed_vision",
+        "pooled Gemma visual soft tokens passed to the language model",
+        "masked mean over non-padding visual soft tokens",
+        "per-image L2; FP32 before CKA",
+        str(tokens.dtype).removeprefix("torch."),
+        "validated_by_forward",
+        tuple(tokens.shape),
+        "derived from non-padding image_position_ids and pooling kernel",
     )
     return ImageEmbeddingOutput(embeddings, tokens, mask, tap)

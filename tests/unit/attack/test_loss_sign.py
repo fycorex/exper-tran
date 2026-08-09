@@ -25,9 +25,9 @@ def test_gradient_descent_reduces_cka_loss() -> None:
 
 
 def test_target_cka_weight_changes_internal_balance() -> None:
-    source = torch.randn(8, 16)
-    target = torch.randn(8, 16)
-    adversarial = torch.randn(8, 16)
+    source = torch.randn(8, 12, 16)
+    target = torch.randn(8, 12, 16)
+    adversarial = torch.randn(8, 12, 16)
     loss = primary_loss(
         torch.tensor(0.0),
         1.0,
@@ -36,5 +36,9 @@ def test_target_cka_weight_changes_internal_balance() -> None:
         target,
         target_cka_weight=5.0,
     )
-    expected = linear_cka(adversarial, source) - 5.0 * linear_cka(adversarial, target)
+    from primary_ml_cka.attack.cka.linear import paired_token_cka, token_cka_against_bank
+
+    expected = paired_token_cka(adversarial, source).mean() - 5.0 * token_cka_against_bank(
+        adversarial, target
+    ).mean()
     assert torch.allclose(loss.cka, expected)

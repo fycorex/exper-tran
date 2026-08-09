@@ -8,8 +8,8 @@ from primary_ml_cka.models.proxies.generative import GenerativeProxy
 def test_generative_proxy_selects_configured_target_answer() -> None:
     proxy = GenerativeProxy.__new__(GenerativeProxy)
     proxy.class_margin = 2.0
-    proxy.rank_weight = 1.0
-    proxy.suppression_weight = 1.0
+    proxy.margin_weight = 1.0
+    proxy.margin_temperature = 0.5
 
     def fake_answer_score(
         self: GenerativeProxy,

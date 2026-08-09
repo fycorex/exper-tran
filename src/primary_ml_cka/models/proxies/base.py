@@ -15,3 +15,8 @@ class BaseProxy(ABC):
     @abstractmethod
     def image_embeddings(self, images: Tensor) -> ImageEmbeddingOutput[Tensor]:
         raise NotImplementedError
+
+    @abstractmethod
+    def free_generate_labels(self, images: Tensor, prompt: str) -> tuple[int | None, ...]:
+        """Return strict parsed labels from an unconstrained proxy prediction."""
+        raise NotImplementedError

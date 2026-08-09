@@ -2,42 +2,37 @@
 
 ## Threat Model
 
-The attack is proxy-only. During optimization, the process loads one proxy and
-has no target model, target encoder, target logits, target embeddings, or target
-gradients. The target is a black-box label generator used only for:
+Attack generation is proxy-only. Its process loads one proxy and has no target
+model, target encoder, target logits, target embeddings, or target gradients.
+The target label generator is used for canonical clean screening and frozen-PNG
+evaluation. Only decoded text crosses that boundary.
 
-1. clean screening before attack generation; and
-2. evaluation after adversarial PNGs are frozen.
-
-`models/targets/` exposes decoded text through `TargetGenerator`. Local
-Transformers generation is an experimental stand-in for a remote closed API;
-`BlackBoxTargetAPI` supports an actual external service with the same narrow
-interface.
+After attacks and target outputs are frozen, `models/analysis/` may load target
+visual encoders sequentially to compute model-similarity CKA. No module under
+`attack/` imports analysis or target code. On the 16GB A4000, proxy and target
+models are never resident at the same time.
 
 ## Dependency Boundaries
-
-The package follows:
 
 ```text
 domain → config/data/prompts/infrastructure → models → attack → experiment
        → evaluation/reporting
 ```
 
-Attack modules cannot import target generation, vLLM, or target-model modules.
-`tests/integration/test_import_boundaries.py` enforces this at source level.
+`tests/integration/test_import_boundaries.py` enforces that attack modules do
+not import target generation, target analysis, or target backends.
 
 ## Attack Data Flow
 
-For each batch, the proxy produces:
+For each logical batch, the proxy produces per-image token tensors:
 
 ```text
-Z_clean     = proxy image embeddings of clean source images
-Z_adv       = proxy image embeddings of current adversarial images
-Z_reference = proxy image embeddings of configured target-class references
+H_clean     = proxy visual tokens of canonical clean images
+H_adv       = proxy visual tokens of current adversarial images
+H_reference = proxy visual-token bank of target-class references
 ```
 
-The proxy also produces ten class logits. CLIP/SigLIP use their native text
-encoder and logit scale. Generative proxies teacher-force exact answers
-`"1"`–`"10"`; sequence log-probabilities become class logits.
-
-Only frozen PNG paths cross from attack generation into target evaluation.
+CLIP/SigLIP use native text encoders and logit scales. Generative proxies
+teacher-force exact answers `"1"`–`"10"`; mean answer-token log probabilities
+become closed-set logits. Only frozen clean/adversarial PNG paths cross into
+target evaluation.

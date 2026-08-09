@@ -58,6 +58,12 @@ def inspect_proxy_taps(
                 raise RuntimeError("Proxy classification loss is non-finite")
             assert_input_gradient(proxy_loss.loss, loss_images)
             assert_parameter_gradients_none(module)
+            with torch.no_grad():
+                free_labels = adapter.free_generate_labels(
+                    loss_images.detach(), CLASSIFICATION_PROMPT
+                )
+            if len(free_labels) != 1:
+                raise RuntimeError("Proxy free generation did not return one label per image")
             record = {
                 **asdict(output.tap),
                 "status": "validated",
@@ -66,8 +72,10 @@ def inspect_proxy_taps(
                 "target_probability": float(proxy_loss.target_probability),
                 "target_human_label": data_config.target_human_label,
                 "max_other_probability": float(proxy_loss.max_other_probability),
+                "token_level_attack_cka": True,
                 "answer_token_ids": list(proxy_loss.answer_token_ids),
                 "answer_label_positions": list(proxy_loss.label_positions),
+                "free_generation_probe_label": free_labels[0],
             }
             write_json(output_dir / "taps" / f"{safe_name}.json", record)
             results.append(f"validated {model_id} {tuple(output.tokens.shape)}")

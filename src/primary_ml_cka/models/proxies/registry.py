@@ -15,6 +15,8 @@ from primary_ml_cka.models.proxies.contrastive import ContrastiveProxy
 from primary_ml_cka.models.proxies.generative import GenerativeProxy
 from primary_ml_cka.models.proxies.siglip2 import SIGLIP2_PREPROCESS
 from primary_ml_cka.models.proxies.visual import (
+    gemma_proxy_embeddings,
+    gemma_visual_inputs,
     internvl_proxy_embeddings,
     internvl_visual_inputs,
     qwen_proxy_embeddings,
@@ -38,9 +40,10 @@ def load_proxy(
             tokenizer,
             CLIP_PREPROCESS,
             model_id,
+            drop_cls_token=True,
             class_margin=attack_config.class_margin,
-            rank_weight=attack_config.rank_weight,
-            suppression_weight=attack_config.other_suppression_weight,
+            margin_weight=attack_config.margin_weight,
+            margin_temperature=attack_config.margin_temperature,
         )
     if model_id == "google/siglip2-so400m-patch14-384":
         model = freeze_module(AutoModel.from_pretrained(snapshot, local_files_only=True).to(device))
@@ -50,16 +53,13 @@ def load_proxy(
             tokenizer,
             SIGLIP2_PREPROCESS,
             model_id,
+            drop_cls_token=False,
             class_margin=attack_config.class_margin,
-            rank_weight=attack_config.rank_weight,
-            suppression_weight=attack_config.other_suppression_weight,
-        )
-    if model_id.startswith("google/gemma"):
-        raise RuntimeError(
-            "BLOCKED: Gemma proxy visual tap and differentiable native preprocessing "
-            "have not passed validation"
+            margin_weight=attack_config.margin_weight,
+            margin_temperature=attack_config.margin_temperature,
         )
     model = load_generative_proxy(snapshot, device)
+    processor = load_processor(snapshot)
     if model_id.startswith("Qwen/"):
         visual_inputs = qwen_visual_inputs
 
@@ -72,14 +72,23 @@ def load_proxy(
         def image_embedding_fn(images: torch.Tensor):
             return internvl_proxy_embeddings(model_id, model.model.vision_tower, images)
 
+    elif model_id.startswith("google/gemma"):
+
+        def visual_inputs(images: torch.Tensor):
+            return gemma_visual_inputs(processor, images)
+
+        def image_embedding_fn(images: torch.Tensor):
+            return gemma_proxy_embeddings(model_id, model, processor, images)
+
     else:
         raise ValueError(f"Unsupported generative proxy: {model_id}")
     return GenerativeProxy(
         model,
-        load_processor(snapshot),
+        processor,
         visual_inputs,
         image_embedding_fn,
         class_margin=attack_config.class_margin,
-        rank_weight=attack_config.rank_weight,
-        suppression_weight=attack_config.other_suppression_weight,
+        margin_weight=attack_config.margin_weight,
+        margin_temperature=attack_config.margin_temperature,
+        microbatch_size=1 if model_id.startswith("google/gemma") else None,
     )

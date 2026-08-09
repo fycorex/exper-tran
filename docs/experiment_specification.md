@@ -2,68 +2,68 @@
 
 ## Proxy Objective
 
-The attack canvas is RGB `224×224` in `[0,1]`. Source and target human labels
-are required settings in `configs/data/imagenet_vehicle10.yaml`; the target
-class index is always derived with `human_label_to_index`. For target index
-\(t\), ten proxy class logits \(\ell\), and probabilities \(p\):
+The attack canvas is RGB `224×224` in `[0,1]`. Source and target labels come
+from `configs/data/imagenet_vehicle10.yaml`. For target index \(t\), ten proxy
+class logits \(\ell\), margin \(m=2\), weight \(\alpha=1\), and temperature
+\(\tau=0.5\):
 
 \[
-L_{cls}=CE(\ell,t)
-+\alpha\,softplus(\max_{j\ne t}\ell_j-\ell_t+m)
-+\beta\,\frac{1}{9}\sum_{j\ne t}p_j.
+L_{cls}=CE(\ell,t)+\alpha\,softplus\!\left(
+\frac{m-(\ell_t-\max_{j\ne t}\ell_j)}{\tau}\right).
 \]
 
-Defaults are margin \(m=2\), \(\alpha=1\), and \(\beta=1\). This pushes the
-target class above every alternative while explicitly suppressing the mean
-probability of the other nine classes.
+The former mean-other-probability term was removed because it equals
+\((1-p_t)/9\) and duplicates the cross-entropy signal. Generative proxy logits
+are mean answer-token log probabilities, so labels with different token lengths
+are comparable. Their ten-way softmax is a closed-set normalized proxy
+probability, not a free-generation probability.
 
-Candidate discovery, clean screening, reference selection, proxy loss, and
-TASR/ASR evaluation all consume the same data configuration. Changing a target
-there does not require a source-code change.
+## Data and Canonical Input
 
-## Data Allocation
+The configured allocation uses 48 target-class training references, 50 source
+validation candidates, up to 32 main images, and the next up to 16 disjoint
+confirmation images. A balanced calibration bank contains five validation
+images from each of the ten classes.
 
-All counts are required in `configs/data/imagenet_vehicle10.yaml`; the Python
-schema provides no duplicate defaults. The configured allocation is:
+`data prepare` materializes one deterministic bicubic-stretched RGB 224×224 PNG
+per candidate, reference, and calibration image. Clean screening, proxy attack,
+target clean evaluation, and target adversarial evaluation all start from these
+same canonical PNGs. Model-native resizing and normalization happen only after
+this shared input boundary.
 
-- 48 target-class ImageNet training images as proxy CKA references;
-- 50 source-class ImageNet validation candidates for clean screening;
-- up to 32 clean-valid candidates for the main attack and evaluation;
-- the next up to 16 clean-valid candidates for disjoint confirmation.
+## Per-image Proxy Attack CKA
 
-Main and confirmation counts are truncated to complete attack batches. This
-experiment does not train model parameters and does not use the unlabeled
-ImageNet test split.
-
-Reference allocation is also disjoint: main batches consume references 0–31,
-while confirmation batches consume references 32–47.
-
-## Proxy CKA
-
-CKA is computed across batch rows using proxy image representations:
+Attack CKA is proxy-only and centers over real visual token positions, never
+over batch rows. For adversarial tokens \(H_i^{adv}\), canonical clean tokens
+\(H_i^{clean}\), and \(K\) target-reference token sets:
 
 \[
-L_{CKA}=CKA(Z_{adv},Z_{clean})-CKA(Z_{adv},Z_{reference}).
+L_{CKA}=\frac1B\sum_i\left[CKA(H_i^{adv},H_i^{clean})-
+\frac1K\sum_j CKA(H_i^{adv},H_j^{target})\right].
 \]
 
-The minimized objective is:
+The minimized total objective is \(L_{cls}+\lambda L_{CKA}\). CLIP and SigLIP2
+expose final-layer spatial patch tokens; Qwen, InternVL, and Gemma expose their
+documented visual token taps. Global pooled embeddings are not used in attack
+CKA.
 
-\[
-L_{total}=L_{cls}+\lambda L_{CKA}.
-\]
+## Strong Proxy Gate and Target Evaluation
 
-The CKA kernel accepts any equal batch size of at least two. The checked-in
-experiment configuration uses batch size 8, but it is a runtime setting rather
-than a mathematical hardcode.
+The target receives only frozen PNGs and decoded-text prompts. Every image in a
+logical batch must satisfy all four proxy conditions: target top-1, logit margin
+at least 2, closed-set target probability at least 0.9, and strict proxy free
+generation equal to the target label. A batch that is not 8/8 is recorded as
+`proxy_target_not_reached` and is never sent to transfer evaluation.
 
-## Target Evaluation
+Reports retain proxy hit counts, eligible batches/images, and clean-conditioned
+TASR so proxy attack failure cannot be mistaken for transfer failure.
 
-The target receives the fixed prompt and returns decoded text. The evaluator
-keeps raw output, parses only an exact integer on the first non-empty line, and
-reports clean-conditioned TASR/ASR with hit counts and denominators. Target
-outputs never influence lambda selection.
+## Post-attack Model Similarity
 
-Target evaluation is gated on the frozen adversarial PNGs. Every image must
-have the configured target class strictly above each of the other nine proxy
-classes. Rows that do not reach `batch_size / batch_size` are recorded as
-`proxy_target_not_reached` and are never sent to the target.
+`analysis model-similarity` runs only after adversarial PNGs and target outputs
+are frozen. It loads one model at a time, extracts representations for identical
+balanced calibration images, and computes global CKA for each pair. For every
+attacked clean image, its eight nearest calibration neighbors in proxy space
+define local CKA. Outputs include pair/lambda TASR, per-image target hits, and
+descriptive global/local correlations. Target representations live in a
+separate post-attack module and cannot enter the attack graph.

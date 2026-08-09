@@ -1,7 +1,11 @@
 import pytest
 import torch
 
-from primary_ml_cka.attack.cka.linear import linear_cka
+from primary_ml_cka.attack.cka.linear import (
+    linear_cka,
+    paired_token_cka,
+    token_cka_against_bank,
+)
 
 
 def test_self_cka_is_one_and_finite() -> None:
@@ -22,3 +26,18 @@ def test_batch_size_is_generic_but_must_match() -> None:
     assert torch.isfinite(value)
     with pytest.raises(ValueError, match="same batch size"):
         linear_cka(torch.randn(3, 4), torch.randn(4, 4))
+
+
+def test_token_cka_returns_one_value_per_image_not_one_per_batch() -> None:
+    images = torch.randn(3, 6, 4)
+    values = paired_token_cka(images, images)
+    assert values.shape == (3,)
+    torch.testing.assert_close(values, torch.ones_like(values), atol=1e-5, rtol=1e-5)
+
+
+def test_token_cka_reference_bank_averages_independent_references() -> None:
+    images = torch.randn(2, 6, 4)
+    references = torch.randn(3, 6, 7)
+    values = token_cka_against_bank(images, references)
+    assert values.shape == (2, 3)
+    assert torch.isfinite(values).all()

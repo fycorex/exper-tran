@@ -17,6 +17,10 @@ def validate_attack_config(config: AttackConfig) -> None:
         raise ValueError(f"Lambda grid must be exactly {LAMBDAS}")
     if config.epsilon <= 0 or config.step_size <= 0:
         raise ValueError("epsilon and step_size must be positive")
+    if config.class_margin <= 0 or config.margin_temperature <= 0:
+        raise ValueError("class_margin and margin_temperature must be positive")
+    if not 0 < config.proxy_probability_threshold < 1:
+        raise ValueError("proxy_probability_threshold must be in (0,1)")
 
 
 def validate_data_config(config: DataConfig) -> None:
@@ -29,6 +33,7 @@ def validate_data_config(config: DataConfig) -> None:
         config.target_reference_count,
         config.main_max_count,
         config.confirmation_max_count,
+        config.calibration_per_class,
     )
     if any(count < 1 for count in counts):
         raise ValueError("All configured image counts must be positive")

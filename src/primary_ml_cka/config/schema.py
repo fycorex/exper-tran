@@ -24,8 +24,10 @@ class AttackConfig:
     main_seed: int = 42
     confirmation_seed: int = 43
     class_margin: float = 2.0
-    rank_weight: float = 1.0
-    other_suppression_weight: float = 1.0
+    margin_weight: float = 1.0
+    margin_temperature: float = 0.5
+    proxy_probability_threshold: float = 0.9
+    require_proxy_free_generation: bool = True
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,6 +38,7 @@ class DataConfig:
     target_reference_count: int
     main_max_count: int
     confirmation_max_count: int
+    calibration_per_class: int = 5
 
 
 @dataclass(frozen=True, slots=True)

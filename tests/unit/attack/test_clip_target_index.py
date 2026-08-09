@@ -19,7 +19,7 @@ def test_contrastive_ce_uses_requested_target_index() -> None:
     assert probability > 0.99
 
 
-def test_ranking_and_suppression_enforce_target_dominance() -> None:
+def test_ce_and_margin_penalty_enforce_target_dominance() -> None:
     weak = torch.zeros(2, 10)
     strong = weak.clone()
     target_index = 4
@@ -28,12 +28,12 @@ def test_ranking_and_suppression_enforce_target_dominance() -> None:
     strong_loss = proxy_classification_loss(strong, target_index=target_index)
     assert strong_loss.total < weak_loss.total
     assert strong_loss.target_probability > strong_loss.max_other_probability
-    assert strong_loss.other_suppression < weak_loss.other_suppression
+    assert strong_loss.margin_penalty < weak_loss.margin_penalty
 
 
 def test_proxy_target_gate_requires_every_image_to_reach_target() -> None:
     logits = torch.zeros(3, 10)
-    logits[:, 2] = torch.tensor([3.0, 2.0, 0.5])
+    logits[:, 2] = torch.tensor([7.0, 6.0, 0.5])
     logits[2, 4] = 0.6
     failed = proxy_target_diagnostics(logits, target_index=2)
     assert failed.hit_count == 2
@@ -41,7 +41,19 @@ def test_proxy_target_gate_requires_every_image_to_reach_target() -> None:
     assert not failed.all_hit
     assert failed.minimum_logit_margin < 0
 
-    logits[2, 2] = 1.0
+    logits[2, 2] = 7.0
     passed = proxy_target_diagnostics(logits, target_index=2)
     assert passed.all_hit
     assert passed.hit_count == passed.denominator == 3
+
+
+def test_proxy_target_gate_checks_margin_probability_and_free_generation() -> None:
+    logits = torch.zeros(2, 10)
+    logits[:, 4] = 7.0
+    assert proxy_target_diagnostics(logits, target_index=4).all_hit
+    assert not proxy_target_diagnostics(
+        logits, target_index=4, free_generated_labels=(5, 3)
+    ).all_hit
+    low_probability = torch.zeros(1, 10)
+    low_probability[:, 4] = 2.1
+    assert not proxy_target_diagnostics(low_probability, target_index=4).all_hit

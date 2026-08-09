@@ -51,6 +51,8 @@ def run(context: CommandContext) -> str:
             for row in rows:
                 proxy_gate_passed = row.get("proxy_target_all_hit") == "True" and row.get(
                     "proxy_target_hit_count"
+                ) == row.get("proxy_target_hit_denominator") and row.get(
+                    "proxy_free_target_hit_count"
                 ) == row.get("proxy_target_hit_denominator")
                 if (
                     row["pair_id"] != pair_id

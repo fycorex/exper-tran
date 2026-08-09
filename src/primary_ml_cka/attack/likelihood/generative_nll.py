@@ -36,3 +36,20 @@ def answer_sequence_log_probability(logits: torch.Tensor, labels: torch.Tensor) 
     log_probabilities = shifted_logits.log_softmax(dim=-1)
     gathered = log_probabilities.gather(-1, shifted_labels.clamp_min(0).unsqueeze(-1)).squeeze(-1)
     return (gathered * scored).sum(dim=1)
+
+
+def mean_answer_token_log_probability(
+    logits: torch.Tensor, labels: torch.Tensor
+) -> torch.Tensor:
+    """Length-normalized teacher-forced answer score for closed-set ranking."""
+    shifted_logits = logits[:, :-1].float()
+    shifted_labels = labels[:, 1:]
+    scored = shifted_labels.ne(-100)
+    counts = scored.sum(dim=1)
+    if torch.any(counts == 0):
+        raise ValueError("Every item must score at least one answer token")
+    log_probabilities = shifted_logits.log_softmax(dim=-1)
+    gathered = log_probabilities.gather(
+        -1, shifted_labels.clamp_min(0).unsqueeze(-1)
+    ).squeeze(-1)
+    return (gathered * scored).sum(dim=1) / counts

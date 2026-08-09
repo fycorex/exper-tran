@@ -32,7 +32,7 @@ def _images(root: Path, split: str, human_label: int) -> tuple[ImageRecord, ...]
 
 def discover_vehicle_pools(
     root: Path, config: DataConfig
-) -> tuple[tuple[ImageRecord, ...], tuple[ImageRecord, ...]]:
+) -> tuple[tuple[ImageRecord, ...], tuple[ImageRecord, ...], tuple[ImageRecord, ...]]:
     candidates = _images(root, "val", config.source_human_label)
     references = _images(root, "train", config.target_human_label)
     if len(candidates) < config.candidate_count:
@@ -45,7 +45,15 @@ def discover_vehicle_pools(
             f"Expected at least {config.target_reference_count} training images for "
             f"target human label {config.target_human_label}, found {len(references)}"
         )
+    calibration = tuple(
+        record
+        for label in range(1, 11)
+        for record in _images(root, "val", label)[: config.calibration_per_class]
+    )
+    if len(calibration) != 10 * config.calibration_per_class:
+        raise ValueError("Calibration bank is incomplete")
     return (
         candidates[: config.candidate_count],
         references[: config.target_reference_count],
+        calibration,
     )

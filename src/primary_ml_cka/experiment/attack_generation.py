@@ -46,11 +46,12 @@ class AttackRunResult:
     proxy_target_hit_denominator: int
     proxy_target_all_hit: bool
     proxy_min_target_logit_margin: float
+    proxy_min_target_probability: float
+    proxy_free_target_hit_count: int
     proxy_max_other_probability: float
     proxy_target_probability_margin: float
     proxy_classification_ce: float
-    proxy_rank_loss: float
-    proxy_other_suppression_loss: float
+    proxy_margin_loss: float
     loss_cka: float
     loss_total: float
     cka_clean_reference: float
@@ -139,7 +140,7 @@ def attack_one_batch(
     device = torch.device("cuda")
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; CPU attack execution is forbidden")
-    imagenet_root = project_root / "data" / "imagenet_vehicle_official"
+    canonical_root = output_dir / "canonical_images"
     resolved_reference_batch = (
         source_batch_index if reference_batch_index is None else reference_batch_index
     )
@@ -148,14 +149,18 @@ def attack_one_batch(
         resolved_reference_batch,
         batch_size,
     )
-    clean = _cuda_images(imagenet_root, source_records, attack_config.canvas_size)
-    reference_images = _cuda_images(imagenet_root, references, attack_config.canvas_size)
+    clean = _cuda_images(canonical_root, source_records, attack_config.canvas_size)
+    reference_images = _cuda_images(canonical_root, references, attack_config.canvas_size)
     timer = Timer()
     reset_peak_memory()
     proxy = load_proxy(pair.proxy_model, project_root / ".hf-cache", device, attack_config)
     with torch.no_grad():
-        z_clean = proxy.image_embeddings(clean).embeddings.detach().float()
-        z_reference = proxy.image_embeddings(reference_images).embeddings.detach().float()
+        clean_representation = proxy.image_embeddings(clean)
+        reference_representation = proxy.image_embeddings(reference_images)
+        z_clean = clean_representation.tokens.detach().float()
+        clean_mask = clean_representation.mask.detach()
+        z_reference = reference_representation.tokens.detach().float()
+        reference_mask = reference_representation.mask.detach()
     initial = shared_random_start(clean, attack_config.epsilon, seed)
     state = MomentumPGDState(initial, torch.zeros_like(initial))
     initial_total = float("nan")
@@ -171,13 +176,16 @@ def attack_one_batch(
         if lambda_cka == 0:
             losses = primary_loss(proxy_output.loss, 0)
         else:
-            z_adv = proxy.image_embeddings(state.adversarial).embeddings
+            adv_representation = proxy.image_embeddings(state.adversarial)
             losses = primary_loss(
                 proxy_output.loss,
                 lambda_cka,
-                z_adv,
+                adv_representation.tokens,
                 z_clean,
                 z_reference,
+                adv_mask=adv_representation.mask,
+                clean_mask=clean_mask,
+                reference_mask=reference_mask,
                 target_cka_weight=cka_target_weight,
             )
         if not torch.isfinite(losses.total):
@@ -206,17 +214,25 @@ def attack_one_batch(
             data_config.target_human_label,
             CLASSIFICATION_PROMPT,
         )
-        z_adv_final = proxy.image_embeddings(adversarial).embeddings.float()
+        final_representation = proxy.image_embeddings(adversarial)
+        z_adv_final = final_representation.tokens.float()
         final_losses = primary_loss(
             final_proxy.loss,
             lambda_cka,
             z_adv_final if lambda_cka > 0 else None,
             z_clean if lambda_cka > 0 else None,
             z_reference if lambda_cka > 0 else None,
+            adv_mask=final_representation.mask if lambda_cka > 0 else None,
+            clean_mask=clean_mask if lambda_cka > 0 else None,
+            reference_mask=reference_mask if lambda_cka > 0 else None,
             target_cka_weight=cka_target_weight,
         )
     assert_parameter_gradients_none(proxy.model)
-    representation = representation_metrics(z_clean, z_adv_final, z_reference)
+    representation = representation_metrics(
+        clean_representation.embeddings.float(),
+        final_representation.embeddings.float(),
+        reference_representation.embeddings.float(),
+    )
     artifact_dir = output_dir / "attacks" / pair.pair_id / phase / f"batch_{source_batch_index:02d}"
     if objective_tag is not None:
         artifact_dir /= objective_tag
@@ -235,9 +251,17 @@ def attack_one_batch(
         )
     if png_proxy.class_logits is None or not torch.isfinite(png_proxy.class_logits).all():
         raise RuntimeError("Frozen PNG proxy class logits are missing or non-finite")
+    free_labels = (
+        proxy.free_generate_labels(adversarial_png, CLASSIFICATION_PROMPT)
+        if attack_config.require_proxy_free_generation
+        else None
+    )
     proxy_diagnostics = proxy_target_diagnostics(
         png_proxy.class_logits,
         target_index=human_label_to_index(data_config.target_human_label),
+        required_margin=attack_config.class_margin,
+        required_probability=attack_config.proxy_probability_threshold,
+        free_generated_labels=free_labels,
     )
     memory = peak_memory()
     zero = 0.0
@@ -257,13 +281,18 @@ def attack_one_batch(
         proxy_target_hit_denominator=proxy_diagnostics.denominator,
         proxy_target_all_hit=proxy_diagnostics.all_hit,
         proxy_min_target_logit_margin=proxy_diagnostics.minimum_logit_margin,
+        proxy_min_target_probability=proxy_diagnostics.minimum_target_probability,
+        proxy_free_target_hit_count=(
+            sum(label == data_config.target_human_label for label in free_labels)
+            if free_labels is not None
+            else batch_size
+        ),
         proxy_max_other_probability=float(png_proxy.max_other_probability),
         proxy_target_probability_margin=float(
             png_proxy.target_probability - png_proxy.max_other_probability
         ),
         proxy_classification_ce=float(png_proxy.classification_ce),
-        proxy_rank_loss=float(png_proxy.rank_loss),
-        proxy_other_suppression_loss=float(png_proxy.other_suppression_loss),
+        proxy_margin_loss=float(png_proxy.margin_loss),
         loss_cka=float(final_losses.cka),
         loss_total=float(final_losses.total),
         cka_clean_reference=representation.cka_clean_reference,
@@ -312,8 +341,10 @@ def result_row(
         proxy_tap_path = "model.visual.merger.norm"
     elif pair.proxy_model.startswith("OpenGVLab/InternVL"):
         proxy_tap_path = "model.vision_tower.layernorm"
+    elif pair.proxy_model.startswith("google/gemma"):
+        proxy_tap_path = "model.embed_vision"
     else:
-        proxy_tap_path = "get_image_features"
+        proxy_tap_path = "vision_model.last_hidden_state"
     values = {
         "pair_id": pair.pair_id,
         "exp_type": pair.exp_type.value,
@@ -346,11 +377,12 @@ def result_row(
         "proxy_target_hit_denominator": result.proxy_target_hit_denominator,
         "proxy_target_all_hit": result.proxy_target_all_hit,
         "proxy_min_target_logit_margin": result.proxy_min_target_logit_margin,
+        "proxy_min_target_probability": result.proxy_min_target_probability,
+        "proxy_free_target_hit_count": result.proxy_free_target_hit_count,
         "proxy_max_other_probability": result.proxy_max_other_probability,
         "proxy_target_probability_margin": result.proxy_target_probability_margin,
         "proxy_classification_ce": result.proxy_classification_ce,
-        "proxy_rank_loss": result.proxy_rank_loss,
-        "proxy_other_suppression_loss": result.proxy_other_suppression_loss,
+        "proxy_margin_loss": result.proxy_margin_loss,
         "loss_cka": result.loss_cka,
         "loss_total": result.loss_total,
         "cka_clean_reference": result.cka_clean_reference,

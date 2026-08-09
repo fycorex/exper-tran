@@ -1,8 +1,6 @@
 import gc
 import json
-import os
 from dataclasses import asdict
-from pathlib import Path
 
 import torch
 
@@ -39,9 +37,7 @@ def run(context: CommandContext) -> str:
         raise RuntimeError("Candidate manifest missing; run `data prepare` first")
     candidates = read_manifest(candidates_path)
     attack_config = resolve_attack_config(context)
-    imagenet_root = Path(
-        os.environ.get("IMAGENET_ROOT", context.project_root / "data/imagenet_vehicle_official")
-    )
+    canonical_root = context.output_dir / "canonical_images"
     target_ids = tuple(
         dict.fromkeys(
             pair.target_model
@@ -60,7 +56,7 @@ def run(context: CommandContext) -> str:
             generator = TransformersTargetGenerator(model, processor)
             outputs = tuple(
                 generator.generate_label(
-                    imagenet_root / record.relative_path, CLASSIFICATION_PROMPT
+                    canonical_root / record.relative_path, CLASSIFICATION_PROMPT
                 )
                 for record in candidates
             )

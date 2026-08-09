@@ -22,6 +22,7 @@ bash scripts/run_experiment.sh attack smoke
 bash scripts/run_experiment.sh attack main
 bash scripts/run_experiment.sh selection lambda
 bash scripts/run_experiment.sh evaluation main
+bash scripts/run_experiment.sh analysis model-similarity
 bash scripts/run_experiment.sh attack confirm
 bash scripts/run_experiment.sh report summarize
 ```
@@ -34,3 +35,8 @@ Main attacks require a passing CUDA test report, a validated proxy tap, a
 clean-screened manifest, and a successful pair smoke result. Blocked pairs are
 serialized with exact errors. Never interpret missing or partial rows as
 successful results.
+
+`data prepare` writes canonical 224×224 PNGs and a balanced calibration manifest
+under the selected output directory. Do not reuse manifests created before this
+canonicalization change. Similarity analysis writes `model_similarity.csv`,
+`local_similarity.csv`, and `similarity_correlations.json` under `summaries/`.

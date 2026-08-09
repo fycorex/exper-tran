@@ -57,8 +57,9 @@ def load_clip_target_generator(
         tokenizer,
         CLIP_PREPROCESS,
         model_id,
+        drop_cls_token=True,
         class_margin=attack_config.class_margin,
-        rank_weight=attack_config.rank_weight,
-        suppression_weight=attack_config.other_suppression_weight,
+        margin_weight=attack_config.margin_weight,
+        margin_temperature=attack_config.margin_temperature,
     )
     return ContrastiveTargetGenerator(classifier, attack_config.canvas_size)

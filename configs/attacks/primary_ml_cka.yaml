@@ -13,5 +13,7 @@ lambdas: [0, 0.01, 0.1, 1, 10, 100]
 main_seed: 42
 confirmation_seed: 43
 class_margin: 2.0
-rank_weight: 1.0
-other_suppression_weight: 1.0
+margin_weight: 1.0
+margin_temperature: 0.5
+proxy_probability_threshold: 0.9
+require_proxy_free_generation: true

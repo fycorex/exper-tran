@@ -41,8 +41,7 @@ class ProxyLossOutput(Generic[TensorT]):
     target_probability: TensorT
     class_logits: TensorT | None = None
     classification_ce: TensorT | None = None
-    rank_loss: TensorT | None = None
-    other_suppression_loss: TensorT | None = None
+    margin_loss: TensorT | None = None
     max_other_probability: TensorT | None = None
     answer_token_ids: tuple[int, ...] = ()
     label_positions: tuple[int, ...] = ()

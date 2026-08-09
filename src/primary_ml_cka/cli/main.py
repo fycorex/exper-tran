@@ -9,6 +9,7 @@ from primary_ml_cka.cli.commands import (
     confirm,
     evaluate_main,
     inspect_taps,
+    model_similarity,
     prepare,
     run_main,
     screen,
@@ -29,6 +30,7 @@ COMMANDS: dict[tuple[str, str], Callable[[CommandContext], str]] = {
     ("attack", "main"): run_main.run,
     ("selection", "lambda"): select_lambda.run,
     ("evaluation", "main"): evaluate_main.run,
+    ("analysis", "model-similarity"): model_similarity.run,
     ("attack", "confirm"): confirm.run,
     ("report", "summarize"): summarize.run,
     ("diagnostics", "clip-intra"): clip_intra.run,
@@ -86,6 +88,7 @@ def run_all(context: CommandContext) -> tuple[str, ...]:
         ("attack", "main"),
         ("selection", "lambda"),
         ("evaluation", "main"),
+        ("analysis", "model-similarity"),
         ("attack", "confirm"),
         ("report", "summarize"),
     )

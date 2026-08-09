@@ -8,6 +8,7 @@ from primary_ml_cka.domain.identifiers import MODEL_REVISIONS
 from primary_ml_cka.domain.labels import CLASS_NAMES, human_label_to_index
 from primary_ml_cka.domain.types import ImageEmbeddingOutput, ProxyLossOutput, TapContract
 from primary_ml_cka.models.proxies.base import BaseProxy
+from primary_ml_cka.models.taps.pooling import masked_mean_l2
 
 TEMPLATES = (
     "a photo of a {class_name}",
@@ -36,37 +37,40 @@ class ContrastiveProxy(BaseProxy):
         image_preprocess: Callable[[torch.Tensor], torch.Tensor],
         model_id: str,
         *,
+        drop_cls_token: bool,
         class_margin: float = 2.0,
-        rank_weight: float = 1.0,
-        suppression_weight: float = 1.0,
+        margin_weight: float = 1.0,
+        margin_temperature: float = 0.5,
     ) -> None:
         self.model = model
         self.tokenizer = tokenizer
         self.image_preprocess = image_preprocess
         self.model_id = model_id
+        self.drop_cls_token = drop_cls_token
         self.class_margin = class_margin
-        self.rank_weight = rank_weight
-        self.suppression_weight = suppression_weight
+        self.margin_weight = margin_weight
+        self.margin_temperature = margin_temperature
         self.class_embeddings = self._build_class_embeddings()
 
     def image_embeddings(self, images: torch.Tensor) -> ImageEmbeddingOutput[torch.Tensor]:
-        features = _pooled_feature(
-            self.model.get_image_features(pixel_values=self.image_preprocess(images))
-        )
-        embeddings = functional.normalize(features.float(), dim=-1)
-        tokens = embeddings.unsqueeze(1)
-        mask = torch.ones((images.shape[0], 1), dtype=torch.bool, device=images.device)
+        pixel_values = self.image_preprocess(images)
+        vision_output = self.model.vision_model(pixel_values=pixel_values, return_dict=True)
+        tokens = vision_output.last_hidden_state
+        if self.drop_cls_token:
+            tokens = tokens[:, 1:, :]
+        mask = torch.ones(tokens.shape[:2], dtype=torch.bool, device=tokens.device)
+        embeddings = masked_mean_l2(tokens, mask)
         tap = TapContract(
             self.model_id,
             MODEL_REVISIONS[self.model_id],
-            "get_image_features",
-            "native projected image embedding",
-            "checkpoint-native global pooling",
+            "vision_model.last_hidden_state",
+            "final visual patch tokens (CLS excluded when present)",
+            "masked mean over real visual patch tokens",
             "per-image L2; FP32 before CKA",
-            str(features.dtype).removeprefix("torch."),
+            str(tokens.dtype).removeprefix("torch."),
             "validated_by_forward",
             tuple(tokens.shape),
-            "one valid global image token per image",
+            "all spatial patch tokens; no synthetic global token",
         )
         return ImageEmbeddingOutput(embeddings, tokens, mask, tap)
 
@@ -76,8 +80,7 @@ class ContrastiveProxy(BaseProxy):
             for class_name in CLASS_NAMES
             for template in TEMPLATES
         ]
-        padding = "max_length" if "siglip" in self.model_id.lower() else True
-        tokens = self.tokenizer(prompts, padding=padding, return_tensors="pt")
+        tokens = self.tokenizer(prompts, padding=True, return_tensors="pt")
         device = next(self.model.parameters()).device
         tokens = {key: value.to(device) for key, value in tokens.items()}
         with torch.no_grad():
@@ -106,8 +109,8 @@ class ContrastiveProxy(BaseProxy):
             logits,
             target_index=target_index,
             margin=self.class_margin,
-            rank_weight=self.rank_weight,
-            suppression_weight=self.suppression_weight,
+            margin_weight=self.margin_weight,
+            temperature=self.margin_temperature,
         )
         target_nll = -output.logits.log_softmax(dim=-1)[:, target_index].mean()
         return ProxyLossOutput(
@@ -116,7 +119,15 @@ class ContrastiveProxy(BaseProxy):
             target_probability=output.target_probability.detach(),
             class_logits=output.logits,
             classification_ce=output.cross_entropy.detach(),
-            rank_loss=output.rank.detach(),
-            other_suppression_loss=output.other_suppression.detach(),
+            margin_loss=output.margin_penalty.detach(),
             max_other_probability=output.max_other_probability.detach(),
         )
+
+    def free_generate_labels(
+        self, images: torch.Tensor, prompt: str
+    ) -> tuple[int | None, ...]:
+        with torch.no_grad():
+            output = self.target_loss(images, human_target_label=1, prompt=prompt)
+        if output.class_logits is None:
+            raise RuntimeError("Contrastive proxy logits are unavailable")
+        return tuple(int(index) + 1 for index in output.class_logits.argmax(dim=1).tolist())

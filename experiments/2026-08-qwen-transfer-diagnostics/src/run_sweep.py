@@ -145,6 +145,12 @@ def _write_summary(diagnostics: Path, *, materialize_selection: bool = False) ->
     write_json(diagnostics / "diagnostic_best.json", selected)
     if materialize_selection:
         write_json(diagnostics / "selected.json", selected)
+    else:
+        # Diagnostic-only runs must not leave a selection artifact from an
+        # older invocation for a scale runner to consume silently.
+        selected_path = diagnostics / "selected.json"
+        if selected_path.exists():
+            selected_path.unlink()
 
 
 def _trial_state(trial: dict[str, object]):
@@ -155,12 +161,38 @@ def _trial_state(trial: dict[str, object]):
 
 
 def _common_clean_records(
-    output_dir: Path, pair_ids: list[str], count: int
+    output_dir: Path,
+    pair_ids: list[str],
+    count: int,
+    source_human_label: int,
+    frozen_manifest: Path,
 ):
+    if frozen_manifest.is_file():
+        frozen = read_manifest(frozen_manifest)
+        if len(frozen) < count:
+            raise RuntimeError(
+                f"Frozen common-clean manifest has {len(frozen)} images; requested {count}"
+            )
+        return frozen[:count]
+
     target_ids = tuple(dict.fromkeys(get_pair(pair_id).target_model for pair_id in pair_ids))
-    manifests = [load_phase_records(output_dir, model_id, "main") for model_id in target_ids]
-    common_ids = set.intersection(*(set(record.image_id for record in rows) for rows in manifests))
-    common = tuple(record for record in manifests[0] if record.image_id in common_ids)[:count]
+    candidates = read_manifest(
+        output_dir / "evaluation" / "manifests" / "source_validation_candidates.jsonl"
+    )
+    valid_sets = []
+    for model_id in target_ids:
+        safe_name = model_id.replace("/", "__")
+        screen_path = output_dir / "evaluation" / f"{safe_name}__clean_screen.jsonl"
+        valid_ids = set()
+        with screen_path.open(encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    payload = json.loads(line)
+                    if payload.get("parsed_label") == source_human_label:
+                        valid_ids.add(payload["image_id"])
+        valid_sets.append(valid_ids)
+    common_ids = set.intersection(*valid_sets)
+    common = tuple(record for record in candidates if record.image_id in common_ids)[:count]
     if len(common) != count:
         raise RuntimeError(
             f"Only {len(common)} images are clean-valid for every configured target; requested {count}"
@@ -248,6 +280,8 @@ def main() -> None:
                 )
             ],
             int(raw.get("image_count", 8)),
+            data_config.source_human_label,
+            diagnostics / "common_clean.jsonl",
         )
         write_manifest(diagnostics / "common_clean.jsonl", common_source)
         print(

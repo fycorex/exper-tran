@@ -1,6 +1,7 @@
 import torch
 
 from primary_ml_cka.attack.cka.linear import linear_cka
+from primary_ml_cka.attack.losses import primary as primary_module
 from primary_ml_cka.attack.losses.primary import _semantic_centroid_loss, primary_loss
 
 
@@ -92,3 +93,27 @@ def test_semantic_only_objective_allows_zero_cka_weights() -> None:
     assert torch.allclose(
         loss.cka, _semantic_centroid_loss(adversarial, target, None, None)
     )
+
+
+def test_zero_weight_cka_components_are_not_computed(monkeypatch) -> None:
+    def unexpected(*args, **kwargs):
+        raise AssertionError("zero-weight CKA component was evaluated")
+
+    monkeypatch.setattr(primary_module, "paired_token_cka", unexpected)
+    monkeypatch.setattr(primary_module, "token_cka_against_bank", unexpected)
+    source = torch.randn(2, 6, 8)
+    target = torch.randn(4, 6, 8)
+    adversarial = torch.randn(2, 6, 8)
+
+    loss = primary_module.primary_loss(
+        torch.tensor(0.0),
+        1.0,
+        adversarial,
+        source,
+        target,
+        source_cka_weight=0.0,
+        target_cka_weight=0.0,
+        semantic_target_weight=1.0,
+    )
+
+    assert torch.isfinite(loss.total)

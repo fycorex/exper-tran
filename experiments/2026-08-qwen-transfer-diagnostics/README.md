@@ -97,12 +97,19 @@ It first runs a one-step end-to-end GPU validation and then compares four
 objectives for each of P20/P21/P22: classification only, target-CKA only,
 semantic-centroid only, and target-CKA plus semantic centroid. All trials use
 the same eight source images, all 48 target references, seed 42, 100 attack
-steps, no source-repulsion term, and an auxiliary/classification input-gradient
-ratio of 0.3. All proxies use the same NF4 policy and targets use BF16. Frozen
+steps, no source-repulsion term, and an initial auxiliary/classification
+input-gradient ratio of 0.3. The calibrated auxiliary weight is then fixed for
+all attack steps. All proxies use the same NF4 policy and targets use BF16. Frozen
 adversarial images are evaluated on the target even when the proxy result is
 below 8/8; the strict 8/8 rule is retained only as a promotion gate. Results
 are resumable under `diagnostics/objective_split_common48_rho03`. This script
 does not run the 50- or 500-image stages.
+
+The running artifact labels `target_cka_only`, `semantic_only`, and
+`target_cka_semantic` are historical shorthand. Classification loss remains in
+all three; their precise meanings are `cls_plus_target_cka`,
+`cls_plus_semantic`, and `cls_plus_target_cka_semantic`. Future diagnostic
+configs should use the explicit names after this active run has completed.
 
 ## Scale runs
 

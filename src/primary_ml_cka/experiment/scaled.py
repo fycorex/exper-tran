@@ -43,11 +43,27 @@ def _log_path(
     return output_dir / "logs" / pair.pair_id / phase / f"{batch_index:02d}_{lambda_cka:g}.json"
 
 
+def _migrate_attack_result_payload(payload: dict[str, object]) -> dict[str, object]:
+    migrated = dict(payload)
+    # Schema migration for logs written before objective decomposition. Do not
+    # fabricate the old per-image proxy mask: aggregate scale resume does not
+    # require it, and None preserves that the information is unavailable.
+    migrated.setdefault("effective_lambda_cka", migrated["lambda_cka"])
+    migrated.setdefault("gradient_ratio", None)
+    migrated.setdefault("cka_source_weight", 1.0)
+    migrated.setdefault("semantic_target_weight", 0.0)
+    migrated.setdefault("proxy_target_hit_mask", None)
+    migrated.setdefault("proxy_tap_path", "legacy-unrecorded")
+    migrated["source_image_ids"] = tuple(migrated["source_image_ids"])
+    migrated["target_reference_ids"] = tuple(migrated["target_reference_ids"])
+    if migrated["proxy_target_hit_mask"] is not None:
+        migrated["proxy_target_hit_mask"] = tuple(migrated["proxy_target_hit_mask"])
+    return migrated
+
+
 def _load_attack_result(path: Path) -> AttackRunResult:
     payload = json.loads(path.read_text(encoding="utf-8"))
-    payload["source_image_ids"] = tuple(payload["source_image_ids"])
-    payload["target_reference_ids"] = tuple(payload["target_reference_ids"])
-    return AttackRunResult(**payload)
+    return AttackRunResult(**_migrate_attack_result_payload(payload))
 
 
 def _artifact_dir(

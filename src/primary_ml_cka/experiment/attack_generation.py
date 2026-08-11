@@ -53,7 +53,8 @@ class AttackRunResult:
     proxy_target_hit_count: int
     proxy_target_hit_denominator: int
     proxy_target_all_hit: bool
-    proxy_target_hit_mask: tuple[bool, ...]
+    # None marks legacy logs where only the aggregate proxy gate was recorded.
+    proxy_target_hit_mask: tuple[bool, ...] | None
     proxy_min_target_logit_margin: float
     proxy_min_target_probability: float
     proxy_free_target_hit_count: int
@@ -517,8 +518,12 @@ def result_row(
         "proxy_target_hit_count": result.proxy_target_hit_count,
         "proxy_target_hit_denominator": result.proxy_target_hit_denominator,
         "proxy_target_all_hit": result.proxy_target_all_hit,
-        "proxy_target_hit_mask": "|".join(
-            "1" if value else "0" for value in result.proxy_target_hit_mask
+        "proxy_target_hit_mask": (
+            ""
+            if result.proxy_target_hit_mask is None
+            else "|".join(
+                "1" if value else "0" for value in result.proxy_target_hit_mask
+            )
         ),
         "proxy_min_target_logit_margin": result.proxy_min_target_logit_margin,
         "proxy_min_target_probability": result.proxy_min_target_probability,

@@ -1,0 +1,7 @@
+pairs: [P20, P14, P16, P19, P02, P06, P11]
+prompts: [original, compact, question]
+lambdas: [0, 0.5, 1.5, 3, 6]
+alphas: [1, 2, 4]
+steps: 100
+seed: 42
+batch_size: 8

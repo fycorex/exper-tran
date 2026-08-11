@@ -1,4 +1,5 @@
 import json
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -26,9 +27,12 @@ class CommandContext:
     dry_run: bool
     seed: int | None
     config_path: Path | None
+    image_count: int | None
 
 
-def resolve_attack_config(context: CommandContext) -> AttackConfig:
+def resolve_attack_config(
+    context: CommandContext, *, require_canonical_lambda_grid: bool = True
+) -> AttackConfig:
     path = context.config_path or (
         context.project_root / "configs" / "attacks" / "primary_ml_cka.yaml"
     )
@@ -37,12 +41,19 @@ def resolve_attack_config(context: CommandContext) -> AttackConfig:
     if "lambdas" in values:
         values["lambdas"] = tuple(float(value) for value in values["lambdas"])
     config = AttackConfig(**values)
-    validate_attack_config(config)
+    validate_attack_config(
+        config, require_canonical_lambda_grid=require_canonical_lambda_grid
+    )
     return config
 
 
 def resolve_data_config(context: CommandContext) -> DataConfig:
-    path = context.project_root / "configs" / "data" / "imagenet_vehicle10.yaml"
+    configured_path = os.environ.get("PRIMARY_ML_CKA_DATA_CONFIG")
+    path = (
+        Path(configured_path)
+        if configured_path
+        else context.project_root / "configs" / "data" / "imagenet_vehicle10.yaml"
+    )
     raw = load_config(path)
     values = {key: raw[key] for key in DataConfig.__dataclass_fields__ if key in raw}
     config = DataConfig(**values)
@@ -100,4 +111,16 @@ def require_proxy_tap(context: CommandContext, proxy_model: str) -> None:
     if payload.get("status") in {None, "blocked", "requires_validation"}:
         raise RuntimeError(
             f"Proxy tap is not validated for {proxy_model}: {payload.get('error', payload)}"
+        )
+    expected_path = (
+        "model.get_image_features.pooler_output"
+        if proxy_model.startswith(("Qwen/", "OpenGVLab/InternVL"))
+        else "model.embed_vision"
+        if proxy_model.startswith("google/gemma")
+        else "vision_model.last_hidden_state"
+    )
+    if payload.get("module_path") != expected_path:
+        raise RuntimeError(
+            f"Stale proxy tap for {proxy_model}: expected {expected_path}, "
+            f"found {payload.get('module_path')}; rerun `models inspect-taps`"
         )

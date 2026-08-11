@@ -26,6 +26,7 @@ def test_generative_proxy_selects_configured_target_answer() -> None:
         return score, f"rendered:{answer}", mask
 
     proxy._answer_score = MethodType(fake_answer_score, proxy)
+    proxy._joint_answer_scores = MethodType(lambda self, images, prompt: None, proxy)
     images = torch.rand(2, 3, 16, 16)
     output = proxy.target_loss(images, human_target_label=3, prompt="prompt")
 

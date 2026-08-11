@@ -11,6 +11,7 @@ def clean_valid_split(
     main_max_count: int,
     confirmation_max_count: int,
     batch_size: int = BATCH_SIZE,
+    allow_partial_main_batch: bool = False,
 ) -> tuple[tuple[ImageRecord, ...], tuple[ImageRecord, ...]]:
     if len(candidates) != len(parsed_labels):
         raise ValueError("Candidates and labels must have equal length")
@@ -20,7 +21,8 @@ def clean_valid_split(
         if label == source_human_label
     ]
     main_count = min(main_max_count, len(valid))
-    main_count -= main_count % batch_size
+    if not allow_partial_main_batch:
+        main_count -= main_count % batch_size
     main = tuple(valid[:main_count])
     remaining = valid[main_count:]
     confirmation_count = min(confirmation_max_count, len(remaining))

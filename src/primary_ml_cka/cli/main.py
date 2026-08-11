@@ -12,12 +12,14 @@ from primary_ml_cka.cli.commands import (
     model_similarity,
     prepare,
     run_main,
+    scaled,
     screen,
     select_lambda,
     smoke,
     summarize,
     tests,
 )
+from primary_ml_cka.domain.identifiers import MODEL_PAIRS
 from primary_ml_cka.experiment.environment import write_environment
 from primary_ml_cka.experiment.orchestration import CommandContext
 
@@ -28,6 +30,7 @@ COMMANDS: dict[tuple[str, str], Callable[[CommandContext], str]] = {
     ("tests", "run"): tests.run,
     ("attack", "smoke"): smoke.run,
     ("attack", "main"): run_main.run,
+    ("attack", "scaled"): scaled.run,
     ("selection", "lambda"): select_lambda.run,
     ("evaluation", "main"): evaluate_main.run,
     ("analysis", "model-similarity"): model_similarity.run,
@@ -41,10 +44,11 @@ COMMANDS: dict[tuple[str, str], Callable[[CommandContext], str]] = {
 
 def _add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--config", type=Path)
-    parser.add_argument("--pair-id", choices=("P02", "P06", "P11", "P14", "P16", "P19"))
+    parser.add_argument("--pair-id", choices=tuple(pair.pair_id for pair in MODEL_PAIRS))
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--seed", type=int)
+    parser.add_argument("--image-count", type=int, choices=(8, 50, 500))
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/primary_ml_cka_v1"))
 
 
@@ -75,6 +79,7 @@ def _context(args: argparse.Namespace) -> CommandContext:
         args.dry_run,
         args.seed,
         args.config,
+        args.image_count,
     )
 
 

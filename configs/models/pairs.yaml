@@ -3,8 +3,11 @@ pairs:
   - {id: P06, type: Cross-Family, proxy: openai/clip-vit-large-patch14, target: OpenGVLab/InternVL3_5-2B-HF}
   - {id: P11, type: Cross-Family, proxy: google/siglip2-so400m-patch14-384, target: google/gemma-4-E2B-it}
   - {id: P14, type: Intra-Family, proxy: Qwen/Qwen3.5-2B, target: Qwen/Qwen3.5-4B}
+  - {id: P20, type: Intra-Family, proxy: Qwen/Qwen3.5-4B, target: Qwen/Qwen3.5-2B}
   - {id: P16, type: Intra-Family, proxy: OpenGVLab/InternVL3_5-2B-HF, target: OpenGVLab/InternVL3_5-4B-HF}
+  - {id: P21, type: Intra-Family, proxy: OpenGVLab/InternVL3_5-4B-HF, target: OpenGVLab/InternVL3_5-2B-HF}
   - {id: P19, type: Intra-Family, proxy: google/gemma-4-E2B-it, target: google/gemma-4-E4B-it}
+  - {id: P22, type: Intra-Family, proxy: google/gemma-4-E4B-it, target: google/gemma-4-E2B-it}
 revisions:
   Qwen/Qwen3.5-2B: 15852e8c16360a2fea060d615a32b45270f8a8fc
   Qwen/Qwen3.5-4B: 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a

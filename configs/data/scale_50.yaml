@@ -1,0 +1,9 @@
+source_human_label: 8
+target_human_label: 7
+candidate_count: 80
+target_reference_count: 64
+main_max_count: 50
+confirmation_max_count: 8
+candidate_split: train
+calibration_per_class: 5
+allow_partial_main_batch: true

@@ -10,7 +10,10 @@ from primary_ml_cka.attack.likelihood.answer_mask import (
 )
 from primary_ml_cka.domain.identifiers import MODEL_REVISIONS
 from primary_ml_cka.models.common.loading import local_snapshot
-from primary_ml_cka.prompts.chat_templates import classification_messages
+from primary_ml_cka.prompts.chat_templates import (
+    classification_messages,
+    render_chat_template,
+)
 from primary_ml_cka.prompts.classification import CLASSIFICATION_PROMPT
 
 GENERATIVE_MODELS = tuple(
@@ -29,11 +32,11 @@ def test_exact_answer_positions_for_cached_processor(model_id: str) -> None:
     tokenizer = processor.tokenizer
     for answer in (str(label) for label in range(1, 11)):
         messages = classification_messages(CLASSIFICATION_PROMPT, answer)
-        prompt = processor.apply_chat_template(
-            list(messages.prompt_only), tokenize=False, add_generation_prompt=True
+        prompt = render_chat_template(
+            processor, messages.prompt_only, add_generation_prompt=True
         )
-        full = processor.apply_chat_template(
-            list(messages.with_answer), tokenize=False, add_generation_prompt=False
+        full = render_chat_template(
+            processor, messages.with_answer, add_generation_prompt=False
         )
         prompt_ids = tokenizer(prompt, add_special_tokens=False, return_tensors="pt").input_ids[0]
         full_ids = tokenizer(full, add_special_tokens=False, return_tensors="pt").input_ids[0]
@@ -45,3 +48,10 @@ def test_exact_answer_positions_for_cached_processor(model_id: str) -> None:
         scored = torch.where(mask.labels != -100)[0]
         assert tuple(scored.tolist()) == mask.label_positions
         assert tuple(full_ids[scored].tolist()) == mask.answer_token_ids
+        plain_ids = tuple(tokenizer(answer, add_special_tokens=False).input_ids)
+        plain_matches = any(
+            full_ids[index : index + len(plain_ids)].tolist() == list(plain_ids)
+            for index in range(len(prompt_ids), len(full_ids) - len(plain_ids) + 1)
+        )
+        assert plain_matches
+        assert mask.answer_token_ids == plain_ids

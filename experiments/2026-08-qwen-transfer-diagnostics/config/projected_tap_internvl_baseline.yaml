@@ -1,0 +1,11 @@
+diagnostics_name: projected_tap_intra_baseline
+phase: projected_tap_baseline
+seed: 42
+steps: 100
+early_stop_proxy_gate: false
+trials:
+  - {pair: P21, prompt: original, lambda: 0.0, alpha: 1.0}
+  - {pair: P21, prompt: original, lambda: 0.3, alpha: 1.0}
+  - {pair: P21, prompt: original, lambda: 1.0, alpha: 0.5}
+  - {pair: P21, prompt: original, lambda: 1.0, alpha: 2.0}
+  - {pair: P21, prompt: original, lambda: 3.0, alpha: 1.0}

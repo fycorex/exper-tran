@@ -1,0 +1,11 @@
+diagnostics_name: p22_semantic_seed43
+phase: recovery_p22_semantic_s43
+early_stop_proxy_gate: false
+steps: 100
+seed: 43
+batch_size: 8
+trials:
+  - {pair: P22, prompt: original, lambda: 3, alpha: 4, beta: 0.5}
+  - {pair: P22, prompt: original, lambda: 10, alpha: 4, beta: 0.5}
+  - {pair: P22, prompt: original, lambda: 3, alpha: 4, beta: 2}
+  - {pair: P22, prompt: original, lambda: 10, alpha: 4, beta: 2}

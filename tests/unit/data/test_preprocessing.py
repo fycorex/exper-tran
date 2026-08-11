@@ -1,6 +1,14 @@
 import torch
 
-from primary_ml_cka.data.preprocessing import ensure_canvas
+from primary_ml_cka.data.preprocessing import ensure_canvas, ste_quantize_8bit
+
+
+def test_ste_quantization_matches_uint8_and_preserves_gradient() -> None:
+    images = torch.tensor([0.1, 0.501, 0.999], requires_grad=True)
+    quantized = ste_quantize_8bit(images)
+    assert torch.equal(quantized.detach(), images.detach().mul(255).round().div(255))
+    quantized.sum().backward()
+    assert torch.equal(images.grad, torch.ones_like(images))
 
 
 def test_different_source_sizes_can_be_resized_before_batching() -> None:

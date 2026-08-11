@@ -4,6 +4,7 @@ candidate_count: 50
 target_reference_count: 48
 main_max_count: 32
 confirmation_max_count: 16
+candidate_split: val
 calibration_per_class: 5
 classes:
   1: {name: ambulance, synset: n02701002}

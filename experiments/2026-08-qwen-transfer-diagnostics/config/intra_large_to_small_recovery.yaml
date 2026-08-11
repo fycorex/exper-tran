@@ -1,0 +1,20 @@
+diagnostics_name: intra_large_to_small_recovery
+phase: recovery_full100
+early_stop_proxy_gate: false
+steps: 100
+seed: 42
+batch_size: 8
+
+# Lambda=3 contributed only about 1.4% of the input-gradient magnitude for
+# InternVL4B. Probe the missing range while retaining P20 as a known-good
+# large-to-small control.
+trials:
+  - {pair: P20, prompt: original, lambda: 0.5, alpha: 1}
+  - {pair: P21, prompt: original, lambda: 30, alpha: 4}
+  - {pair: P21, prompt: original, lambda: 100, alpha: 4}
+  - {pair: P21, prompt: original, lambda: 100, alpha: 10}
+  - {pair: P21, prompt: original, lambda: 300, alpha: 10}
+  - {pair: P22, prompt: original, lambda: 10, alpha: 4}
+  - {pair: P22, prompt: original, lambda: 30, alpha: 4}
+  - {pair: P22, prompt: original, lambda: 30, alpha: 10}
+  - {pair: P22, prompt: original, lambda: 100, alpha: 10}

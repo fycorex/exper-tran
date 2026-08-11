@@ -1,0 +1,176 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "Existing CKA Transfer Baseline Audit",
+    "description": "Technical audit of the pre-correction eight-image transfer baseline and the corrective baseline now running.",
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "layout": "full",
+        "body": "# Existing CKA Transfer Baseline Audit"
+      },
+      {
+        "id": "technical_summary",
+        "type": "markdown",
+        "layout": "full",
+        "sourceId": "historical_audit",
+        "body": "## Technical summary\n\nThe weak intra-family results cannot yet be treated as a failure of the proposed method. The historical implementation mixed representation levels: Qwen and InternVL attack CKA used pre-projector vision features, while their classification loss and Gemma CKA used language-model input tokens. Among 85 historical trials that passed both proxy 8/8 gates and had eight clean-valid target images, higher recorded reference-CKA gain was not associated with higher transfer (pooled Spearman -0.227). This is a diagnostic result, not an inference, because trials reuse images and mix pairs and objectives. The existing baseline has therefore been corrected before any new attack method is introduced."
+      },
+      {
+        "id": "historical_heading",
+        "type": "markdown",
+        "layout": "full",
+        "sourceId": "historical_audit",
+        "body": "## Historical results do not validate the intended CKA mechanism\n\nOnly Qwen-4B to Qwen-2B reached the requested 4/8 in any eligible historical trial. InternVL-4B to 2B peaked at 2/8 and Gemma-E4B to E2B at 1/8. Within those pairs, the descriptive rank association between reference-CKA gain and target hits was non-positive, so simply increasing the old CKA term is not supported by these runs."
+      },
+      {
+        "id": "historical_table_block",
+        "type": "table",
+        "layout": "full",
+        "tableId": "historical_by_pair"
+      },
+      {
+        "id": "scope",
+        "type": "markdown",
+        "layout": "full",
+        "sourceId": "historical_audit",
+        "body": "## Scope and metric definitions\n\nAn eligible trial is complete, has closed-set proxy success 8/8, proxy free-generation success 8/8, and a target clean-valid denominator of 8. `Target hits` count adversarial target outputs equal to class 7 only among images whose clean target output equals source class 8. `Reference CKA gain` is the change from clean-reference CKA to adversarial-reference CKA recorded by the historical attack tap. The audit excludes the newly launched projected-token baseline until it finishes."
+      },
+      {
+        "id": "implementation_heading",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## The primary problem was implementation alignment, not one lambda value\n\nThe attack path, evaluation path, and analysis path were traced independently. Four implementation defects could materially invalidate or contaminate the conclusion; three are now corrected and one requires a held-out experimental result."
+      },
+      {
+        "id": "implementation_table_block",
+        "type": "table",
+        "layout": "full",
+        "tableId": "implementation_findings"
+      },
+      {
+        "id": "methodology",
+        "type": "markdown",
+        "layout": "full",
+        "sourceId": "audit_code",
+        "body": "## Audit method and validation\n\nThe review followed the full data path: canonical 224 PNG, differentiable native preprocessing, proxy 10-way scoring, visual-token extraction, per-image token CKA, momentum PGD, PNG round-trip gate, and target generation. Historical summaries were filtered with a reproducible script. The corrected implementation uses each generative model's `get_image_features(...).pooler_output`, the same projected visual soft tokens consumed by its language model. Formal smoke and scaled attacks now use the full configured step budget. The test suite passes 70 tests with 3 intentional smoke skips."
+      },
+      {
+        "id": "limitations",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## Limitations and robustness boundaries\n\nThe historical correlations are not independent estimates: the same eight images appear in many trials, configurations differ, and pair identity strongly confounds pooled results. Token-level linear CKA is also rotation-invariant and centers across spatial tokens, so it can improve token-geometry similarity without necessarily moving the class-semantic direction. That method-level concern remains unresolved until the layer-correct baseline is evaluated. Model-similarity global/local CKA has not yet produced an analysis CSV, so the proxy-selector hypothesis itself is not yet tested."
+      },
+      {
+        "id": "next_steps",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## Recommended next steps\n\n1. Finish the 15-trial projected-token baseline for P20, P21, and P22, including the lambda-zero control and the declared lambda/alpha combinations.\n2. Require 8/8 proxy closed-set and free-generation success, then judge transfer on disjoint target evaluation.\n3. Do not promote any configuration to 50 images until all three large-to-small intra-family pairs are reviewed and the selected configuration is confirmed on held-out images.\n4. Only if the corrected baseline still fails should a new branch introduce a different transfer method such as input diversity, translation-invariant gradients, or prompt ensembles."
+      },
+      {
+        "id": "further_questions",
+        "type": "markdown",
+        "layout": "full",
+        "body": "## Further questions\n\nDoes projected-token CKA improve transfer beyond the lambda-zero classification control? Does a target-attraction-only CKA objective outperform the current source-repulsion plus target-attraction form? After a fixed attack is selected without target-image reuse, do global and local proxy-target CKA predict held-out TASR?"
+      }
+    ],
+    "tables": [
+      {
+        "id": "historical_by_pair",
+        "title": "Eligible historical trials by model pair",
+        "description": "Pre-correction trials only; best and mean targeted hits are out of eight.",
+        "dataset": "historical_by_pair",
+        "sourceId": "historical_audit",
+        "columns": [
+          {"field": "pair_id", "label": "Pair"},
+          {"field": "eligible_trials", "label": "Eligible trials", "type": "number"},
+          {"field": "mean_target_hits_of_8", "label": "Mean hits / 8", "type": "number"},
+          {"field": "best_target_hits_of_8", "label": "Best hits / 8", "type": "number"},
+          {"field": "reference_gain_spearman", "label": "CKA gain Spearman", "type": "number"}
+        ],
+        "defaultSort": {"field": "best_target_hits_of_8", "direction": "desc"}
+      },
+      {
+        "id": "implementation_findings",
+        "title": "Implementation audit findings",
+        "description": "Status as of the corrected projected-token baseline launch.",
+        "dataset": "implementation_findings",
+        "sourceId": "audit_code",
+        "columns": [
+          {"field": "finding", "label": "Finding"},
+          {"field": "impact", "label": "Impact"},
+          {"field": "status", "label": "Status"}
+        ],
+        "defaultSort": {"field": "status", "direction": "asc"}
+      }
+    ],
+    "sources": [
+      {
+        "id": "historical_audit",
+        "label": "Historical eligible-trial audit",
+        "path": "outputs/proxy_selector_cka_v2/diagnostics/existing_method_audit.json",
+        "query": {
+          "language": "python",
+          "description": "Filters completed diagnostic summary CSV rows to strict proxy 8/8, free-generation 8/8, and target denominator 8; aggregates results by pair and computes descriptive correlations.",
+          "filters": ["historical pre-projected-token diagnostics", "target denominator exactly 8"],
+          "metric_definitions": {
+            "target_hits": "Count of target label 7 among clean-valid target images",
+            "reference_cka_gain": "adversarial-reference CKA minus clean-reference CKA"
+          }
+        }
+      },
+      {
+        "id": "audit_code",
+        "label": "Repository implementation audit",
+        "path": "src/primary_ml_cka",
+        "query": {
+          "language": "python",
+          "description": "Reviewed attack generation, proxy visual adapters, target generation, confirmation evaluation, configuration resolution, and model-similarity extraction."
+        }
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "status": "ready",
+    "generatedAt": "2026-08-11T10:50:00Z",
+    "datasets": {
+      "historical_by_pair": [
+        {"pair_id": "P02", "eligible_trials": 5, "mean_target_hits_of_8": 0.0, "best_target_hits_of_8": 0, "reference_gain_spearman": null},
+        {"pair_id": "P06", "eligible_trials": 5, "mean_target_hits_of_8": 0.0, "best_target_hits_of_8": 0, "reference_gain_spearman": null},
+        {"pair_id": "P11", "eligible_trials": 5, "mean_target_hits_of_8": 0.0, "best_target_hits_of_8": 0, "reference_gain_spearman": null},
+        {"pair_id": "P14", "eligible_trials": 14, "mean_target_hits_of_8": 0.429, "best_target_hits_of_8": 1, "reference_gain_spearman": 0.179},
+        {"pair_id": "P16", "eligible_trials": 3, "mean_target_hits_of_8": 0.0, "best_target_hits_of_8": 0, "reference_gain_spearman": null},
+        {"pair_id": "P19", "eligible_trials": 5, "mean_target_hits_of_8": 0.6, "best_target_hits_of_8": 1, "reference_gain_spearman": 0.0},
+        {"pair_id": "P20", "eligible_trials": 14, "mean_target_hits_of_8": 2.857, "best_target_hits_of_8": 4, "reference_gain_spearman": -0.263},
+        {"pair_id": "P21", "eligible_trials": 13, "mean_target_hits_of_8": 0.308, "best_target_hits_of_8": 2, "reference_gain_spearman": -0.045},
+        {"pair_id": "P22", "eligible_trials": 21, "mean_target_hits_of_8": 0.095, "best_target_hits_of_8": 1, "reference_gain_spearman": -0.455}
+      ],
+      "implementation_findings": [
+        {"finding": "Qwen and InternVL CKA tapped pre-projector features while classification used post-projector tokens", "impact": "Attack terms optimized different representation levels", "status": "corrected"},
+        {"finding": "Formal smoke/scaled paths stopped as soon as a robust proxy gate was reached", "impact": "Lambda/alpha trials received unequal optimization budgets", "status": "corrected"},
+        {"finding": "Confirmation attacks were written without target evaluation rates", "impact": "Held-out transfer could not be reported", "status": "corrected"},
+        {"finding": "Model-similarity extraction preferred pre-projector last hidden state", "impact": "Global/local CKA was not aligned to attack semantics", "status": "corrected in code; rerun pending"},
+        {"finding": "Configured restart/random-start fields were silently ignored", "impact": "Recorded configuration overstated implemented behavior", "status": "validated explicitly; one restart only"},
+        {"finding": "Hyperparameter selection ranks trials using target hits", "impact": "Eight-image tuning TASR is not held-out evidence", "status": "held-out confirmation required"},
+        {"finding": "Token CKA can match centered spatial geometry without class-direction alignment", "impact": "Higher attack CKA need not imply semantic transfer", "status": "method-level question unresolved"}
+      ]
+    },
+    "accessIssues": []
+  },
+  "sources": [
+    {
+      "id": "historical_audit",
+      "label": "Historical eligible-trial audit",
+      "path": "outputs/proxy_selector_cka_v2/diagnostics/existing_method_audit.json"
+    },
+    {
+      "id": "audit_code",
+      "label": "Repository implementation audit",
+      "path": "src/primary_ml_cka"
+    }
+  ]
+}

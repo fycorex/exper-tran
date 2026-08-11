@@ -17,3 +17,4 @@ margin_weight: 1.0
 margin_temperature: 0.5
 proxy_probability_threshold: 0.9
 require_proxy_free_generation: true
+cka_target_weight: 1.0

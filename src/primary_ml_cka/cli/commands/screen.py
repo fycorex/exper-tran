@@ -1,5 +1,6 @@
 import gc
 import json
+import os
 from dataclasses import asdict
 
 import torch
@@ -19,7 +20,7 @@ from primary_ml_cka.models.backends.target_transformers_generation import (
 from primary_ml_cka.models.backends.transformers_backend import load_processor
 from primary_ml_cka.models.common.loading import local_snapshot
 from primary_ml_cka.models.targets.generation import TransformersTargetGenerator
-from primary_ml_cka.prompts.classification import CLASSIFICATION_PROMPT
+from primary_ml_cka.prompts.variants import get_prompt
 
 
 def run(context: CommandContext) -> str:
@@ -37,6 +38,7 @@ def run(context: CommandContext) -> str:
         raise RuntimeError("Candidate manifest missing; run `data prepare` first")
     candidates = read_manifest(candidates_path)
     attack_config = resolve_attack_config(context)
+    prompt = get_prompt(os.environ.get("PRIMARY_ML_CKA_PROMPT_ID", "original"))
     canonical_root = context.output_dir / "canonical_images"
     target_ids = tuple(
         dict.fromkeys(
@@ -56,7 +58,7 @@ def run(context: CommandContext) -> str:
             generator = TransformersTargetGenerator(model, processor)
             outputs = tuple(
                 generator.generate_label(
-                    canonical_root / record.relative_path, CLASSIFICATION_PROMPT
+                    canonical_root / record.relative_path, prompt
                 )
                 for record in candidates
             )
@@ -79,6 +81,7 @@ def run(context: CommandContext) -> str:
                 data_config.main_max_count,
                 data_config.confirmation_max_count,
                 attack_config.batch_size,
+                data_config.allow_partial_main_batch,
             )
             main_ok, confirmation_ok = require_minimum_sets(
                 main, confirmation, attack_config.batch_size

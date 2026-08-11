@@ -1,3 +1,5 @@
+import gc
+import traceback
 from dataclasses import asdict
 from pathlib import Path
 
@@ -35,6 +37,13 @@ def inspect_proxy_taps(
     results = []
     for model_id in proxy_ids:
         safe_name = model_id.replace("/", "__")
+        adapter = None
+        module = None
+        images = None
+        output = None
+        loss_images = None
+        proxy_loss = None
+        free_labels = None
         try:
             adapter = load_proxy(model_id, hf_home, torch.device("cuda"), attack_config)
             module = adapter.model
@@ -80,9 +89,22 @@ def inspect_proxy_taps(
             write_json(output_dir / "taps" / f"{safe_name}.json", record)
             results.append(f"validated {model_id} {tuple(output.tokens.shape)}")
         except Exception as exc:
-            failure = {"model_id": model_id, "status": "blocked", "error": repr(exc)}
+            failure = {
+                "model_id": model_id,
+                "status": "blocked",
+                "error": repr(exc),
+                "traceback": traceback.format_exc(),
+            }
             write_json(output_dir / "taps" / f"{safe_name}.json", failure)
             results.append(f"blocked {model_id}: {exc!r}")
         finally:
+            adapter = None
+            module = None
+            images = None
+            output = None
+            loss_images = None
+            proxy_loss = None
+            free_labels = None
+            gc.collect()
             torch.cuda.empty_cache()
     return tuple(results)

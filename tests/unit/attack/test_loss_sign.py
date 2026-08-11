@@ -1,7 +1,7 @@
 import torch
 
 from primary_ml_cka.attack.cka.linear import linear_cka
-from primary_ml_cka.attack.losses.primary import primary_loss
+from primary_ml_cka.attack.losses.primary import _semantic_centroid_loss, primary_loss
 
 
 def cka_loss(z_adv: torch.Tensor, source: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
@@ -42,3 +42,15 @@ def test_target_cka_weight_changes_internal_balance() -> None:
         adversarial, target
     ).mean()
     assert torch.allclose(loss.cka, expected)
+
+
+def test_semantic_anchor_prefers_target_centroid() -> None:
+    target = torch.zeros(3, 6, 8)
+    target[..., 0] = 2.0
+    near_target = torch.zeros(2, 6, 8)
+    near_target[..., 0] = 1.0
+    near_source = torch.zeros(2, 6, 8)
+    near_source[..., 1] = 1.0
+    target_loss = _semantic_centroid_loss(near_target, target, None, None)
+    source_loss = _semantic_centroid_loss(near_source, target, None, None)
+    assert target_loss < source_loss

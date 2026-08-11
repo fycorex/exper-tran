@@ -33,11 +33,11 @@ def _images(root: Path, split: str, human_label: int) -> tuple[ImageRecord, ...]
 def discover_vehicle_pools(
     root: Path, config: DataConfig
 ) -> tuple[tuple[ImageRecord, ...], tuple[ImageRecord, ...], tuple[ImageRecord, ...]]:
-    candidates = _images(root, "val", config.source_human_label)
+    candidates = _images(root, config.candidate_split, config.source_human_label)
     references = _images(root, "train", config.target_human_label)
     if len(candidates) < config.candidate_count:
         raise ValueError(
-            f"Expected at least {config.candidate_count} validation images for "
+            f"Expected at least {config.candidate_count} {config.candidate_split} images for "
             f"source human label {config.source_human_label}, found {len(candidates)}"
         )
     if len(references) < config.target_reference_count:

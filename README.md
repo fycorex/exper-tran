@@ -4,7 +4,7 @@ Reproducible targeted image-attack experiment using a proxy-only classification
 objective and per-image token-level proxy CKA. Attack generation is proxy-only;
 target representations are used solely by a separate post-attack global/local
 CKA analysis that tests whether representation similarity predicts conditional
-TASR. The six fixed model pairs and all attack constants live under `configs/`.
+TASR. The configured model pairs and all attack constants live under `configs/`.
 
 The attack source and target classes are not embedded in the implementation.
 Set `source_human_label` and `target_human_label` in
@@ -35,3 +35,9 @@ bash scripts/run_experiment.sh run all --dry-run
 Run `python -m primary_ml_cka.cli.main --help` for all stages. Real attack
 generation is gated on passing correctness tests and validated proxy-tap
 records. See `docs/reproduction.md` before starting GPU work.
+
+## Experiments
+
+- `experiments/2026-08-qwen-transfer-diagnostics`: audits Qwen preprocessing
+  and answer scoring, performs the resumable prompt/lambda/alpha sweep, and
+  provides one resumable sweep-to-8/50/500 full experiment workflow.

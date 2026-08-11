@@ -1,0 +1,15 @@
+diagnostics_name: p22_semantic_seed42
+phase: recovery_p22_semantic_s42
+early_stop_proxy_gate: false
+steps: 100
+seed: 42
+batch_size: 8
+trials:
+  - {pair: P22, prompt: original, lambda: 3, alpha: 2, beta: 0.5}
+  - {pair: P22, prompt: original, lambda: 10, alpha: 2, beta: 0.5}
+  - {pair: P22, prompt: original, lambda: 3, alpha: 4, beta: 0.5}
+  - {pair: P22, prompt: original, lambda: 10, alpha: 4, beta: 0.5}
+  - {pair: P22, prompt: original, lambda: 3, alpha: 2, beta: 2}
+  - {pair: P22, prompt: original, lambda: 10, alpha: 2, beta: 2}
+  - {pair: P22, prompt: original, lambda: 3, alpha: 4, beta: 2}
+  - {pair: P22, prompt: original, lambda: 10, alpha: 4, beta: 2}

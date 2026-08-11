@@ -4,7 +4,10 @@ from pathlib import Path
 from PIL import Image
 
 from primary_ml_cka.models.common.outputs import GenerationOutput
-from primary_ml_cka.prompts.chat_templates import classification_messages
+from primary_ml_cka.prompts.chat_templates import (
+    classification_messages,
+    render_chat_template,
+)
 from primary_ml_cka.prompts.parser import parse_exact_label
 
 
@@ -15,17 +18,9 @@ class TransformersTargetGenerator:
 
     def generate_label(self, image_path: Path, prompt: str) -> GenerationOutput:
         messages = classification_messages(prompt).prompt_only
-        try:
-            rendered = self.processor.apply_chat_template(
-                list(messages),
-                tokenize=False,
-                add_generation_prompt=True,
-                enable_thinking=False,
-            )
-        except TypeError:
-            rendered = self.processor.apply_chat_template(
-                list(messages), tokenize=False, add_generation_prompt=True
-            )
+        rendered = render_chat_template(
+            self.processor, messages, add_generation_prompt=True
+        )
         with Image.open(image_path) as image:
             inputs = self.processor(text=rendered, images=image.convert("RGB"), return_tensors="pt")
         device = next(self.model.parameters()).device

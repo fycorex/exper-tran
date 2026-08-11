@@ -73,6 +73,9 @@ def run_smoke(context: CommandContext) -> str:
                     steps=smoke_config.steps,
                     attack_config=attack_config,
                     data_config=data_config,
+                    cka_target_weight=smoke_config.cka_target_weight,
+                    early_stop_proxy_gate=False,
+                    progress_interval=10,
                 )
                 if not result.proxy_target_all_hit:
                     rows.append(

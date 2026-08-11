@@ -30,6 +30,7 @@ MODEL_PAIRS = (
         "google/gemma-4-E2B-it",
     ),
     ModelPair("P14", ExperimentType.INTRA_FAMILY, "Qwen/Qwen3.5-2B", "Qwen/Qwen3.5-4B"),
+    ModelPair("P20", ExperimentType.INTRA_FAMILY, "Qwen/Qwen3.5-4B", "Qwen/Qwen3.5-2B"),
     ModelPair(
         "P16",
         ExperimentType.INTRA_FAMILY,
@@ -37,10 +38,22 @@ MODEL_PAIRS = (
         "OpenGVLab/InternVL3_5-4B-HF",
     ),
     ModelPair(
+        "P21",
+        ExperimentType.INTRA_FAMILY,
+        "OpenGVLab/InternVL3_5-4B-HF",
+        "OpenGVLab/InternVL3_5-2B-HF",
+    ),
+    ModelPair(
         "P19",
         ExperimentType.INTRA_FAMILY,
         "google/gemma-4-E2B-it",
         "google/gemma-4-E4B-it",
+    ),
+    ModelPair(
+        "P22",
+        ExperimentType.INTRA_FAMILY,
+        "google/gemma-4-E4B-it",
+        "google/gemma-4-E2B-it",
     ),
 )
 

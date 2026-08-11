@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import torch
 
-from primary_ml_cka.attack.cka.linear import linear_cka
+from primary_ml_cka.attack.cka.linear import paired_token_cka, token_cka_against_bank
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,13 +16,23 @@ class RepresentationMetrics:
 
 
 def representation_metrics(
-    z_clean: torch.Tensor, z_adv: torch.Tensor, z_reference: torch.Tensor
+    z_clean: torch.Tensor,
+    z_adv: torch.Tensor,
+    z_reference: torch.Tensor,
+    clean_mask: torch.Tensor | None = None,
+    adv_mask: torch.Tensor | None = None,
+    reference_mask: torch.Tensor | None = None,
 ) -> RepresentationMetrics:
-    clean_reference = linear_cka(z_clean, z_reference)
-    adv_source = linear_cka(z_adv, z_clean)
-    adv_reference = linear_cka(z_adv, z_reference)
+    """Summarize the same per-image token CKA geometry used by the attack."""
+    clean_reference = token_cka_against_bank(
+        z_clean, z_reference, clean_mask, reference_mask
+    ).mean()
+    adv_source = paired_token_cka(z_adv, z_clean, adv_mask, clean_mask).mean()
+    adv_reference = token_cka_against_bank(
+        z_adv, z_reference, adv_mask, reference_mask
+    ).mean()
     reference_gain = adv_reference - clean_reference
-    source_drop = linear_cka(z_clean, z_clean) - adv_source
+    source_drop = 1.0 - adv_source
     shift = reference_gain + source_drop
     return RepresentationMetrics(
         float(clean_reference),

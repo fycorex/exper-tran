@@ -1,6 +1,7 @@
 import json
+import os
 
-from primary_ml_cka.artifacts.writers import write_results_csv
+from primary_ml_cka.artifacts.writers import write_json, write_results_csv
 from primary_ml_cka.data.manifests import read_manifest
 from primary_ml_cka.domain.identifiers import MODEL_PAIRS
 from primary_ml_cka.experiment.attack_generation import (
@@ -15,6 +16,8 @@ from primary_ml_cka.experiment.orchestration import (
     resolve_attack_config,
     resolve_data_config,
 )
+from primary_ml_cka.evaluation.target_generation import evaluate_local_frozen_batch
+from primary_ml_cka.prompts.variants import get_prompt
 
 
 def run_confirmation(context: CommandContext) -> str:
@@ -30,6 +33,7 @@ def run_confirmation(context: CommandContext) -> str:
     }
     config = resolve_attack_config(context)
     data_config = resolve_data_config(context)
+    prompt = get_prompt(os.environ.get("PRIMARY_ML_CKA_PROMPT_ID", "original"))
     references = read_manifest(
         context.output_dir / "evaluation" / "manifests" / "target_training_references.jsonl"
     )
@@ -63,13 +67,44 @@ def run_confirmation(context: CommandContext) -> str:
                     steps=config.steps,
                     attack_config=config,
                     data_config=data_config,
+                    cka_target_weight=config.cka_target_weight,
+                    prompt=prompt,
                 )
+                rates = None
+                if result.proxy_target_all_hit:
+                    artifact_dir = (
+                        context.output_dir
+                        / "attacks"
+                        / pair.pair_id
+                        / "confirmation"
+                        / f"batch_{batch_index:02d}"
+                        / f"lambda_{selected_values[pair.pair_id]:g}"
+                    )
+                    evaluation = evaluate_local_frozen_batch(
+                        model_id=pair.target_model,
+                        hf_home=context.project_root / ".hf-cache",
+                        artifact_dir=artifact_dir,
+                        image_count=len(source),
+                        prompt=prompt,
+                        source_human_label=data_config.source_human_label,
+                        target_human_label=data_config.target_human_label,
+                    )
+                    rates = evaluation.rates
+                    write_json(
+                        context.output_dir
+                        / "evaluation"
+                        / "confirmation"
+                        / pair.pair_id
+                        / f"batch_{batch_index:02d}.json",
+                        evaluation,
+                    )
                 rows.append(
                     result_row(
                         pair,
                         result,
                         context.seed if context.seed is not None else config.confirmation_seed,
                         config.steps,
+                        rates,
                     )
                 )
         except Exception as exc:

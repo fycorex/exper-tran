@@ -7,18 +7,31 @@ from PIL import Image
 from primary_ml_cka.data.manifests import ImageRecord
 
 
+def ste_quantize_8bit(images: torch.Tensor) -> torch.Tensor:
+    """Match PNG uint8 values in the forward pass while preserving gradients."""
+    quantized = images.mul(255).round().clamp(0, 255).div(255)
+    return images + (quantized - images).detach()
+
+
 def resize_crop_normalize(
     images: torch.Tensor,
     *,
     size: int,
     mean: tuple[float, float, float],
     std: tuple[float, float, float],
+    interpolation_mode: str = "bicubic",
 ) -> torch.Tensor:
     if images.ndim != 4 or images.shape[1] != 3:
         raise ValueError(f"Expected BCHW RGB images, got {tuple(images.shape)}")
+    quantized_images = ste_quantize_8bit(images)
     resized = functional.interpolate(
-        images, size=(size, size), mode="bicubic", align_corners=False, antialias=True
+        quantized_images,
+        size=(size, size),
+        mode=interpolation_mode,
+        align_corners=False,
+        antialias=True,
     )
+    resized = ste_quantize_8bit(resized)
     mean_tensor = resized.new_tensor(mean).view(1, 3, 1, 1)
     std_tensor = resized.new_tensor(std).view(1, 3, 1, 1)
     return (resized - mean_tensor) / std_tensor

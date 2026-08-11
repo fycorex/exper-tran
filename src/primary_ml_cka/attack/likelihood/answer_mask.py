@@ -39,12 +39,17 @@ def build_answer_mask(
     matches: list[tuple[tuple[int, ...], tuple[int, ...]]] = []
     for candidate in candidate_answer_ids:
         token_ids = tuple(int(token) for token in candidate)
-        positions = _find_subsequence(full, list(token_ids), max(0, common - 2))
+        # Never allow a class-number occurrence in the user prompt to become a
+        # supervised answer token. All supported chat templates retain the
+        # generation prefix through ``common``; assistant content starts after it.
+        positions = _find_subsequence(full, list(token_ids), common)
         if positions is not None:
             matches.append((token_ids, positions))
     if not matches:
         raise ValueError("Exact assistant answer tokens were not found after the prompt boundary")
-    token_ids, positions = min(matches, key=lambda item: (item[1][0], len(item[0])))
+    # Prefer the shortest exact tokenization so chat-template boundary tokens
+    # (for example a shared assistant newline) are not scored as answer content.
+    token_ids, positions = min(matches, key=lambda item: (len(item[0]), item[1][0]))
     labels = torch.full_like(full_input_ids, -100)
     labels[list(positions)] = full_input_ids[list(positions)]
     return AnswerMask(labels, token_ids, positions)

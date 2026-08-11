@@ -1,0 +1,13 @@
+diagnostics_name: p21_mixed_precision_semantic
+phase: recovery_p21_mixed
+early_stop_proxy_gate: false
+steps: 100
+seed: 42
+batch_size: 8
+trials:
+  - {pair: P21, prompt: original, lambda: 10, alpha: 4, beta: 0}
+  - {pair: P21, prompt: original, lambda: 30, alpha: 4, beta: 0}
+  - {pair: P21, prompt: original, lambda: 10, alpha: 4, beta: 0.5}
+  - {pair: P21, prompt: original, lambda: 30, alpha: 4, beta: 0.5}
+  - {pair: P21, prompt: original, lambda: 10, alpha: 4, beta: 2}
+  - {pair: P21, prompt: original, lambda: 30, alpha: 4, beta: 2}

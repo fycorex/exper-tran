@@ -7,4 +7,5 @@ SIGLIP2_PREPROCESS = partial(
     size=384,
     mean=(0.5, 0.5, 0.5),
     std=(0.5, 0.5, 0.5),
+    interpolation_mode="bilinear",
 )

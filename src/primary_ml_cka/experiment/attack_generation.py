@@ -36,6 +36,7 @@ class AttackRunResult:
     batch_id: str
     lambda_cka: float
     cka_target_weight: float
+    proxy_tap_path: str
     source_human_label: int
     target_human_label: int
     source_image_ids: tuple[str, ...]
@@ -132,7 +133,11 @@ def attack_one_batch(
     data_config: DataConfig,
     reference_batch_index: int | None = None,
     cka_target_weight: float = 1.0,
+    semantic_target_weight: float = 0.0,
     objective_tag: str | None = None,
+    early_stop_proxy_gate: bool = False,
+    progress_interval: int = 0,
+    prompt: str = CLASSIFICATION_PROMPT,
 ) -> AttackRunResult:
     batch_size = len(source_records)
     if batch_size < 2:
@@ -161,7 +166,11 @@ def attack_one_batch(
         clean_mask = clean_representation.mask.detach()
         z_reference = reference_representation.tokens.detach().float()
         reference_mask = reference_representation.mask.detach()
-    initial = shared_random_start(clean, attack_config.epsilon, seed)
+    initial = (
+        shared_random_start(clean, attack_config.epsilon, seed)
+        if attack_config.random_start
+        else clean.detach().clone().requires_grad_(True)
+    )
     state = MomentumPGDState(initial, torch.zeros_like(initial))
     initial_total = float("nan")
     diagnostics = None
@@ -171,7 +180,7 @@ def attack_one_batch(
         proxy_output = proxy.target_loss(
             state.adversarial,
             data_config.target_human_label,
-            CLASSIFICATION_PROMPT,
+            prompt,
         )
         if lambda_cka == 0:
             losses = primary_loss(proxy_output.loss, 0)
@@ -187,12 +196,46 @@ def attack_one_batch(
                 clean_mask=clean_mask,
                 reference_mask=reference_mask,
                 target_cka_weight=cka_target_weight,
+                semantic_target_weight=semantic_target_weight,
             )
         if not torch.isfinite(losses.total):
             raise RuntimeError(f"Non-finite total loss at step {step}")
+        step_diagnostics = proxy_target_diagnostics(
+            proxy_output.class_logits,
+            target_index=human_label_to_index(data_config.target_human_label),
+            required_margin=attack_config.class_margin,
+            required_probability=attack_config.proxy_probability_threshold,
+        )
+        robust_stop_diagnostics = proxy_target_diagnostics(
+            proxy_output.class_logits,
+            target_index=human_label_to_index(data_config.target_human_label),
+            required_margin=attack_config.class_margin + 0.5,
+            required_probability=max(attack_config.proxy_probability_threshold, 0.95),
+        )
+        if progress_interval and (step == 0 or (step + 1) % progress_interval == 0):
+            print(
+                f"{pair.pair_id} lambda={lambda_cka:g} step={step + 1}/{steps} "
+                f"closed_set={step_diagnostics.hit_count}/{step_diagnostics.denominator} "
+                f"min_margin={step_diagnostics.minimum_logit_margin:.4f} "
+                f"min_probability={step_diagnostics.minimum_target_probability:.4f}",
+                flush=True,
+            )
+        if early_stop_proxy_gate and step > 0 and robust_stop_diagnostics.all_hit:
+            last_losses = losses
+            last_proxy = proxy_output
+            print(
+                f"{pair.pair_id} lambda={lambda_cka:g} early-stop at step {step + 1}: "
+                "robust closed-set proxy gate reached",
+                flush=True,
+            )
+            break
         if step == 0:
             initial_total = float(losses.total.detach())
-            if lambda_cka > 0:
+            memory_heavy_diagnostic_proxies = {
+                "google/gemma-4-E4B-it",
+                "google/siglip2-so400m-patch14-384",
+            }
+            if lambda_cka > 0 and pair.proxy_model not in memory_heavy_diagnostic_proxies:
                 diagnostics = component_gradient_diagnostics(
                     losses.ml, losses.cka, state.adversarial, lambda_cka
                 )
@@ -212,7 +255,7 @@ def attack_one_batch(
         final_proxy = proxy.target_loss(
             adversarial,
             data_config.target_human_label,
-            CLASSIFICATION_PROMPT,
+            prompt,
         )
         final_representation = proxy.image_embeddings(adversarial)
         z_adv_final = final_representation.tokens.float()
@@ -226,12 +269,16 @@ def attack_one_batch(
             clean_mask=clean_mask if lambda_cka > 0 else None,
             reference_mask=reference_mask if lambda_cka > 0 else None,
             target_cka_weight=cka_target_weight,
+            semantic_target_weight=semantic_target_weight,
         )
     assert_parameter_gradients_none(proxy.model)
     representation = representation_metrics(
-        clean_representation.embeddings.float(),
-        final_representation.embeddings.float(),
-        reference_representation.embeddings.float(),
+        clean_representation.tokens.float(),
+        final_representation.tokens.float(),
+        reference_representation.tokens.float(),
+        clean_representation.mask,
+        final_representation.mask,
+        reference_representation.mask,
     )
     artifact_dir = output_dir / "attacks" / pair.pair_id / phase / f"batch_{source_batch_index:02d}"
     if objective_tag is not None:
@@ -247,12 +294,12 @@ def attack_one_batch(
         png_proxy = proxy.target_loss(
             adversarial_png,
             data_config.target_human_label,
-            CLASSIFICATION_PROMPT,
+            prompt,
         )
     if png_proxy.class_logits is None or not torch.isfinite(png_proxy.class_logits).all():
         raise RuntimeError("Frozen PNG proxy class logits are missing or non-finite")
     free_labels = (
-        proxy.free_generate_labels(adversarial_png, CLASSIFICATION_PROMPT)
+        proxy.free_generate_labels(adversarial_png, prompt)
         if attack_config.require_proxy_free_generation
         else None
     )
@@ -271,6 +318,7 @@ def attack_one_batch(
         batch_id=f"{source_batch_index:02d}",
         lambda_cka=lambda_cka,
         cka_target_weight=cka_target_weight,
+        proxy_tap_path=final_representation.tap.module_path,
         source_human_label=data_config.source_human_label,
         target_human_label=data_config.target_human_label,
         source_image_ids=tuple(record.image_id for record in source_records),
@@ -337,14 +385,6 @@ def result_row(
     steps: int,
     rates: AttackRates | None = None,
 ) -> ResultRow:
-    if pair.proxy_model.startswith("Qwen/"):
-        proxy_tap_path = "model.visual.merger.norm"
-    elif pair.proxy_model.startswith("OpenGVLab/InternVL"):
-        proxy_tap_path = "model.vision_tower.layernorm"
-    elif pair.proxy_model.startswith("google/gemma"):
-        proxy_tap_path = "model.embed_vision"
-    else:
-        proxy_tap_path = "vision_model.last_hidden_state"
     values = {
         "pair_id": pair.pair_id,
         "exp_type": pair.exp_type.value,
@@ -355,7 +395,7 @@ def result_row(
         "proxy_revision": MODEL_REVISIONS[pair.proxy_model],
         "target_revision": MODEL_REVISIONS[pair.target_model],
         "proxy_tap_status": "validated",
-        "proxy_tap_path": proxy_tap_path,
+        "proxy_tap_path": result.proxy_tap_path,
         "phase": result.phase,
         "batch_id": result.batch_id,
         "source_image_ids": "|".join(result.source_image_ids),

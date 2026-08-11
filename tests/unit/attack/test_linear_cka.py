@@ -41,3 +41,16 @@ def test_token_cka_reference_bank_averages_independent_references() -> None:
     values = token_cka_against_bank(images, references)
     assert values.shape == (2, 3)
     assert torch.isfinite(values).all()
+
+
+def test_token_cka_bank_matches_explicit_pairwise_values() -> None:
+    images = torch.randn(2, 5, 7)
+    references = torch.randn(3, 5, 4)
+    values = token_cka_against_bank(images, references)
+    expected = torch.stack(
+        [
+            torch.stack([linear_cka(image, reference) for reference in references])
+            for image in images
+        ]
+    )
+    assert torch.allclose(values, expected, atol=1e-6, rtol=1e-5)

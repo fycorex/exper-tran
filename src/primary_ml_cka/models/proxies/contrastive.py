@@ -2,6 +2,7 @@ from collections.abc import Callable
 
 import torch
 import torch.nn.functional as functional
+from torch.utils.checkpoint import checkpoint
 
 from primary_ml_cka.attack.likelihood.contrastive_ce import proxy_classification_loss
 from primary_ml_cka.domain.identifiers import MODEL_REVISIONS
@@ -41,6 +42,7 @@ class ContrastiveProxy(BaseProxy):
         class_margin: float = 2.0,
         margin_weight: float = 1.0,
         margin_temperature: float = 0.5,
+        microbatch_size: int | None = None,
     ) -> None:
         self.model = model
         self.tokenizer = tokenizer
@@ -50,12 +52,25 @@ class ContrastiveProxy(BaseProxy):
         self.class_margin = class_margin
         self.margin_weight = margin_weight
         self.margin_temperature = margin_temperature
+        self.microbatch_size = microbatch_size
         self.class_embeddings = self._build_class_embeddings()
 
     def image_embeddings(self, images: torch.Tensor) -> ImageEmbeddingOutput[torch.Tensor]:
-        pixel_values = self.image_preprocess(images)
-        vision_output = self.model.vision_model(pixel_values=pixel_values, return_dict=True)
-        tokens = vision_output.last_hidden_state
+        def extract(image_chunk: torch.Tensor) -> torch.Tensor:
+            pixel_values = self.image_preprocess(image_chunk)
+            vision_output = self.model.vision_model(
+                pixel_values=pixel_values, return_dict=True
+            )
+            return vision_output.last_hidden_state
+
+        chunk_size = self.microbatch_size or images.shape[0]
+        token_chunks = []
+        for image_chunk in images.split(chunk_size):
+            if torch.is_grad_enabled() and images.requires_grad:
+                token_chunks.append(checkpoint(extract, image_chunk, use_reentrant=False))
+            else:
+                token_chunks.append(extract(image_chunk))
+        tokens = torch.cat(token_chunks)
         if self.drop_cls_token:
             tokens = tokens[:, 1:, :]
         mask = torch.ones(tokens.shape[:2], dtype=torch.bool, device=tokens.device)
@@ -94,17 +109,30 @@ class ContrastiveProxy(BaseProxy):
         self, images: torch.Tensor, human_target_label: int, prompt: str
     ) -> ProxyLossOutput[torch.Tensor]:
         target_index = human_label_to_index(human_target_label)
-        image_features = _pooled_feature(
-            self.model.get_image_features(pixel_values=self.image_preprocess(images))
-        )
-        scale = self.model.logit_scale.exp()
-        bias_parameter = getattr(self.model, "logit_bias", None)
-        bias = bias_parameter if bias_parameter is not None else None
-        images = functional.normalize(image_features, dim=-1)
-        classes = functional.normalize(self.class_embeddings, dim=-1)
-        logits = scale * (images @ classes.T)
-        if bias is not None:
-            logits = logits + bias
+
+        def score(image_chunk: torch.Tensor) -> torch.Tensor:
+            image_features = _pooled_feature(
+                self.model.get_image_features(
+                    pixel_values=self.image_preprocess(image_chunk)
+                )
+            )
+            scale = self.model.logit_scale.exp()
+            bias_parameter = getattr(self.model, "logit_bias", None)
+            normalized_images = functional.normalize(image_features, dim=-1)
+            classes = functional.normalize(self.class_embeddings, dim=-1)
+            chunk_logits = scale * (normalized_images @ classes.T)
+            if bias_parameter is not None:
+                chunk_logits = chunk_logits + bias_parameter
+            return chunk_logits
+
+        chunk_size = self.microbatch_size or images.shape[0]
+        logit_chunks = []
+        for image_chunk in images.split(chunk_size):
+            if torch.is_grad_enabled() and images.requires_grad:
+                logit_chunks.append(checkpoint(score, image_chunk, use_reentrant=False))
+            else:
+                logit_chunks.append(score(image_chunk))
+        logits = torch.cat(logit_chunks)
         output = proxy_classification_loss(
             logits,
             target_index=target_index,

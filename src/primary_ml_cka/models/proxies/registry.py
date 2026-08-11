@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import torch
@@ -24,6 +25,16 @@ from primary_ml_cka.models.proxies.visual import (
 )
 
 
+def vision_precision_skip_modules(model_id: str) -> tuple[str, ...]:
+    if model_id.startswith("Qwen/"):
+        return ("visual",)
+    if model_id.startswith("OpenGVLab/InternVL"):
+        return ("vision_tower", "multi_modal_projector")
+    if model_id.startswith("google/gemma"):
+        return ("vision_tower", "embed_vision")
+    return ()
+
+
 def load_proxy(
     model_id: str,
     hf_home: Path,
@@ -44,6 +55,7 @@ def load_proxy(
             class_margin=attack_config.class_margin,
             margin_weight=attack_config.margin_weight,
             margin_temperature=attack_config.margin_temperature,
+            microbatch_size=4,
         )
     if model_id == "google/siglip2-so400m-patch14-384":
         model = freeze_module(AutoModel.from_pretrained(snapshot, local_files_only=True).to(device))
@@ -57,20 +69,33 @@ def load_proxy(
             class_margin=attack_config.class_margin,
             margin_weight=attack_config.margin_weight,
             margin_temperature=attack_config.margin_temperature,
+            microbatch_size=1,
         )
-    model = load_generative_proxy(snapshot, device)
+    keep_vision_bf16 = os.environ.get("PRIMARY_ML_CKA_KEEP_VISION_BF16") == "1"
+    model = load_generative_proxy(
+        snapshot,
+        device,
+        modules_to_not_convert=(
+            vision_precision_skip_modules(model_id) if keep_vision_bf16 else ()
+        ),
+    )
     processor = load_processor(snapshot)
     if model_id.startswith("Qwen/"):
         visual_inputs = qwen_visual_inputs
 
         def image_embedding_fn(images: torch.Tensor):
-            return qwen_proxy_embeddings(model_id, model.model.visual, images)
+            return qwen_proxy_embeddings(model_id, model, images)
 
     elif model_id.startswith("OpenGVLab/InternVL"):
         visual_inputs = internvl_visual_inputs
 
         def image_embedding_fn(images: torch.Tensor):
-            return internvl_proxy_embeddings(model_id, model.model.vision_tower, images)
+            return internvl_proxy_embeddings(
+                model_id,
+                model,
+                images,
+                microbatch_size=(2 if model_id.endswith("4B-HF") else 4),
+            )
 
     elif model_id.startswith("google/gemma"):
 
@@ -90,5 +115,13 @@ def load_proxy(
         class_margin=attack_config.class_margin,
         margin_weight=attack_config.margin_weight,
         margin_temperature=attack_config.margin_temperature,
-        microbatch_size=1 if model_id.startswith("google/gemma") else None,
+        microbatch_size=(
+            1
+            if model_id.startswith("google/gemma")
+            else 3
+            if model_id == "Qwen/Qwen3.5-4B"
+            else 2
+            if model_id.endswith("4B-HF")
+            else 4
+        ),
     )

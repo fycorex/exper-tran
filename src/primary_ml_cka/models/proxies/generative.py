@@ -13,7 +13,10 @@ from primary_ml_cka.attack.likelihood.generative_nll import mean_answer_token_lo
 from primary_ml_cka.domain.labels import human_label_to_index
 from primary_ml_cka.domain.types import ImageEmbeddingOutput, ProxyLossOutput
 from primary_ml_cka.models.proxies.base import BaseProxy
-from primary_ml_cka.prompts.chat_templates import classification_messages
+from primary_ml_cka.prompts.chat_templates import (
+    classification_messages,
+    render_chat_template,
+)
 from primary_ml_cka.prompts.parser import parse_exact_label
 
 
@@ -46,16 +49,15 @@ class GenerativeProxy(BaseProxy):
         self, images: torch.Tensor, human_target_label: int, prompt: str
     ) -> ProxyLossOutput[torch.Tensor]:
         target_index = human_label_to_index(human_target_label)
-        class_scores = []
-        target_mask = None
-        target_rendered = ""
-        for label in range(1, 11):
-            score, rendered, mask = self._answer_score(images, prompt, str(label))
-            class_scores.append(score)
-            if label == human_target_label:
-                target_mask = mask
-                target_rendered = rendered
-        logits = torch.stack(class_scores, dim=1)
+        joint = self._joint_answer_scores(images, prompt)
+        if joint is None:
+            scored = [self._answer_score(images, prompt, str(label)) for label in range(1, 11)]
+            logits = torch.stack([item[0] for item in scored], dim=1)
+            target_rendered, target_mask = scored[target_index][1:]
+        else:
+            logits, rendered_prompts, masks = joint
+            target_rendered = rendered_prompts[target_index]
+            target_mask = masks[target_index]
         output = proxy_classification_loss(
             logits,
             target_index=target_index,
@@ -63,8 +65,6 @@ class GenerativeProxy(BaseProxy):
             margin_weight=self.margin_weight,
             temperature=self.margin_temperature,
         )
-        if target_mask is None:
-            raise AssertionError("Target answer mask was not constructed")
         target_nll = -logits[:, target_index].mean()
         return ProxyLossOutput(
             loss=output.total,
@@ -79,23 +79,111 @@ class GenerativeProxy(BaseProxy):
             rendered_prompt=target_rendered,
         )
 
-    def _answer_score(
-        self, images: torch.Tensor, prompt: str, answer: str
-    ) -> tuple[torch.Tensor, str, object]:
-        messages = classification_messages(prompt, answer)
-        tokenizer = self.processor.tokenizer
-        prompt_text = self.processor.apply_chat_template(
-            list(messages.prompt_only), tokenize=False, add_generation_prompt=True
-        )
-        full_text = self.processor.apply_chat_template(
-            list(messages.with_answer), tokenize=False, add_generation_prompt=False
-        )
+    def _joint_answer_scores(self, images: torch.Tensor, prompt: str):
+        """Score a shared answer prefix and ten final class tokens in one forward."""
         with torch.no_grad():
             visual_token_count = self._visual_token_count(self.visual_inputs(images.detach()))
+        encodings = [
+            self._answer_encoding(prompt, str(label), visual_token_count)
+            for label in range(1, 11)
+        ]
+        rendered_prompts = tuple(item[0] for item in encodings)
+        full_ids = tuple(item[1] for item in encodings)
+        mm_types = tuple(item[2] for item in encodings)
+        masks = tuple(item[3] for item in encodings)
+        positions = tuple(tuple(mask.label_positions) for mask in masks)
+        answer_ids = tuple(tuple(mask.answer_token_ids) for mask in masks)
+        if any(not item for item in answer_ids):
+            return None
+        groups: dict[tuple[tuple[int, ...], tuple[int, ...]], list[int]] = {}
+        for index, (item_positions, item_ids) in enumerate(zip(positions, answer_ids, strict=True)):
+            groups.setdefault((item_positions, item_ids[:-1]), []).append(index)
+        chunk_size = getattr(self, "microbatch_size", None) or images.shape[0]
+        class_scores: list[torch.Tensor | None] = [None] * 10
+        for indices in groups.values():
+            representative_ids = full_ids[indices[0]]
+            representative_mm = mm_types[indices[0]]
+            scored_positions = torch.tensor(
+                [position - 1 for position in positions[indices[0]]], dtype=torch.long
+            )
+            candidate_ids = torch.tensor([answer_ids[index] for index in indices])
+
+            def score(
+                image_tensor: torch.Tensor,
+                representative_ids: torch.Tensor = representative_ids,
+                representative_mm: torch.Tensor | None = representative_mm,
+                scored_positions: torch.Tensor = scored_positions,
+                candidate_ids: torch.Tensor = candidate_ids,
+            ) -> torch.Tensor:
+                item_count = image_tensor.shape[0]
+                input_ids = representative_ids.unsqueeze(0).expand(item_count, -1).to(
+                    image_tensor.device
+                )
+                model_inputs = {
+                    "input_ids": input_ids,
+                    "attention_mask": torch.ones_like(input_ids),
+                    "use_cache": False,
+                    **self.visual_inputs(image_tensor),
+                }
+                if representative_mm is not None:
+                    model_inputs["mm_token_type_ids"] = (
+                        representative_mm.unsqueeze(0)
+                        .expand(item_count, -1)
+                        .to(image_tensor.device)
+                    )
+                output = self.model(**model_inputs)
+                selected = output.logits[:, scored_positions.to(image_tensor.device)].float()
+                log_probabilities = selected.log_softmax(dim=-1)
+                scores = []
+                for ids in candidate_ids.to(image_tensor.device):
+                    gathered = log_probabilities.gather(
+                        -1, ids.view(1, -1, 1).expand(item_count, -1, -1)
+                    ).squeeze(-1)
+                    scores.append(gathered.mean(dim=1))
+                return torch.stack(scores, dim=1)
+
+            chunks = []
+            for image_chunk in images.split(chunk_size):
+                if torch.is_grad_enabled() and images.requires_grad:
+                    chunks.append(checkpoint(score, image_chunk, use_reentrant=False))
+                else:
+                    chunks.append(score(image_chunk))
+            group_scores = torch.cat(chunks)
+            for column, class_index in enumerate(indices):
+                class_scores[class_index] = group_scores[:, column]
+        if any(item is None for item in class_scores):
+            raise AssertionError("Every closed-set class must receive a score")
+        return torch.stack(class_scores, dim=1), rendered_prompts, masks  # type: ignore[arg-type]
+
+    def _answer_encoding(
+        self, prompt: str, answer: str, visual_token_count: int | None
+    ) -> tuple[str, torch.Tensor, torch.Tensor | None, object]:
+        messages = classification_messages(prompt, answer)
+        tokenizer = self.processor.tokenizer
+        prompt_text = render_chat_template(
+            self.processor,
+            messages.prompt_only,
+            add_generation_prompt=True,
+        )
+        full_text = render_chat_template(
+            self.processor,
+            messages.with_answer,
+            add_generation_prompt=False,
+        )
         prompt_ids, _ = self._multimodal_token_ids(prompt_text, visual_token_count)
         full_ids, full_mm_types = self._multimodal_token_ids(full_text, visual_token_count)
         mask = build_answer_mask(
             full_ids, prompt_ids, answer_tokenization_candidates(tokenizer, answer)
+        )
+        return full_text, full_ids, full_mm_types, mask
+
+    def _answer_score(
+        self, images: torch.Tensor, prompt: str, answer: str
+    ) -> tuple[torch.Tensor, str, object]:
+        with torch.no_grad():
+            visual_token_count = self._visual_token_count(self.visual_inputs(images.detach()))
+        full_text, full_ids, full_mm_types, mask = self._answer_encoding(
+            prompt, answer, visual_token_count
         )
         def score(image_tensor: torch.Tensor) -> torch.Tensor:
             item_count = image_tensor.shape[0]
@@ -169,17 +257,9 @@ class GenerativeProxy(BaseProxy):
         self, images: torch.Tensor, prompt: str
     ) -> tuple[int | None, ...]:
         messages = classification_messages(prompt).prompt_only
-        try:
-            rendered = self.processor.apply_chat_template(
-                list(messages),
-                tokenize=False,
-                add_generation_prompt=True,
-                enable_thinking=False,
-            )
-        except TypeError:
-            rendered = self.processor.apply_chat_template(
-                list(messages), tokenize=False, add_generation_prompt=True
-            )
+        rendered = render_chat_template(
+            self.processor, messages, add_generation_prompt=True
+        )
         visual_inputs = self.visual_inputs(images)
         visual_token_count = self._visual_token_count(visual_inputs)
         input_ids, mm_types = self._multimodal_token_ids(rendered, visual_token_count)

@@ -72,19 +72,44 @@ def token_cka_against_bank(
     if images.shape[1] != references.shape[1]:
         raise ValueError("Image and reference token counts must match")
     batch_size, reference_count = images.shape[0], references.shape[0]
-    expanded_images = images[:, None].expand(-1, reference_count, -1, -1)
-    expanded_references = references[None].expand(batch_size, -1, -1, -1)
     if image_mask is None:
         image_mask = torch.ones(images.shape[:2], dtype=torch.bool, device=images.device)
     if reference_mask is None:
         reference_mask = torch.ones(
             references.shape[:2], dtype=torch.bool, device=references.device
         )
-    expanded_image_mask = image_mask[:, None].expand(-1, reference_count, -1)
-    expanded_reference_mask = reference_mask[None].expand(batch_size, -1, -1)
-    return paired_token_cka(
-        expanded_images.reshape(-1, images.shape[1], images.shape[2]),
-        expanded_references.reshape(-1, references.shape[1], references.shape[2]),
-        expanded_image_mask.reshape(-1, images.shape[1]),
-        expanded_reference_mask.reshape(-1, references.shape[1]),
-    ).reshape(batch_size, reference_count)
+    if bool(image_mask.all()) and bool(reference_mask.all()):
+        # Compute every token Gram once. Expanding [B,K,T,D] and reshaping
+        # materializes hundreds of MiB for wide VLM embeddings (Gemma D=2560).
+        images_fp32 = images.float()
+        references_fp32 = references.float()
+        centered_images = images_fp32 - images_fp32.mean(dim=1, keepdim=True)
+        centered_references = references_fp32 - references_fp32.mean(
+            dim=1, keepdim=True
+        )
+        image_grams = centered_images @ centered_images.transpose(1, 2)
+        reference_grams = centered_references @ centered_references.transpose(1, 2)
+        numerator = torch.einsum("bij,kij->bk", image_grams, reference_grams)
+        image_norms = torch.linalg.vector_norm(image_grams.flatten(1), dim=1)
+        reference_norms = torch.linalg.vector_norm(reference_grams.flatten(1), dim=1)
+        denominator = image_norms[:, None] * reference_norms[None, :]
+        if not torch.isfinite(denominator).all() or bool((denominator <= 0).any()):
+            raise ValueError("CKA denominator must be finite and positive")
+        return numerator / (denominator + 1e-12)
+
+    values = []
+    for image_index in range(batch_size):
+        row = []
+        for reference_index in range(reference_count):
+            valid = image_mask[image_index].bool() & reference_mask[
+                reference_index
+            ].bool()
+            if int(valid.sum()) < 2:
+                raise ValueError("Every image/reference pair needs two valid tokens")
+            row.append(
+                linear_cka(
+                    images[image_index, valid], references[reference_index, valid]
+                )
+            )
+        values.append(torch.stack(row))
+    return torch.stack(values)

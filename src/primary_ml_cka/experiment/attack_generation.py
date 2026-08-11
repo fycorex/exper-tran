@@ -11,7 +11,10 @@ from primary_ml_cka.artifacts.schemas import ALL_RESULTS_COLUMNS, ResultRow
 from primary_ml_cka.artifacts.writers import write_json
 from primary_ml_cka.attack.cka.batches import fixed_reference_batch
 from primary_ml_cka.attack.likelihood.contrastive_ce import proxy_target_diagnostics
-from primary_ml_cka.attack.losses.component_gradients import component_gradient_diagnostics
+from primary_ml_cka.attack.losses.component_gradients import (
+    calibrate_gradient_ratio,
+    component_gradient_diagnostics,
+)
 from primary_ml_cka.attack.losses.primary import primary_loss
 from primary_ml_cka.attack.optimization.momentum_pgd import MomentumPGDState, descent_step
 from primary_ml_cka.attack.optimization.random_start import shared_random_start
@@ -35,7 +38,11 @@ class AttackRunResult:
     phase: str
     batch_id: str
     lambda_cka: float
+    effective_lambda_cka: float
+    gradient_ratio: float | None
+    cka_source_weight: float
     cka_target_weight: float
+    semantic_target_weight: float
     proxy_tap_path: str
     source_human_label: int
     target_human_label: int
@@ -46,6 +53,7 @@ class AttackRunResult:
     proxy_target_hit_count: int
     proxy_target_hit_denominator: int
     proxy_target_all_hit: bool
+    proxy_target_hit_mask: tuple[bool, ...]
     proxy_min_target_logit_margin: float
     proxy_min_target_probability: float
     proxy_free_target_hit_count: int
@@ -95,6 +103,19 @@ def _manifest_name(model_id: str, phase: str) -> str:
     return f"{model_id.replace('/', '__')}__{phase}.jsonl"
 
 
+def _detached_embedding_bank(
+    proxy: object, images: torch.Tensor, *, chunk_size: int = 8
+) -> tuple[torch.Tensor, torch.Tensor]:
+    token_chunks = []
+    mask_chunks = []
+    with torch.no_grad():
+        for chunk in images.split(chunk_size):
+            output = proxy.image_embeddings(chunk)
+            token_chunks.append(output.tokens.detach().float())
+            mask_chunks.append(output.mask.detach())
+    return torch.cat(token_chunks), torch.cat(mask_chunks)
+
+
 def _save_png_batch(
     root: Path,
     clean: torch.Tensor,
@@ -132,8 +153,11 @@ def attack_one_batch(
     attack_config: AttackConfig,
     data_config: DataConfig,
     reference_batch_index: int | None = None,
+    reference_bank_size: int | None = None,
+    cka_source_weight: float = 1.0,
     cka_target_weight: float = 1.0,
     semantic_target_weight: float = 0.0,
+    gradient_ratio: float | None = None,
     objective_tag: str | None = None,
     early_stop_proxy_gate: bool = False,
     progress_interval: int = 0,
@@ -142,6 +166,12 @@ def attack_one_batch(
     batch_size = len(source_records)
     if batch_size < 2:
         raise ValueError("An attack/CKA batch must contain at least two images")
+    if lambda_cka > 0 and not any(
+        (cka_source_weight, cka_target_weight, semantic_target_weight)
+    ):
+        raise ValueError("A positive auxiliary weight requires at least one objective component")
+    if gradient_ratio is not None and lambda_cka <= 0:
+        raise ValueError("gradient_ratio requires a positive auxiliary loss")
     device = torch.device("cuda")
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; CPU attack execution is forbidden")
@@ -153,6 +183,7 @@ def attack_one_batch(
         reference_records,
         resolved_reference_batch,
         batch_size,
+        reference_count=reference_bank_size,
     )
     clean = _cuda_images(canonical_root, source_records, attack_config.canvas_size)
     reference_images = _cuda_images(canonical_root, references, attack_config.canvas_size)
@@ -161,19 +192,66 @@ def attack_one_batch(
     proxy = load_proxy(pair.proxy_model, project_root / ".hf-cache", device, attack_config)
     with torch.no_grad():
         clean_representation = proxy.image_embeddings(clean)
-        reference_representation = proxy.image_embeddings(reference_images)
         z_clean = clean_representation.tokens.detach().float()
         clean_mask = clean_representation.mask.detach()
-        z_reference = reference_representation.tokens.detach().float()
-        reference_mask = reference_representation.mask.detach()
+    z_reference, reference_mask = _detached_embedding_bank(proxy, reference_images)
+    del reference_images
     initial = (
         shared_random_start(clean, attack_config.epsilon, seed)
         if attack_config.random_start
         else clean.detach().clone().requires_grad_(True)
     )
     state = MomentumPGDState(initial, torch.zeros_like(initial))
-    initial_total = float("nan")
+    effective_lambda_cka = lambda_cka
     diagnostics = None
+    if lambda_cka > 0 and gradient_ratio is not None:
+        calibration_proxy = proxy.target_loss(
+            state.adversarial,
+            data_config.target_human_label,
+            prompt,
+        )
+        grad_ml = torch.autograd.grad(
+            calibration_proxy.loss, state.adversarial, only_inputs=True
+        )[0]
+        del calibration_proxy
+        calibration_representation = proxy.image_embeddings(state.adversarial)
+        calibration_losses = primary_loss(
+            state.adversarial.new_zeros(()),
+            1.0,
+            calibration_representation.tokens,
+            z_clean,
+            z_reference,
+            adv_mask=calibration_representation.mask,
+            clean_mask=clean_mask,
+            reference_mask=reference_mask,
+            source_cka_weight=cka_source_weight,
+            target_cka_weight=cka_target_weight,
+            semantic_target_weight=semantic_target_weight,
+        )
+        grad_aux = torch.autograd.grad(
+            calibration_losses.cka, state.adversarial, only_inputs=True
+        )[0]
+        effective_lambda_cka, calibration_diagnostics = calibrate_gradient_ratio(
+            grad_ml, grad_aux, gradient_ratio
+        )
+        calibration_grad_ml_l1 = calibration_diagnostics.grad_ml_l1
+        calibration_grad_aux_weighted_l1 = (
+            calibration_diagnostics.grad_cka_weighted_l1
+        )
+        calibration_grad_cosine = calibration_diagnostics.cosine
+        print(
+            f"{pair.pair_id} calibrated rho={gradient_ratio:g} "
+            f"effective_lambda={effective_lambda_cka:.6g} "
+            f"grad_cls={calibration_grad_ml_l1:.6g} "
+            f"grad_aux_weighted={calibration_grad_aux_weighted_l1:.6g}",
+            flush=True,
+        )
+        del calibration_representation, calibration_losses, grad_ml, grad_aux
+    else:
+        calibration_grad_ml_l1 = 0.0
+        calibration_grad_aux_weighted_l1 = 0.0
+        calibration_grad_cosine = 0.0
+    initial_total = float("nan")
     last_losses = None
     last_proxy = None
     for step in range(steps):
@@ -182,19 +260,20 @@ def attack_one_batch(
             data_config.target_human_label,
             prompt,
         )
-        if lambda_cka == 0:
+        if effective_lambda_cka == 0:
             losses = primary_loss(proxy_output.loss, 0)
         else:
             adv_representation = proxy.image_embeddings(state.adversarial)
             losses = primary_loss(
                 proxy_output.loss,
-                lambda_cka,
+                effective_lambda_cka,
                 adv_representation.tokens,
                 z_clean,
                 z_reference,
                 adv_mask=adv_representation.mask,
                 clean_mask=clean_mask,
                 reference_mask=reference_mask,
+                source_cka_weight=cka_source_weight,
                 target_cka_weight=cka_target_weight,
                 semantic_target_weight=semantic_target_weight,
             )
@@ -235,9 +314,13 @@ def attack_one_batch(
                 "google/gemma-4-E4B-it",
                 "google/siglip2-so400m-patch14-384",
             }
-            if lambda_cka > 0 and pair.proxy_model not in memory_heavy_diagnostic_proxies:
+            if (
+                lambda_cka > 0
+                and gradient_ratio is None
+                and pair.proxy_model not in memory_heavy_diagnostic_proxies
+            ):
                 diagnostics = component_gradient_diagnostics(
-                    losses.ml, losses.cka, state.adversarial, lambda_cka
+                    losses.ml, losses.cka, state.adversarial, effective_lambda_cka
                 )
         state = descent_step(
             losses.total,
@@ -261,13 +344,14 @@ def attack_one_batch(
         z_adv_final = final_representation.tokens.float()
         final_losses = primary_loss(
             final_proxy.loss,
-            lambda_cka,
-            z_adv_final if lambda_cka > 0 else None,
-            z_clean if lambda_cka > 0 else None,
-            z_reference if lambda_cka > 0 else None,
-            adv_mask=final_representation.mask if lambda_cka > 0 else None,
-            clean_mask=clean_mask if lambda_cka > 0 else None,
-            reference_mask=reference_mask if lambda_cka > 0 else None,
+            effective_lambda_cka,
+            z_adv_final if effective_lambda_cka > 0 else None,
+            z_clean if effective_lambda_cka > 0 else None,
+            z_reference if effective_lambda_cka > 0 else None,
+            adv_mask=final_representation.mask if effective_lambda_cka > 0 else None,
+            clean_mask=clean_mask if effective_lambda_cka > 0 else None,
+            reference_mask=reference_mask if effective_lambda_cka > 0 else None,
+            source_cka_weight=cka_source_weight,
             target_cka_weight=cka_target_weight,
             semantic_target_weight=semantic_target_weight,
         )
@@ -275,10 +359,10 @@ def attack_one_batch(
     representation = representation_metrics(
         clean_representation.tokens.float(),
         final_representation.tokens.float(),
-        reference_representation.tokens.float(),
+        z_reference,
         clean_representation.mask,
         final_representation.mask,
-        reference_representation.mask,
+        reference_mask,
     )
     artifact_dir = output_dir / "attacks" / pair.pair_id / phase / f"batch_{source_batch_index:02d}"
     if objective_tag is not None:
@@ -317,7 +401,11 @@ def attack_one_batch(
         phase=phase,
         batch_id=f"{source_batch_index:02d}",
         lambda_cka=lambda_cka,
+        effective_lambda_cka=effective_lambda_cka,
+        gradient_ratio=gradient_ratio,
+        cka_source_weight=cka_source_weight,
         cka_target_weight=cka_target_weight,
+        semantic_target_weight=semantic_target_weight,
         proxy_tap_path=final_representation.tap.module_path,
         source_human_label=data_config.source_human_label,
         target_human_label=data_config.target_human_label,
@@ -328,6 +416,7 @@ def attack_one_batch(
         proxy_target_hit_count=proxy_diagnostics.hit_count,
         proxy_target_hit_denominator=proxy_diagnostics.denominator,
         proxy_target_all_hit=proxy_diagnostics.all_hit,
+        proxy_target_hit_mask=proxy_diagnostics.hit_mask,
         proxy_min_target_logit_margin=proxy_diagnostics.minimum_logit_margin,
         proxy_min_target_probability=proxy_diagnostics.minimum_target_probability,
         proxy_free_target_hit_count=(
@@ -349,9 +438,17 @@ def attack_one_batch(
         reference_cka_gain=representation.reference_cka_gain,
         source_cka_drop=representation.source_cka_drop,
         proxy_representation_shift=representation.proxy_representation_shift,
-        grad_ml_l1=diagnostics.grad_ml_l1 if diagnostics else zero,
-        grad_cka_weighted_l1=(diagnostics.grad_cka_weighted_l1 if diagnostics else zero),
-        grad_component_cosine=diagnostics.cosine if diagnostics else zero,
+        grad_ml_l1=(
+            diagnostics.grad_ml_l1 if diagnostics else calibration_grad_ml_l1
+        ),
+        grad_cka_weighted_l1=(
+            diagnostics.grad_cka_weighted_l1
+            if diagnostics
+            else calibration_grad_aux_weighted_l1
+        ),
+        grad_component_cosine=(
+            diagnostics.cosine if diagnostics else calibration_grad_cosine
+        ),
         linf_float=linf_float,
         linf_png=linf_png,
         elapsed_seconds=timer.elapsed(),
@@ -401,7 +498,11 @@ def result_row(
         "source_image_ids": "|".join(result.source_image_ids),
         "target_reference_ids": "|".join(result.target_reference_ids),
         "lambda": result.lambda_cka,
+        "effective_lambda": result.effective_lambda_cka,
+        "gradient_ratio": "" if result.gradient_ratio is None else result.gradient_ratio,
+        "cka_source_weight": result.cka_source_weight,
         "cka_target_weight": result.cka_target_weight,
+        "semantic_target_weight": result.semantic_target_weight,
         "seed": seed,
         "steps": steps,
         "clean_valid_count": (
@@ -416,6 +517,9 @@ def result_row(
         "proxy_target_hit_count": result.proxy_target_hit_count,
         "proxy_target_hit_denominator": result.proxy_target_hit_denominator,
         "proxy_target_all_hit": result.proxy_target_all_hit,
+        "proxy_target_hit_mask": "|".join(
+            "1" if value else "0" for value in result.proxy_target_hit_mask
+        ),
         "proxy_min_target_logit_margin": result.proxy_min_target_logit_margin,
         "proxy_min_target_probability": result.proxy_min_target_probability,
         "proxy_free_target_hit_count": result.proxy_free_target_hit_count,

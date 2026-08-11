@@ -67,7 +67,11 @@ def run_confirmation(context: CommandContext) -> str:
                     steps=config.steps,
                     attack_config=config,
                     data_config=data_config,
+                    reference_bank_size=config.reference_bank_size,
+                    cka_source_weight=config.cka_source_weight,
                     cka_target_weight=config.cka_target_weight,
+                    semantic_target_weight=config.semantic_target_weight,
+                    gradient_ratio=config.gradient_ratio,
                     prompt=prompt,
                 )
                 rates = None

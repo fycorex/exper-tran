@@ -1,0 +1,12 @@
+diagnostics_name: objective_split_validation
+phase: objective_split_validation
+seed: 42
+steps: 1
+early_stop_proxy_gate: false
+materialize_selection: false
+common_clean: true
+common_clean_pairs: [P20, P21, P22]
+image_count: 8
+reference_count: 48
+trials:
+  - {pair: P20, objective: target_cka_only, lambda: 1, rho: 0.3, source_weight: 0, alpha: 1, beta: 0}

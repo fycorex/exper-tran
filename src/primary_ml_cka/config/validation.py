@@ -35,8 +35,19 @@ def validate_attack_config(
         raise ValueError("class_margin and margin_temperature must be positive")
     if not 0 < config.proxy_probability_threshold < 1:
         raise ValueError("proxy_probability_threshold must be in (0,1)")
-    if not math.isfinite(config.cka_target_weight) or config.cka_target_weight <= 0:
-        raise ValueError("cka_target_weight must be finite and positive")
+    component_weights = (
+        config.cka_source_weight,
+        config.cka_target_weight,
+        config.semantic_target_weight,
+    )
+    if any(not math.isfinite(value) or value < 0 for value in component_weights):
+        raise ValueError("Attack component weights must be finite and non-negative")
+    if config.gradient_ratio is not None and (
+        not math.isfinite(config.gradient_ratio) or config.gradient_ratio <= 0
+    ):
+        raise ValueError("gradient_ratio must be finite and positive when configured")
+    if config.reference_bank_size < config.batch_size:
+        raise ValueError("reference_bank_size must be at least batch_size")
 
 
 def validate_data_config(config: DataConfig) -> None:
@@ -74,8 +85,19 @@ def validate_smoke_config(config: SmokeConfig, attack_config: AttackConfig) -> N
         raise ValueError("Smoke lambda scan cannot be empty")
     if any(not math.isfinite(value) or value < 0 for value in config.lambdas):
         raise ValueError("Smoke lambdas must be finite and non-negative")
-    if not math.isfinite(config.cka_target_weight) or config.cka_target_weight <= 0:
-        raise ValueError("Smoke CKA target weight must be finite and positive")
+    component_weights = (
+        config.cka_source_weight,
+        config.cka_target_weight,
+        config.semantic_target_weight,
+    )
+    if any(not math.isfinite(value) or value < 0 for value in component_weights):
+        raise ValueError("Smoke component weights must be finite and non-negative")
+    if config.gradient_ratio is not None and (
+        not math.isfinite(config.gradient_ratio) or config.gradient_ratio <= 0
+    ):
+        raise ValueError("Smoke gradient_ratio must be finite and positive")
+    if config.reference_bank_size < config.batch_size:
+        raise ValueError("Smoke reference_bank_size must be at least batch_size")
 
 
 def validate_alpha_scan_config(

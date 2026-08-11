@@ -73,7 +73,11 @@ def run_smoke(context: CommandContext) -> str:
                     steps=smoke_config.steps,
                     attack_config=attack_config,
                     data_config=data_config,
+                    reference_bank_size=smoke_config.reference_bank_size,
+                    cka_source_weight=smoke_config.cka_source_weight,
                     cka_target_weight=smoke_config.cka_target_weight,
+                    semantic_target_weight=smoke_config.semantic_target_weight,
+                    gradient_ratio=smoke_config.gradient_ratio,
                     early_stop_proxy_gate=False,
                     progress_interval=10,
                 )

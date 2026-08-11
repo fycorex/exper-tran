@@ -223,7 +223,11 @@ def run_scaled(context: CommandContext) -> str:
                         steps=attack_config.steps,
                         attack_config=attack_config,
                         data_config=data_config,
+                        reference_bank_size=attack_config.reference_bank_size,
+                        cka_source_weight=attack_config.cka_source_weight,
                         cka_target_weight=attack_config.cka_target_weight,
+                        semantic_target_weight=attack_config.semantic_target_weight,
+                        gradient_ratio=attack_config.gradient_ratio,
                         # The 8/8 gate determines transfer eligibility after
                         # optimization; it must not shorten the configured
                         # attack budget, otherwise lambda/alpha trials receive

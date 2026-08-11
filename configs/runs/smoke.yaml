@@ -3,4 +3,8 @@ batch_size: 8
 lambdas: [0]
 steps: 100
 seed: 42
+cka_source_weight: 1
 cka_target_weight: 1
+semantic_target_weight: 0
+gradient_ratio: null
+reference_bank_size: 8

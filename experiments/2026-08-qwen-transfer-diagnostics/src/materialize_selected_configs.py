@@ -25,7 +25,11 @@ def main() -> None:
     for pair_id, trial in sorted(selected.items()):
         config = dict(base)
         config["lambdas"] = [float(trial["lambda_cka"])]
-        config["cka_target_weight"] = float(trial["alpha"])
+        config["cka_source_weight"] = float(trial.get("source_weight", 1))
+        config["cka_target_weight"] = float(trial.get("alpha", 1))
+        config["semantic_target_weight"] = float(trial.get("beta", 0))
+        config["gradient_ratio"] = trial.get("rho")
+        config["reference_bank_size"] = int(trial.get("reference_count", 8))
         config_path = args.output_dir / f"{pair_id}.yaml"
         atomic_text_write(
             config_path,

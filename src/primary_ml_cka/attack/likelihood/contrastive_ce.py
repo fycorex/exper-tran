@@ -23,6 +23,7 @@ class ProxyTargetDiagnostics:
     all_hit: bool
     minimum_logit_margin: float
     minimum_target_probability: float
+    hit_mask: tuple[bool, ...]
 
 
 def proxy_target_diagnostics(
@@ -63,6 +64,7 @@ def proxy_target_diagnostics(
         all_hit=hit_count == denominator,
         minimum_logit_margin=float(margins.min().item()),
         minimum_target_probability=float(probabilities.min().item()),
+        hit_mask=tuple(bool(value) for value in hits.detach().cpu().tolist()),
     )
 
 

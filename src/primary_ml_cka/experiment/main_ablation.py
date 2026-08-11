@@ -54,6 +54,11 @@ def run_main_ablation(context: CommandContext) -> str:
                         steps=attack_config.steps,
                         attack_config=attack_config,
                         data_config=data_config,
+                        reference_bank_size=attack_config.reference_bank_size,
+                        cka_source_weight=attack_config.cka_source_weight,
+                        cka_target_weight=attack_config.cka_target_weight,
+                        semantic_target_weight=attack_config.semantic_target_weight,
+                        gradient_ratio=attack_config.gradient_ratio,
                     )
                     seed = context.seed if context.seed is not None else attack_config.main_seed
                     rows.append(result_row(pair, result, seed, attack_config.steps))

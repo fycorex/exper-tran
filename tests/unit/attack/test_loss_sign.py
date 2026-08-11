@@ -54,3 +54,41 @@ def test_semantic_anchor_prefers_target_centroid() -> None:
     target_loss = _semantic_centroid_loss(near_target, target, None, None)
     source_loss = _semantic_centroid_loss(near_source, target, None, None)
     assert target_loss < source_loss
+
+
+def test_target_only_objective_removes_source_repulsion() -> None:
+    source = torch.randn(2, 6, 8)
+    target = torch.randn(4, 6, 8)
+    adversarial = torch.randn(2, 6, 8)
+    loss = primary_loss(
+        torch.tensor(0.0),
+        1.0,
+        adversarial,
+        source,
+        target,
+        source_cka_weight=0.0,
+        target_cka_weight=1.0,
+    )
+    from primary_ml_cka.attack.cka.linear import token_cka_against_bank
+
+    expected = -token_cka_against_bank(adversarial, target).mean()
+    assert torch.allclose(loss.cka, expected)
+
+
+def test_semantic_only_objective_allows_zero_cka_weights() -> None:
+    source = torch.randn(2, 6, 8)
+    target = torch.randn(4, 6, 8)
+    adversarial = torch.randn(2, 6, 8)
+    loss = primary_loss(
+        torch.tensor(0.0),
+        1.0,
+        adversarial,
+        source,
+        target,
+        source_cka_weight=0.0,
+        target_cka_weight=0.0,
+        semantic_target_weight=1.0,
+    )
+    assert torch.allclose(
+        loss.cka, _semantic_centroid_loss(adversarial, target, None, None)
+    )

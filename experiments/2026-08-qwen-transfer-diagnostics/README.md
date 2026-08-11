@@ -86,6 +86,24 @@ classification control and four lambda/alpha combinations. Incremental results
 are written to `diagnostics/projected_tap_intra_baseline`. The runner waits when
 CUDA is unavailable and never falls back to CPU.
 
+The clean objective-split diagnostic is:
+
+```bash
+bash scripts/run_objective_split_common48.sh \
+  outputs/proxy_selector_cka_v2
+```
+
+It first runs a one-step end-to-end GPU validation and then compares four
+objectives for each of P20/P21/P22: classification only, target-CKA only,
+semantic-centroid only, and target-CKA plus semantic centroid. All trials use
+the same eight source images, all 48 target references, seed 42, 100 attack
+steps, no source-repulsion term, and an auxiliary/classification input-gradient
+ratio of 0.3. All proxies use the same NF4 policy and targets use BF16. Frozen
+adversarial images are evaluated on the target even when the proxy result is
+below 8/8; the strict 8/8 rule is retained only as a promotion gate. Results
+are resumable under `diagnostics/objective_split_common48_rho03`. This script
+does not run the 50- or 500-image stages.
+
 ## Scale runs
 
 Run and stop at the all-pair eight-image review gate:

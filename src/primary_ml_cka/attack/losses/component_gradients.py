@@ -11,6 +11,29 @@ class ComponentGradientDiagnostics:
     cosine: float
 
 
+def calibrate_gradient_ratio(
+    grad_ml: torch.Tensor,
+    grad_aux: torch.Tensor,
+    ratio: float,
+) -> tuple[float, ComponentGradientDiagnostics]:
+    if ratio <= 0:
+        raise ValueError("Gradient ratio must be positive")
+    ml_l1 = grad_ml.abs().mean()
+    aux_l1 = grad_aux.abs().mean()
+    if not torch.isfinite(ml_l1) or ml_l1 <= 0:
+        raise ValueError("Classification input gradient must be finite and non-zero")
+    if not torch.isfinite(aux_l1) or aux_l1 <= 0:
+        raise ValueError("Auxiliary input gradient must be finite and non-zero")
+    weight = float(ratio * ml_l1 / aux_l1)
+    weighted = weight * grad_aux
+    diagnostics = ComponentGradientDiagnostics(
+        float(ml_l1),
+        float(weighted.abs().mean()),
+        float(functional.cosine_similarity(grad_ml.flatten(), weighted.flatten(), dim=0)),
+    )
+    return weight, diagnostics
+
+
 def component_gradient_diagnostics(
     loss_ml: torch.Tensor,
     loss_cka: torch.Tensor,

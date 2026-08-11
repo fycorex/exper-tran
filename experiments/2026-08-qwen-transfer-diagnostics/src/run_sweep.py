@@ -9,7 +9,7 @@ import torch
 
 from primary_ml_cka.artifacts.writers import write_json
 from primary_ml_cka.config.loader import load_config
-from primary_ml_cka.data.manifests import read_manifest
+from primary_ml_cka.data.manifests import read_manifest, write_manifest
 from primary_ml_cka.domain.identifiers import get_pair
 from primary_ml_cka.evaluation.target_generation import evaluate_local_frozen_batch
 from primary_ml_cka.experiment.attack_generation import attack_one_batch, load_phase_records
@@ -26,14 +26,23 @@ FIELDNAMES = (
     "pair_id",
     "prompt_id",
     "lambda_cka",
+    "effective_lambda_cka",
+    "rho",
+    "objective",
+    "source_weight",
     "alpha",
     "beta",
+    "reference_count",
     "status",
     "proxy_hits",
     "proxy_denominator",
+    "proxy_hit_mask",
     "free_generation_hits",
     "target_hits",
     "target_denominator",
+    "target_hit_mask",
+    "target_hits_among_proxy_hits",
+    "proxy_hit_target_denominator",
     "tasr_percent",
     "untargeted_hits",
     "proxy_min_margin",
@@ -62,7 +71,17 @@ def _arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _objective(prompt_id: str, alpha: float, beta: float) -> str:
+def _objective(
+    prompt_id: str,
+    alpha: float,
+    beta: float,
+    *,
+    objective_id: str | None = None,
+    rho: float | None = None,
+) -> str:
+    if objective_id is not None:
+        rho_suffix = "" if rho is None else f"_rho_{rho:g}"
+        return f"{objective_id}{rho_suffix}"
     suffix = "" if beta == 0 else f"_beta_{beta:g}"
     return f"prompt_{prompt_id}_alpha_{alpha:g}{suffix}"
 
@@ -74,16 +93,20 @@ def _state_path(
     lambda_cka: float,
     alpha: float,
     beta: float,
+    objective_id: str | None = None,
+    rho: float | None = None,
 ) -> Path:
     beta_suffix = "" if beta == 0 else f"__beta_{beta:g}"
+    objective_suffix = "" if objective_id is None else f"__objective_{objective_id}"
+    rho_suffix = "" if rho is None else f"__rho_{rho:g}"
     name = (
         f"{pair_id}__{prompt_id}__lambda_{lambda_cka:g}__alpha_{alpha:g}"
-        f"{beta_suffix}.json"
+        f"{beta_suffix}{objective_suffix}{rho_suffix}.json"
     )
     return diagnostics / "trials" / name
 
 
-def _write_summary(diagnostics: Path) -> None:
+def _write_summary(diagnostics: Path, *, materialize_selection: bool = False) -> None:
     states = []
     for path in sorted((diagnostics / "trials").glob("*.json")):
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -119,20 +142,30 @@ def _write_summary(diagnostics: Path) -> None:
                     -state["lambda_cka"],
                 ),
             )
-    write_json(diagnostics / "selected.json", selected)
+    write_json(diagnostics / "diagnostic_best.json", selected)
+    if materialize_selection:
+        write_json(diagnostics / "selected.json", selected)
 
 
-def _trial_state(
-    pair_id: str, prompt_id: str, lambda_cka: float, alpha: float, beta: float
-):
+def _trial_state(trial: dict[str, object]):
     return {
-        "pair_id": pair_id,
-        "prompt_id": prompt_id,
-        "lambda_cka": lambda_cka,
-        "alpha": alpha,
-        "beta": beta,
+        **trial,
         "status": "running",
     }
+
+
+def _common_clean_records(
+    output_dir: Path, pair_ids: list[str], count: int
+):
+    target_ids = tuple(dict.fromkeys(get_pair(pair_id).target_model for pair_id in pair_ids))
+    manifests = [load_phase_records(output_dir, model_id, "main") for model_id in target_ids]
+    common_ids = set.intersection(*(set(record.image_id for record in rows) for rows in manifests))
+    common = tuple(record for record in manifests[0] if record.image_id in common_ids)[:count]
+    if len(common) != count:
+        raise RuntimeError(
+            f"Only {len(common)} images are clean-valid for every configured target; requested {count}"
+        )
+    return common
 
 
 def main() -> None:
@@ -160,20 +193,39 @@ def main() -> None:
     diagnostics = output_dir / "diagnostics" / diagnostics_name
     phase = str(raw.get("phase", "tuning"))
     early_stop_proxy_gate = bool(raw.get("early_stop_proxy_gate", True))
+    materialize_selection = bool(raw.get("materialize_selection", False))
     if "trials" in raw:
         trials = [
-            (
-                str(trial["pair"]),
-                str(trial.get("prompt", "original")),
-                float(trial["lambda"]),
-                float(trial["alpha"]),
-                float(trial.get("beta", 0)),
-            )
+            {
+                "pair_id": str(trial["pair"]),
+                "prompt_id": str(trial.get("prompt", "original")),
+                "lambda_cka": float(trial["lambda"]),
+                "alpha": float(trial.get("alpha", 1)),
+                "beta": float(trial.get("beta", 0)),
+                "source_weight": float(trial.get("source_weight", 1)),
+                "rho": (
+                    None if trial.get("rho") is None else float(trial["rho"])
+                ),
+                "reference_count": int(
+                    trial.get("reference_count", raw.get("reference_count", 8))
+                ),
+                "objective": trial.get("objective"),
+            }
             for trial in raw["trials"]
         ]
     else:
         trials = [
-            (pair_id, prompt_id, float(lambda_cka), float(alpha), 0.0)
+            {
+                "pair_id": pair_id,
+                "prompt_id": prompt_id,
+                "lambda_cka": float(lambda_cka),
+                "alpha": float(alpha),
+                "beta": 0.0,
+                "source_weight": 1.0,
+                "rho": None,
+                "reference_count": int(raw.get("reference_count", 8)),
+                "objective": None,
+            }
             for pair_id in raw["pairs"]
             for prompt_id in raw["prompts"]
             for lambda_cka in raw["lambdas"]
@@ -184,6 +236,24 @@ def main() -> None:
             )
             or prompt_id == "original"
         ]
+    common_source = None
+    if bool(raw.get("common_clean", False)):
+        common_source = _common_clean_records(
+            output_dir,
+            [
+                str(pair_id)
+                for pair_id in raw.get(
+                    "common_clean_pairs",
+                    [trial["pair_id"] for trial in trials],
+                )
+            ],
+            int(raw.get("image_count", 8)),
+        )
+        write_manifest(diagnostics / "common_clean.jsonl", common_source)
+        print(
+            "common_clean=" + "|".join(record.image_id for record in common_source),
+            flush=True,
+        )
     print(f"planned_trials={len(trials)}", flush=True)
     free_bytes, total_bytes = torch.cuda.mem_get_info()
     if free_bytes < 0.75 * total_bytes:
@@ -192,11 +262,25 @@ def main() -> None:
             f"free={free_bytes / 2**30:.2f} GiB of {total_bytes / 2**30:.2f} GiB. "
             "Stop the existing GPU job before starting this sweep."
         )
-    for trial_index, (pair_id, prompt_id, lambda_cka, alpha, beta) in enumerate(
-        trials, start=1
-    ):
+    for trial_index, trial in enumerate(trials, start=1):
+        pair_id = str(trial["pair_id"])
+        prompt_id = str(trial["prompt_id"])
+        lambda_cka = float(trial["lambda_cka"])
+        alpha = float(trial["alpha"])
+        beta = float(trial["beta"])
+        source_weight = float(trial["source_weight"])
+        rho = trial["rho"]
+        reference_count = int(trial["reference_count"])
+        objective_id = trial["objective"]
         state_path = _state_path(
-            diagnostics, pair_id, prompt_id, lambda_cka, alpha, beta
+            diagnostics,
+            pair_id,
+            prompt_id,
+            lambda_cka,
+            alpha,
+            beta,
+            None if objective_id is None else str(objective_id),
+            None if rho is None else float(rho),
         )
         if args.resume and state_path.is_file():
             existing = json.loads(state_path.read_text(encoding="utf-8"))
@@ -205,19 +289,31 @@ def main() -> None:
                 continue
         pair = get_pair(pair_id)
         prompt = get_prompt(prompt_id)
-        state = _trial_state(pair_id, prompt_id, lambda_cka, alpha, beta)
+        state = _trial_state(trial)
         state["prompt"] = prompt
         write_json(state_path, state)
         fatal_error = None
         try:
             require_proxy_tap(context, pair.proxy_model)
-            source = load_phase_records(output_dir, pair.target_model, "main")[:8]
+            source = (
+                common_source
+                if common_source is not None
+                else load_phase_records(output_dir, pair.target_model, "main")[:8]
+            )
             if len(source) != 8:
                 raise RuntimeError(f"{pair_id} does not have eight clean-valid images")
-            objective = _objective(prompt_id, alpha, beta)
+            objective = _objective(
+                prompt_id,
+                alpha,
+                beta,
+                objective_id=None if objective_id is None else str(objective_id),
+                rho=None if rho is None else float(rho),
+            )
             print(
                 f"trial={trial_index}/{len(trials)} pair={pair_id} prompt={prompt_id} "
-                f"lambda={lambda_cka:g} alpha={alpha:g} beta={beta:g}",
+                f"objective={objective} lambda={lambda_cka:g} rho={rho} "
+                f"source={source_weight:g} alpha={alpha:g} beta={beta:g} "
+                f"references={reference_count}",
                 flush=True,
             )
             result = attack_one_batch(
@@ -233,48 +329,70 @@ def main() -> None:
                 steps=int(raw["steps"]),
                 attack_config=attack_config,
                 data_config=data_config,
+                reference_bank_size=reference_count,
+                cka_source_weight=source_weight,
                 cka_target_weight=alpha,
                 semantic_target_weight=beta,
+                gradient_ratio=None if rho is None else float(rho),
                 objective_tag=objective,
                 early_stop_proxy_gate=early_stop_proxy_gate,
                 progress_interval=10,
                 prompt=prompt,
             )
-            rates = None
-            if result.proxy_target_all_hit:
-                artifact_dir = (
-                    output_dir
-                    / "attacks"
-                    / pair_id
-                    / phase
-                    / "batch_00"
-                    / objective
-                    / f"lambda_{lambda_cka:g}"
+            artifact_dir = (
+                output_dir
+                / "attacks"
+                / pair_id
+                / phase
+                / "batch_00"
+                / objective
+                / f"lambda_{lambda_cka:g}"
+            )
+            evaluation = evaluate_local_frozen_batch(
+                model_id=pair.target_model,
+                hf_home=project_root / ".hf-cache",
+                artifact_dir=artifact_dir,
+                image_count=len(source),
+                prompt=prompt,
+                source_human_label=data_config.source_human_label,
+                target_human_label=data_config.target_human_label,
+            )
+            rates = evaluation.rates
+            write_json(
+                diagnostics / "target_outputs" / state_path.name,
+                evaluation,
+            )
+            target_hit_mask = tuple(
+                clean.parsed_label == data_config.source_human_label
+                and adversarial.parsed_label == data_config.target_human_label
+                for clean, adversarial in zip(
+                    evaluation.clean_outputs,
+                    evaluation.adversarial_outputs,
+                    strict=True,
                 )
-                evaluation = evaluate_local_frozen_batch(
-                    model_id=pair.target_model,
-                    hf_home=project_root / ".hf-cache",
-                    artifact_dir=artifact_dir,
-                    image_count=8,
-                    prompt=prompt,
-                    source_human_label=data_config.source_human_label,
-                    target_human_label=data_config.target_human_label,
+            )
+            proxy_hit_target_denominator = sum(result.proxy_target_hit_mask)
+            target_hits_among_proxy_hits = sum(
+                proxy_hit and target_hit
+                for proxy_hit, target_hit in zip(
+                    result.proxy_target_hit_mask, target_hit_mask, strict=True
                 )
-                rates = evaluation.rates
-                write_json(
-                    diagnostics / "target_outputs" / state_path.name,
-                    evaluation,
-                )
+            )
             state.update(
                 {
                     "status": "complete",
                     "proxy_hits": result.proxy_target_hit_count,
                     "proxy_denominator": result.proxy_target_hit_denominator,
+                    "proxy_hit_mask": list(result.proxy_target_hit_mask),
                     "free_generation_hits": result.proxy_free_target_hit_count,
-                    "target_hits": rates.targeted_hit_count if rates else "",
-                    "target_denominator": rates.clean_valid_count if rates else "",
-                    "tasr_percent": rates.tasr_percent if rates else "",
-                    "untargeted_hits": rates.untargeted_hit_count if rates else "",
+                    "target_hits": rates.targeted_hit_count,
+                    "target_denominator": rates.clean_valid_count,
+                    "target_hit_mask": list(target_hit_mask),
+                    "target_hits_among_proxy_hits": target_hits_among_proxy_hits,
+                    "proxy_hit_target_denominator": proxy_hit_target_denominator,
+                    "tasr_percent": rates.tasr_percent,
+                    "untargeted_hits": rates.untargeted_hit_count,
+                    "effective_lambda_cka": result.effective_lambda_cka,
                     "proxy_min_margin": result.proxy_min_target_logit_margin,
                     "proxy_min_probability": result.proxy_min_target_probability,
                     "cka_adv_source": result.cka_adv_source,
@@ -299,14 +417,16 @@ def main() -> None:
             )
         finally:
             write_json(state_path, state)
-            _write_summary(diagnostics)
+            _write_summary(
+                diagnostics, materialize_selection=materialize_selection
+            )
             gc.collect()
             torch.cuda.empty_cache()
         if fatal_error is not None:
             raise RuntimeError(
                 "Stopping sweep after CUDA OOM; completed trials remain resumable"
             ) from fatal_error
-    _write_summary(diagnostics)
+    _write_summary(diagnostics, materialize_selection=materialize_selection)
 
 
 if __name__ == "__main__":

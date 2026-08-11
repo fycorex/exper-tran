@@ -33,7 +33,11 @@ class AttackConfig:
     margin_temperature: float = 0.5
     proxy_probability_threshold: float = 0.9
     require_proxy_free_generation: bool = True
+    cka_source_weight: float = 1.0
     cka_target_weight: float = 1.0
+    semantic_target_weight: float = 0.0
+    gradient_ratio: float | None = None
+    reference_bank_size: int = 8
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +59,11 @@ class SmokeConfig:
     lambdas: tuple[float, ...]
     steps: int
     seed: int
+    cka_source_weight: float = 1.0
     cka_target_weight: float = 1.0
+    semantic_target_weight: float = 0.0
+    gradient_ratio: float | None = None
+    reference_bank_size: int = 8
 
 
 @dataclass(frozen=True, slots=True)

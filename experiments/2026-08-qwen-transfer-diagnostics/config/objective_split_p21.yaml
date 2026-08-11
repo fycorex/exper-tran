@@ -1,0 +1,15 @@
+diagnostics_name: objective_split_common48_rho03
+phase: objective_split_common48_rho03
+seed: 42
+steps: 100
+early_stop_proxy_gate: false
+materialize_selection: false
+common_clean: true
+common_clean_pairs: [P20, P21, P22]
+image_count: 8
+reference_count: 48
+trials:
+  - {pair: P21, objective: cls_only, lambda: 0, source_weight: 0, alpha: 0, beta: 0}
+  - {pair: P21, objective: target_cka_only, lambda: 1, rho: 0.3, source_weight: 0, alpha: 1, beta: 0}
+  - {pair: P21, objective: semantic_only, lambda: 1, rho: 0.3, source_weight: 0, alpha: 0, beta: 1}
+  - {pair: P21, objective: target_cka_semantic, lambda: 1, rho: 0.3, source_weight: 0, alpha: 1, beta: 1}

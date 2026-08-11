@@ -52,11 +52,13 @@ def primary_loss(
     adv_mask: torch.Tensor | None = None,
     clean_mask: torch.Tensor | None = None,
     reference_mask: torch.Tensor | None = None,
+    source_cka_weight: float = 1.0,
     target_cka_weight: float = 1.0,
     semantic_target_weight: float = 0.0,
 ) -> PrimaryLoss:
-    if target_cka_weight <= 0:
-        raise ValueError("target_cka_weight must be positive")
+    weights = (source_cka_weight, target_cka_weight, semantic_target_weight)
+    if any(weight < 0 for weight in weights):
+        raise ValueError("CKA and semantic component weights must be non-negative")
     if lambda_cka == 0:
         zero = loss_ml.new_zeros(())
         return PrimaryLoss(loss_ml, loss_ml, zero, zero, zero, zero)
@@ -74,7 +76,7 @@ def primary_loss(
         z_adv.float(), z_reference.float(), adv_mask, reference_mask
     )
     loss_cka = (
-        cka_source
+        source_cka_weight * cka_source
         - target_cka_weight * cka_reference
         + semantic_target_weight * semantic_reference
     )

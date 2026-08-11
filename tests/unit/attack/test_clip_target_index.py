@@ -40,11 +40,13 @@ def test_proxy_target_gate_requires_every_image_to_reach_target() -> None:
     assert failed.denominator == 3
     assert not failed.all_hit
     assert failed.minimum_logit_margin < 0
+    assert failed.hit_mask == (True, True, False)
 
     logits[2, 2] = 7.0
     passed = proxy_target_diagnostics(logits, target_index=2)
     assert passed.all_hit
     assert passed.hit_count == passed.denominator == 3
+    assert passed.hit_mask == (True, True, True)
 
 
 def test_proxy_target_gate_checks_margin_probability_and_free_generation() -> None:

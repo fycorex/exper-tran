@@ -29,7 +29,8 @@ bash scripts/run_experiment.sh tests run --output-dir "$OUTPUT_DIR"
   --config \
     experiments/2026-08-qwen-transfer-diagnostics/config/objective_split_all9_smoke.yaml \
   --output-dir "$OUTPUT_DIR" \
-  --resume
+  --resume \
+  --fail-on-error
 
 # Priority 1: reverse-direction intra-family pairs.
 for config in \
@@ -45,10 +46,20 @@ for config in \
 done
 
 .venv-primary-ml-cka/bin/python \
+  experiments/2026-08-qwen-transfer-diagnostics/src/materialize_disjoint_calibration.py \
+  --output-dir "$OUTPUT_DIR" \
+  --common-clean-manifest \
+    "diagnostics/${DIAGNOSTICS_NAME}/common_clean.jsonl" \
+  --output-manifest \
+    "evaluation/manifests/calibration_disjoint_all9v2.jsonl"
+
+.venv-primary-ml-cka/bin/python \
   experiments/2026-08-qwen-transfer-diagnostics/src/run_cka_validity.py \
   --output-dir "$OUTPUT_DIR" \
   --diagnostics-name "$DIAGNOSTICS_NAME" \
   --result-name "cka_validity_${RESULT_SUFFIX}" \
+  --calibration-manifest \
+    "evaluation/manifests/calibration_disjoint_all9v2.jsonl" \
   --resume
 
 for pair_id in P02 P06 P11 P14 P16 P19 P20 P21 P22; do
@@ -66,6 +77,7 @@ done
   --diagnostics-name "$DIAGNOSTICS_NAME" \
   --cka-result-name "cka_validity_${RESULT_SUFFIX}" \
   --geometry-result-name "decision_geometry_${RESULT_SUFFIX}" \
+  --result-name "selector_analysis_${RESULT_SUFFIX}" \
   --objective cls_only
 
 .venv-primary-ml-cka/bin/python \
@@ -74,4 +86,5 @@ done
   --diagnostics-name "$DIAGNOSTICS_NAME" \
   --cka-result-name "cka_validity_${RESULT_SUFFIX}" \
   --geometry-result-name "decision_geometry_${RESULT_SUFFIX}" \
+  --result-name "selector_analysis_${RESULT_SUFFIX}" \
   --objective semantic_only

@@ -121,7 +121,9 @@ bash scripts/run_all9_controlled_diagnostic.sh \
   outputs/proxy_selector_cka_v2
 ```
 
-The script is resumable and continues through all nine-pair CKA validity,
+The script is resumable. Its six-pair one-step smoke is fail-fast and verifies
+that every planned smoke state is complete before any 100-step trial begins.
+It continues through all nine-pair CKA validity,
 leave-query-out local CKA, decision geometry, gap closure, and pair-level
 Spearman summaries after the 36 attacks finish. Generative proxy gates are
 reported as `generative_strict`; CLIP/SigLIP gates are reported as
@@ -129,7 +131,12 @@ reported as `generative_strict`; CLIP/SigLIP gates are reported as
 generation. Contrastive semantic loss uses the same classifier-facing projected
 image representation as its closed-set logits; spatial tokens remain separate
 for token CKA. Selector reporting treats `cls_only` as primary and semantic as
-secondary. The existing P20/P21/P22 results remain the corrected historical
+secondary; their artifacts are written to separate `cls_only/` and
+`semantic_only/` result directories. Before CKA extraction, the runner creates
+`evaluation/manifests/calibration_disjoint_all9v2.jsonl`, preserving five
+images per class while excluding every frozen attack image. Thus the selector
+analysis is out-of-sample with respect to the attacked source images without
+requiring any attack to be rerun. The existing P20/P21/P22 results remain the corrected historical
 three-pair diagnostic; only the new all-nine phase is used for strict common-
 image pair comparisons.
 

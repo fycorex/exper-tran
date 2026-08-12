@@ -40,6 +40,11 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--pairs", nargs="+", choices=PAIR_IDS, default=list(PAIR_IDS))
     parser.add_argument("--diagnostics-name", default="objective_split_common48_rho03")
     parser.add_argument("--result-name", default="cka_validity")
+    parser.add_argument(
+        "--calibration-manifest",
+        type=Path,
+        help="Calibration manifest, relative to the output directory unless absolute.",
+    )
     return parser.parse_args()
 
 
@@ -213,7 +218,12 @@ def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
     diagnostics = output_dir / "diagnostics" / args.diagnostics_name
     result_dir = output_dir / "diagnostics" / args.result_name
-    calibration = read_manifest(output_dir / "evaluation" / "manifests" / "calibration.jsonl")
+    calibration_manifest = args.calibration_manifest
+    if calibration_manifest is None:
+        calibration_manifest = Path("evaluation/manifests/calibration.jsonl")
+    if not calibration_manifest.is_absolute():
+        calibration_manifest = output_dir / calibration_manifest
+    calibration = read_manifest(calibration_manifest)
     calibration_paths = [
         output_dir / "canonical_images" / record.relative_path for record in calibration
     ]

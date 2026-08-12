@@ -16,6 +16,7 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--diagnostics-name", default="objective_split_all9_common48_rho03")
     parser.add_argument("--cka-result-name", default="cka_validity_all9_common48_rho03")
     parser.add_argument("--geometry-result-name", default="decision_geometry_all9_common48_rho03")
+    parser.add_argument("--result-name", default="selector_analysis_all9_common48_rho03")
     parser.add_argument("--objective", default="semantic_only")
     return parser.parse_args()
 
@@ -137,7 +138,7 @@ def main() -> None:
             }
         )
 
-    result_dir = output_dir / "diagnostics" / "selector_analysis_all9_common48_rho03"
+    result_dir = output_dir / "diagnostics" / args.result_name / args.objective
     _write_csv(result_dir / "pair_summary.csv", rows)
     metrics = ("global_cka", "global_cka_z_score", "mean_local_cka_normalized")
     outcomes = ("tasr_percent", "mean_gap_closure")

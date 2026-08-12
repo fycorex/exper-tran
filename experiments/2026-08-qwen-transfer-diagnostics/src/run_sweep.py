@@ -80,6 +80,11 @@ def _arguments() -> argparse.Namespace:
     )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument(
+        "--fail-on-error",
+        action="store_true",
+        help="Stop at the first failed trial and require every planned state to be complete.",
+    )
     return parser.parse_args()
 
 
@@ -339,6 +344,7 @@ def main() -> None:
             f"free={free_bytes / 2**30:.2f} GiB of {total_bytes / 2**30:.2f} GiB. "
             "Stop the existing GPU job before starting this sweep."
         )
+    planned_state_paths = []
     for trial_index, trial in enumerate(trials, start=1):
         pair_id = str(trial["pair_id"])
         prompt_id = str(trial["prompt_id"])
@@ -359,6 +365,7 @@ def main() -> None:
             None if objective_id is None else str(objective_id),
             None if rho is None else float(rho),
         )
+        planned_state_paths.append(state_path)
         if args.resume and state_path.is_file():
             existing = json.loads(state_path.read_text(encoding="utf-8"))
             if existing.get("status") == "complete":
@@ -488,7 +495,7 @@ def main() -> None:
             )
         except Exception as exc:
             state.update({"status": "error", "error": repr(exc)})
-            if isinstance(exc, torch.cuda.OutOfMemoryError):
+            if isinstance(exc, torch.cuda.OutOfMemoryError) or args.fail_on_error:
                 fatal_error = exc
             print(
                 f"trial={trial_index}/{len(trials)} ERROR {type(exc).__name__}: {exc}",
@@ -500,10 +507,27 @@ def main() -> None:
             gc.collect()
             torch.cuda.empty_cache()
         if fatal_error is not None:
+            reason = (
+                "CUDA OOM"
+                if isinstance(fatal_error, torch.cuda.OutOfMemoryError)
+                else "trial error"
+            )
             raise RuntimeError(
-                "Stopping sweep after CUDA OOM; completed trials remain resumable"
+                f"Stopping sweep after {reason}; completed trials remain resumable"
             ) from fatal_error
     _write_summary(diagnostics, materialize_selection=materialize_selection)
+    if args.fail_on_error:
+        incomplete = []
+        for state_path in planned_state_paths:
+            status = "missing"
+            if state_path.is_file():
+                status = json.loads(state_path.read_text(encoding="utf-8")).get("status", "unknown")
+            if status != "complete":
+                incomplete.append(f"{state_path.name}:{status}")
+        if incomplete:
+            raise RuntimeError(
+                "Sweep did not complete every planned trial: " + ", ".join(incomplete)
+            )
 
 
 if __name__ == "__main__":

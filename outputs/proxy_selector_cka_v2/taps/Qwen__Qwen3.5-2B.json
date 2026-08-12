@@ -9,25 +9,25 @@
     1,
     10
   ],
-  "classification_loss": 11.408995628356934,
+  "classification_loss": 11.694141387939453,
   "dtype": "bfloat16",
   "error": null,
-  "extraction": "proxy final visual patch tokens after normalization, before merger projection",
+  "extraction": "post-merger Qwen visual soft tokens passed to the language model",
   "free_generation_probe_label": 10,
-  "max_other_probability": 0.44336599111557007,
+  "max_other_probability": 0.4425487816333771,
   "model_id": "Qwen/Qwen3.5-2B",
-  "module_path": "model.visual.merger.norm",
+  "module_path": "model.get_image_features.pooler_output",
   "normalization": "per-image L2; FP32 before CKA",
-  "pooling": "masked mean over proxy image patch tokens",
+  "pooling": "masked mean over projected proxy image tokens",
   "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
   "shape": [
     8,
-    256,
-    1024
+    64,
+    2048
   ],
   "status": "validated",
   "target_human_label": 7,
-  "target_probability": 0.04920155927538872,
+  "target_probability": 0.04468482360243797,
   "token_level_attack_cka": true,
   "token_mask": "grid_thw image patches only"
 }

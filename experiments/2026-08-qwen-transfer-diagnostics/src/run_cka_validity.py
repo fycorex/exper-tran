@@ -128,6 +128,15 @@ def _clean_queries(diagnostics: Path, output_dir: Path, pair_id: str):
     return paths, metadata
 
 
+def _query_exclusions(calibration, query_metadata) -> tuple[tuple[int, ...], ...]:
+    calibration_indices: dict[str, list[int]] = {}
+    for index, record in enumerate(calibration):
+        calibration_indices.setdefault(record.image_id, []).append(index)
+    return tuple(
+        tuple(calibration_indices.get(str(metadata["image_id"]), ())) for metadata in query_metadata
+    )
+
+
 def _rsa_correlation(left: torch.Tensor, right: torch.Tensor) -> float:
     left = functional.normalize(left.float(), dim=-1)
     right = functional.normalize(right.float(), dim=-1)
@@ -228,28 +237,53 @@ def main() -> None:
                             "null_std": baseline.null_std,
                             "z_score": baseline.z_score,
                             "empirical_p_value": baseline.empirical_p_value,
+                            "null_exceedance_count": baseline.null_exceedance_count,
                             "permutations_evaluated": baseline.permutations_evaluated,
                             "exact_null": int(baseline.exact),
                         }
                     )
         proxy_projected = proxy["projected"][:calibration_count]
         target_projected = target["projected"]
+        query_exclusions = _query_exclusions(calibration, query_metadata)
         similarity = proxy_target_similarity(
             proxy_projected,
             target_projected,
             proxy["projected"][calibration_count:],
             neighbor_count=8,
+            excluded_calibration_indices=query_exclusions,
         )
-        for metadata, local_cka, neighbors in zip(
+        for metadata, excluded, local_cka, neighbors in zip(
             query_metadata,
+            query_exclusions,
             similarity.local_cka,
             similarity.neighbor_indices,
             strict=True,
         ):
+            local_baseline = cka_permutation_baseline(
+                proxy_projected[list(neighbors)],
+                target_projected[list(neighbors)],
+                permutation_count=args.permutations,
+                seed=args.seed,
+            )
+            null_headroom = 1.0 - local_baseline.null_mean
             local_rows.append(
                 {
                     **metadata,
                     "local_cka": local_cka,
+                    "local_null_mean": local_baseline.null_mean,
+                    "local_null_std": local_baseline.null_std,
+                    "local_cka_excess": local_cka - local_baseline.null_mean,
+                    "local_cka_normalized": (
+                        (local_cka - local_baseline.null_mean) / null_headroom
+                        if null_headroom > 0
+                        else float("nan")
+                    ),
+                    "local_z_score": local_baseline.z_score,
+                    "local_empirical_p_value": local_baseline.empirical_p_value,
+                    "local_null_exceedance_count": (local_baseline.null_exceedance_count),
+                    "local_permutations_evaluated": (local_baseline.permutations_evaluated),
+                    "query_in_calibration": int(bool(excluded)),
+                    "excluded_calibration_indices": "|".join(map(str, excluded)),
                     "neighbor_indices": "|".join(map(str, neighbors)),
                 }
             )

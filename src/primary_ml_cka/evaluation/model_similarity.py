@@ -22,6 +22,7 @@ class CkaPermutationBaseline:
     null_std: float
     z_score: float
     empirical_p_value: float
+    null_exceedance_count: int
     permutations_evaluated: int
     exact: bool
 
@@ -98,13 +99,15 @@ def cka_permutation_baseline(
         if null_std > 0
         else math.copysign(math.inf, true_cka - null_mean)
     )
-    empirical_p = (1 + int((null >= true_cka).sum())) / (1 + len(null_values))
+    null_exceedance_count = int((null >= true_cka).sum())
+    empirical_p = (1 + null_exceedance_count) / (1 + len(null_values))
     return CkaPermutationBaseline(
         true_cka=true_cka,
         null_mean=null_mean,
         null_std=null_std,
         z_score=z_score,
         empirical_p_value=empirical_p,
+        null_exceedance_count=null_exceedance_count,
         permutations_evaluated=len(null_values),
         exact=exact,
     )
@@ -116,8 +119,14 @@ def proxy_target_similarity(
     proxy_queries: torch.Tensor,
     *,
     neighbor_count: int,
+    excluded_calibration_indices: tuple[tuple[int, ...], ...] | None = None,
 ) -> ModelSimilarity:
-    """Compute pair-level global and query-level local CKA on identical images."""
+    """Compute global and leave-query-out-capable local CKA.
+
+    ``excluded_calibration_indices`` supplies one tuple per query. It is used
+    when a query image may also occur in the calibration bank, so neighborhood
+    selection remains out-of-sample.
+    """
     if proxy_calibration.ndim != 2 or target_calibration.ndim != 2:
         raise ValueError("Calibration representations must have shape [N,D]")
     if proxy_calibration.shape[0] != target_calibration.shape[0]:
@@ -126,9 +135,22 @@ def proxy_target_similarity(
         raise ValueError("Proxy queries must use the proxy calibration feature space")
     if not 2 <= neighbor_count <= proxy_calibration.shape[0]:
         raise ValueError("neighbor_count must be between 2 and calibration size")
+    if excluded_calibration_indices is None:
+        excluded_calibration_indices = tuple(() for _ in range(proxy_queries.shape[0]))
+    if len(excluded_calibration_indices) != proxy_queries.shape[0]:
+        raise ValueError("Excluded calibration indices must provide one tuple per query")
     proxy_bank = functional.normalize(proxy_calibration.float(), dim=-1)
     queries = functional.normalize(proxy_queries.float(), dim=-1)
-    neighbors = (queries @ proxy_bank.T).topk(neighbor_count, dim=1).indices
+    similarities = queries @ proxy_bank.T
+    for query_index, excluded in enumerate(excluded_calibration_indices):
+        unique_excluded = set(excluded)
+        if any(index < 0 or index >= proxy_calibration.shape[0] for index in unique_excluded):
+            raise ValueError("Excluded calibration index is out of range")
+        if proxy_calibration.shape[0] - len(unique_excluded) < neighbor_count:
+            raise ValueError("Too few eligible calibration rows after query exclusion")
+        if unique_excluded:
+            similarities[query_index, list(unique_excluded)] = -torch.inf
+    neighbors = similarities.topk(neighbor_count, dim=1).indices
     local_values = []
     for indices in neighbors:
         local_values.append(

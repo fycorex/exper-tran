@@ -108,9 +108,15 @@ does not run the 50- or 500-image stages.
 Post-hoc CKA validity uses the eight canonical clean source images as local
 queries, not their adversarial variants. It writes one local-similarity row per
 pair and source image, avoiding repeated similarity observations across attack
-objectives. Layer/subset CKA is calibrated against a correspondence-shuffled
-null: all 119 non-identity permutations are used for five-image class subsets,
-while larger subsets default to 1,000 seeded permutations. Run it with:
+objectives. If a query also occurs in the calibration manifest, every matching
+calibration row is excluded before selecting its neighbors. Each resulting
+eight-neighbor local CKA is calibrated against a correspondence-shuffled null
+and reports raw, excess, and null-headroom-normalized values. Layer/subset CKA
+uses the same calibration: all 119 non-identity permutations are used for
+five-image class subsets, while larger subsets default to 1,000 seeded
+permutations. A Monte Carlo value at the minimum resolution means no sampled
+permutation reached the observation; it is reported as an empirical bound, not
+an exact tail probability. Run it with:
 
 ```bash
 bash scripts/run_cka_validity.sh outputs/proxy_selector_cka_v2

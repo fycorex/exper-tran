@@ -31,20 +31,24 @@ with margin movement and gap closure.
 
 ## Clean-query local CKA
 
-Local proxy-target CKA now uses the canonical clean source image to choose its
+Local proxy-target CKA uses the canonical clean source image to choose its
 proxy-space calibration neighbors. It produces one observation per pair and
 source image rather than duplicating the same selector value across four attack
-objectives. Mean clean-query local CKA was:
+objectives. Three of eight source queries also occur in the original calibration
+manifest; their matching bank row is now excluded before top-k selection. Each
+N=8 neighborhood is also calibrated against 1,000 shuffled correspondences.
+The leave-query-out values below supersede the earlier overlapping results.
 
-| Pair | Mean local CKA | Semantic TASR |
-| --- | ---: | ---: |
-| P20 | 0.9767 | 4/8 |
-| P21 | 0.9608 | 0/8 |
-| P22 | 0.9980 | 0/8 |
+| Pair | Raw local CKA | Null mean | CKA excess | Normalized CKA | Semantic TASR |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| P20 | 0.9792 | 0.7239 | 0.2553 | 0.9131 | 4/8 |
+| P21 | 0.9623 | 0.7271 | 0.2352 | 0.8519 | 0/8 |
+| P22 | 0.9979 | 0.8176 | 0.1804 | 0.9891 | 0/8 |
 
-These eight-image results do not show that a higher clean-query local CKA is
-sufficient for targeted transfer. They also no longer test a post-attack query
-under the name of a pre-attack selector.
+These eight-image results no longer use an overlapping self-neighbor or test a
+post-attack query under the name of a pre-attack selector. Raw local CKA should
+be interpreted alongside its null mean, excess, normalized value, z-score, and
+Monte Carlo empirical p resolution.
 
 ## CKA permutation calibration
 
@@ -67,6 +71,11 @@ The N=5 null means confirm strong small-sample saturation. Absolute values such
 as 0.999 must not be interpreted like ordinary correlations. The matched-image
 signal nevertheless remains above the permutation null, so the calibrated
 result is not that the representation evidence disappears.
+
+For N=10/N=50 and local N=8, an empirical p-value of `1/1001` means that zero of
+the 1,000 sampled permutations reached the observed CKA. It is not presented as
+an exact tail probability. All 24 local neighborhoods reached this Monte Carlo
+resolution limit and are therefore summarized as empirical `p <= 0.001`.
 
 ## Scope
 

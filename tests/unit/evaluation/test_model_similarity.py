@@ -1,3 +1,4 @@
+import pytest
 import torch
 
 from primary_ml_cka.evaluation.model_similarity import (
@@ -14,6 +15,35 @@ def test_global_and_local_similarity_use_matching_calibration_rows() -> None:
     assert len(result.local_cka) == 3
     assert all(value > 0.99 for value in result.local_cka)
     assert all(len(indices) == 4 for indices in result.neighbor_indices)
+
+
+def test_local_similarity_excludes_query_from_neighbor_selection() -> None:
+    proxy = torch.eye(6)
+    target = proxy.clone()
+    result = proxy_target_similarity(
+        proxy,
+        target,
+        proxy[:2],
+        neighbor_count=3,
+        excluded_calibration_indices=((0,), (1,)),
+    )
+
+    assert 0 not in result.neighbor_indices[0]
+    assert 1 not in result.neighbor_indices[1]
+
+
+def test_local_similarity_validates_query_exclusions() -> None:
+    proxy = torch.randn(6, 4)
+    target = torch.randn(6, 7)
+
+    with pytest.raises(ValueError, match="one tuple per query"):
+        proxy_target_similarity(
+            proxy,
+            target,
+            proxy[:2],
+            neighbor_count=3,
+            excluded_calibration_indices=((0,),),
+        )
 
 
 def test_cka_permutation_baseline_calibrates_small_sample_exactly() -> None:

@@ -37,6 +37,8 @@ FIELDNAMES = (
     "proxy_hits",
     "proxy_denominator",
     "proxy_hit_mask",
+    "proxy_gate_type",
+    "proxy_free_check_applicable",
     "free_generation_hits",
     "target_hits",
     "target_denominator",
@@ -57,6 +59,16 @@ FIELDNAMES = (
     "elapsed_seconds",
     "error",
 )
+
+CONTRASTIVE_PREFIXES = ("openai/clip", "google/siglip")
+
+
+def _proxy_gate_reporting(pair_id: str) -> tuple[str, bool]:
+    is_contrastive = get_pair(pair_id).proxy_model.startswith(CONTRASTIVE_PREFIXES)
+    return (
+        "contrastive_closed_set" if is_contrastive else "generative_strict",
+        not is_contrastive,
+    )
 
 
 def _arguments() -> argparse.Namespace:
@@ -122,13 +134,13 @@ def _write_summary(diagnostics: Path, *, materialize_selection: bool = False) ->
             writer.writerow({field: state.get(field, "") for field in FIELDNAMES})
     temporary.replace(csv_path)
 
-    eligible = [
-        state
-        for state in states
-        if state.get("proxy_hits") == state.get("proxy_denominator") == 8
-        and state.get("free_generation_hits") == 8
-        and state.get("target_denominator") == 8
-    ]
+    eligible = []
+    for state in states:
+        _, free_check_applicable = _proxy_gate_reporting(str(state["pair_id"]))
+        proxy_gate_passed = state.get("proxy_hits") == state.get("proxy_denominator") == 8
+        free_gate_passed = not free_check_applicable or state.get("free_generation_hits") == 8
+        if proxy_gate_passed and free_gate_passed and state.get("target_denominator") == 8:
+            eligible.append(state)
     selected = {}
     for pair_id in sorted({state["pair_id"] for state in eligible}):
         candidates = [state for state in eligible if state["pair_id"] == pair_id]
@@ -195,7 +207,8 @@ def _common_clean_records(
     common = tuple(record for record in candidates if record.image_id in common_ids)[:count]
     if len(common) != count:
         raise RuntimeError(
-            f"Only {len(common)} images are clean-valid for every configured target; requested {count}"
+            f"Only {len(common)} images are clean-valid for every configured "
+            f"target; requested {count}"
         )
     return common
 
@@ -235,12 +248,8 @@ def main() -> None:
                 "alpha": float(trial.get("alpha", 1)),
                 "beta": float(trial.get("beta", 0)),
                 "source_weight": float(trial.get("source_weight", 1)),
-                "rho": (
-                    None if trial.get("rho") is None else float(trial["rho"])
-                ),
-                "reference_count": int(
-                    trial.get("reference_count", raw.get("reference_count", 8))
-                ),
+                "rho": (None if trial.get("rho") is None else float(trial["rho"])),
+                "reference_count": int(trial.get("reference_count", raw.get("reference_count", 8))),
                 "objective": trial.get("objective"),
             }
             for trial in raw["trials"]
@@ -263,9 +272,7 @@ def main() -> None:
             for lambda_cka in raw["lambdas"]
             for alpha in raw["alphas"]
             if float(lambda_cka) > 0 or float(alpha) == 1
-            if not get_pair(pair_id).proxy_model.startswith(
-                ("openai/clip", "google/siglip")
-            )
+            if not get_pair(pair_id).proxy_model.startswith(("openai/clip", "google/siglip"))
             or prompt_id == "original"
         ]
     common_source = None
@@ -322,6 +329,7 @@ def main() -> None:
                 print(f"trial={trial_index}/{len(trials)} resumed {state_path.name}", flush=True)
                 continue
         pair = get_pair(pair_id)
+        proxy_gate_type, proxy_free_check_applicable = _proxy_gate_reporting(pair_id)
         prompt = get_prompt(prompt_id)
         state = _trial_state(trial)
         state["prompt"] = prompt
@@ -418,6 +426,8 @@ def main() -> None:
                     "proxy_hits": result.proxy_target_hit_count,
                     "proxy_denominator": result.proxy_target_hit_denominator,
                     "proxy_hit_mask": list(result.proxy_target_hit_mask),
+                    "proxy_gate_type": proxy_gate_type,
+                    "proxy_free_check_applicable": proxy_free_check_applicable,
                     "free_generation_hits": result.proxy_free_target_hit_count,
                     "target_hits": rates.targeted_hit_count,
                     "target_denominator": rates.clean_valid_count,
@@ -451,9 +461,7 @@ def main() -> None:
             )
         finally:
             write_json(state_path, state)
-            _write_summary(
-                diagnostics, materialize_selection=materialize_selection
-            )
+            _write_summary(diagnostics, materialize_selection=materialize_selection)
             gc.collect()
             torch.cuda.empty_cache()
         if fatal_error is not None:

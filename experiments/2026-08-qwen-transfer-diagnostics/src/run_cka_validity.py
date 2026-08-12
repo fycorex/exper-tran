@@ -8,7 +8,8 @@ from pathlib import Path
 import torch
 import torch.nn.functional as functional
 from PIL import Image
-from transformers import AutoProcessor
+from torchvision.transforms.functional import pil_to_tensor
+from transformers import AutoModel, AutoProcessor
 
 from primary_ml_cka.artifacts.writers import write_json
 from primary_ml_cka.attack.cka.linear import linear_cka
@@ -22,9 +23,11 @@ from primary_ml_cka.infrastructure.atomic_io import atomic_text_write
 from primary_ml_cka.models.backends.target_transformers_generation import (
     load_target_for_generation,
 )
-from primary_ml_cka.models.common.loading import local_snapshot
+from primary_ml_cka.models.common.loading import freeze_module, local_snapshot
+from primary_ml_cka.models.proxies.clip import CLIP_PREPROCESS
+from primary_ml_cka.models.proxies.siglip2 import SIGLIP2_PREPROCESS
 
-PAIR_IDS = ("P20", "P21", "P22")
+PAIR_IDS = ("P02", "P06", "P11", "P14", "P16", "P19", "P20", "P21", "P22")
 LAYERS = ("vision_mid", "vision_final", "projected")
 
 
@@ -34,6 +37,9 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--permutations", type=int, default=1_000)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--pairs", nargs="+", choices=PAIR_IDS, default=list(PAIR_IDS))
+    parser.add_argument("--diagnostics-name", default="objective_split_common48_rho03")
+    parser.add_argument("--result-name", default="cka_validity")
     return parser.parse_args()
 
 
@@ -73,6 +79,33 @@ def _extract_layers(model, processor, paths: list[Path]) -> dict[str, torch.Tens
     return {layer: torch.stack(values) for layer, values in rows.items()}
 
 
+def _extract_contrastive_layers(model, preprocess, paths: list[Path]) -> dict[str, torch.Tensor]:
+    rows = {layer: [] for layer in LAYERS}
+    device = next(model.parameters()).device
+    with torch.no_grad():
+        for index, path in enumerate(paths, start=1):
+            with Image.open(path) as image:
+                tensor = pil_to_tensor(image.convert("RGB")).float().div(255).unsqueeze(0)
+            pixel_values = preprocess(tensor.to(device))
+            output = model.vision_model(
+                pixel_values=pixel_values,
+                return_dict=True,
+                output_hidden_states=True,
+            )
+            if not output.hidden_states:
+                raise RuntimeError("Contrastive vision model did not expose hidden states")
+            rows["vision_mid"].append(
+                _pooled_row(output.hidden_states[len(output.hidden_states) // 2])
+            )
+            rows["vision_final"].append(_pooled_row(output.last_hidden_state))
+            rows["projected"].append(
+                _pooled_row(model.get_image_features(pixel_values=pixel_values))
+            )
+            if index == 1 or index % 10 == 0:
+                print(f"extracted={index}/{len(paths)}", flush=True)
+    return {layer: torch.stack(values) for layer, values in rows.items()}
+
+
 def _model_cache(
     model_id: str,
     paths: list[Path],
@@ -93,11 +126,21 @@ def _model_cache(
             print(f"resumed={model_id} rows={len(paths)}", flush=True)
             return {layer: payload[layer] for layer in LAYERS}
     snapshot = local_snapshot(hf_home, model_id)
-    processor = AutoProcessor.from_pretrained(snapshot, local_files_only=True)
-    model = load_target_for_generation(snapshot, torch.device("cuda"))
+    is_clip = model_id.startswith("openai/clip")
+    is_siglip = model_id.startswith("google/siglip")
+    if is_clip or is_siglip:
+        processor = CLIP_PREPROCESS if is_clip else SIGLIP2_PREPROCESS
+        model = freeze_module(AutoModel.from_pretrained(snapshot, local_files_only=True).cuda())
+    else:
+        processor = AutoProcessor.from_pretrained(snapshot, local_files_only=True)
+        model = load_target_for_generation(snapshot, torch.device("cuda"))
     try:
         print(f"loading={model_id} rows={len(paths)}", flush=True)
-        layers = _extract_layers(model, processor, paths)
+        layers = (
+            _extract_contrastive_layers(model, processor, paths)
+            if is_clip or is_siglip
+            else _extract_layers(model, processor, paths)
+        )
     finally:
         del model
         gc.collect()
@@ -168,8 +211,8 @@ def main() -> None:
         raise RuntimeError("CUDA is required for CKA validity extraction")
     output_dir = args.output_dir.resolve()
     project_root = Path(__file__).resolve().parents[3]
-    diagnostics = output_dir / "diagnostics" / "objective_split_common48_rho03"
-    result_dir = output_dir / "diagnostics" / "cka_validity"
+    diagnostics = output_dir / "diagnostics" / args.diagnostics_name
+    result_dir = output_dir / "diagnostics" / args.result_name
     calibration = read_manifest(output_dir / "evaluation" / "manifests" / "calibration.jsonl")
     calibration_paths = [
         output_dir / "canonical_images" / record.relative_path for record in calibration
@@ -179,7 +222,7 @@ def main() -> None:
     null_rows = []
     local_rows = []
     summaries = []
-    for pair_id in PAIR_IDS:
+    for pair_id in args.pairs:
         pair = get_pair(pair_id)
         query_paths, query_metadata = _clean_queries(diagnostics, output_dir, pair_id)
         proxy_paths = calibration_paths + query_paths

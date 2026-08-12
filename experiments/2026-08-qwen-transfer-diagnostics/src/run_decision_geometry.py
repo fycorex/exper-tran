@@ -33,7 +33,7 @@ from primary_ml_cka.models.proxies.visual import (
 )
 from primary_ml_cka.prompts.classification import CLASSIFICATION_PROMPT
 
-PAIR_IDS = ("P20", "P21", "P22")
+PAIR_IDS = ("P02", "P06", "P11", "P14", "P16", "P19", "P20", "P21", "P22")
 TARGET_INDEX = 6
 SOURCE_INDEX = 7
 
@@ -42,6 +42,8 @@ def _arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--pair-id", choices=PAIR_IDS)
+    parser.add_argument("--diagnostics-name", default="objective_split_common48_rho03")
+    parser.add_argument("--result-name", default="decision_geometry")
     return parser.parse_args()
 
 
@@ -174,10 +176,13 @@ def _gap_closure(clean_margin: float, margin_change: float) -> float:
 
 
 def _run_pair(
-    output_dir: Path, project_root: Path, pair_id: str
+    output_dir: Path,
+    project_root: Path,
+    pair_id: str,
+    diagnostics_name: str,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     pair = get_pair(pair_id)
-    diagnostics = output_dir / "diagnostics" / "objective_split_common48_rho03"
+    diagnostics = output_dir / "diagnostics" / diagnostics_name
     records = read_manifest(diagnostics / "common_clean.jsonl")
     clean = _cuda_images(output_dir / "canonical_images", records, 224)
     os.environ.pop("PRIMARY_ML_CKA_KEEP_VISION_BF16", None)
@@ -277,11 +282,11 @@ def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
     output_dir = args.output_dir.resolve()
     pairs = (args.pair_id,) if args.pair_id else PAIR_IDS
-    result_dir = output_dir / "diagnostics" / "decision_geometry"
+    result_dir = output_dir / "diagnostics" / args.result_name
     all_rows = []
     all_summaries = []
     for pair_id in pairs:
-        rows, summaries = _run_pair(output_dir, project_root, pair_id)
+        rows, summaries = _run_pair(output_dir, project_root, pair_id, args.diagnostics_name)
         _write_csv(result_dir / f"{pair_id}.csv", rows)
         _write_csv(result_dir / f"{pair_id}_summary.csv", summaries)
         all_rows.extend(rows)

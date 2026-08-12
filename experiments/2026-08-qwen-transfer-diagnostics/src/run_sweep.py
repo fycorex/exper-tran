@@ -275,6 +275,10 @@ def main() -> None:
             if not get_pair(pair_id).proxy_model.startswith(("openai/clip", "google/siglip"))
             or prompt_id == "original"
         ]
+    for proxy_model in dict.fromkeys(
+        get_pair(str(trial["pair_id"])).proxy_model for trial in trials
+    ):
+        require_proxy_tap(context, proxy_model)
     common_source = None
     if bool(raw.get("common_clean", False)):
         common_source = _common_clean_records(
@@ -336,7 +340,6 @@ def main() -> None:
         write_json(state_path, state)
         fatal_error = None
         try:
-            require_proxy_tap(context, pair.proxy_model)
             source = (
                 common_source
                 if common_source is not None

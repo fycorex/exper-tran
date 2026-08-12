@@ -28,11 +28,20 @@ from pathlib import Path
 
 root = Path(sys.argv[1]) / "diagnostics" / "decision_geometry"
 rows = []
+summaries = []
 for pair_id in ("P20", "P21", "P22"):
     with (root / f"{pair_id}.csv").open(encoding="utf-8", newline="") as handle:
         rows.extend(csv.DictReader(handle))
+    with (root / f"{pair_id}_summary.csv").open(encoding="utf-8", newline="") as handle:
+        summaries.extend(csv.DictReader(handle))
 with (root / "all_pairs.csv").open("w", encoding="utf-8", newline="") as handle:
-    writer = csv.DictWriter(handle, fieldnames=tuple(rows[0]))
+    writer = csv.DictWriter(handle, fieldnames=tuple(rows[0]), lineterminator="\n")
     writer.writeheader()
     writer.writerows(rows)
+with (root / "gap_closure_summary.csv").open("w", encoding="utf-8", newline="") as handle:
+    writer = csv.DictWriter(
+        handle, fieldnames=tuple(summaries[0]), lineterminator="\n"
+    )
+    writer.writeheader()
+    writer.writerows(summaries)
 PY

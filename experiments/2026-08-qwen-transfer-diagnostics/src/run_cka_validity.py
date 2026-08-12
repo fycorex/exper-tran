@@ -1,6 +1,7 @@
 import argparse
 import csv
 import gc
+import hashlib
 import json
 from pathlib import Path
 
@@ -13,7 +14,10 @@ from primary_ml_cka.artifacts.writers import write_json
 from primary_ml_cka.attack.cka.linear import linear_cka
 from primary_ml_cka.data.manifests import read_manifest
 from primary_ml_cka.domain.identifiers import get_pair
-from primary_ml_cka.evaluation.model_similarity import proxy_target_similarity
+from primary_ml_cka.evaluation.model_similarity import (
+    cka_permutation_baseline,
+    proxy_target_similarity,
+)
 from primary_ml_cka.infrastructure.atomic_io import atomic_text_write
 from primary_ml_cka.models.backends.target_transformers_generation import (
     load_target_for_generation,
@@ -28,6 +32,8 @@ def _arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--permutations", type=int, default=1_000)
+    parser.add_argument("--seed", type=int, default=42)
     return parser.parse_args()
 
 
@@ -49,17 +55,13 @@ def _extract_layers(model, processor, paths: list[Path]) -> dict[str, torch.Tens
     with torch.no_grad():
         for index, path in enumerate(paths, start=1):
             with Image.open(path) as image:
-                inputs = image_processor(
-                    images=image.convert("RGB"), return_tensors="pt"
-                )
+                inputs = image_processor(images=image.convert("RGB"), return_tensors="pt")
             visual = {
                 key: value.to(device)
                 for key, value in inputs.items()
                 if isinstance(value, torch.Tensor)
             }
-            output = model.get_image_features(
-                **visual, return_dict=True, output_hidden_states=True
-            )
+            output = model.get_image_features(**visual, return_dict=True, output_hidden_states=True)
             hidden_states = output.hidden_states
             if not hidden_states:
                 raise RuntimeError("Vision model did not expose hidden states")
@@ -79,9 +81,15 @@ def _model_cache(
     *,
     resume: bool,
 ) -> dict[str, torch.Tensor]:
+    path_fingerprint = hashlib.sha256(
+        "\n".join(str(path.resolve()) for path in paths).encode("utf-8")
+    ).hexdigest()
     if resume and cache_path.is_file():
         payload = torch.load(cache_path, map_location="cpu", weights_only=True)
-        if payload["path_count"] == len(paths):
+        if (
+            payload.get("path_count") == len(paths)
+            and payload.get("path_fingerprint") == path_fingerprint
+        ):
             print(f"resumed={model_id} rows={len(paths)}", flush=True)
             return {layer: payload[layer] for layer in LAYERS}
     snapshot = local_snapshot(hf_home, model_id)
@@ -95,48 +103,28 @@ def _model_cache(
         gc.collect()
         torch.cuda.empty_cache()
     cache_path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({"path_count": len(paths), **layers}, cache_path)
+    torch.save(
+        {
+            "path_count": len(paths),
+            "path_fingerprint": path_fingerprint,
+            **layers,
+        },
+        cache_path,
+    )
     return layers
 
 
-def _trial_queries(diagnostics: Path, output_dir: Path, pair_id: str):
-    paths = []
-    metadata = []
-    for state_path in sorted((diagnostics / "trials").glob(f"{pair_id}__*.json")):
-        state = json.loads(state_path.read_text(encoding="utf-8"))
-        if state.get("status") != "complete":
-            continue
-        rho = state.get("rho")
-        objective_dir = str(state["objective"])
-        if rho is not None:
-            objective_dir += f"_rho_{float(rho):g}"
-        artifact_dir = (
-            output_dir
-            / "attacks"
-            / pair_id
-            / state["attack"]["phase"]
-            / "batch_00"
-            / objective_dir
-            / f"lambda_{float(state['lambda_cka']):g}"
-        )
-        for index, (image_id, target_hit, proxy_hit) in enumerate(
-            zip(
-                state["attack"]["source_image_ids"],
-                state["target_hit_mask"],
-                state["proxy_hit_mask"],
-                strict=True,
-            )
-        ):
-            paths.append(artifact_dir / f"{index:02d}_adv.png")
-            metadata.append(
-                {
-                    "pair_id": pair_id,
-                    "objective": state["objective"],
-                    "image_id": image_id,
-                    "target_hit": int(target_hit),
-                    "proxy_hit": int(proxy_hit),
-                }
-            )
+def _clean_queries(diagnostics: Path, output_dir: Path, pair_id: str):
+    records = read_manifest(diagnostics / "common_clean.jsonl")
+    paths = [output_dir / "canonical_images" / record.relative_path for record in records]
+    metadata = [
+        {
+            "pair_id": pair_id,
+            "image_id": record.image_id,
+            "query_kind": "clean",
+        }
+        for record in records
+    ]
     return paths, metadata
 
 
@@ -159,7 +147,7 @@ def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     import io
 
     buffer = io.StringIO()
-    writer = csv.DictWriter(buffer, fieldnames=tuple(rows[0]))
+    writer = csv.DictWriter(buffer, fieldnames=tuple(rows[0]), lineterminator="\n")
     writer.writeheader()
     writer.writerows(rows)
     atomic_text_write(path, buffer.getvalue())
@@ -173,19 +161,18 @@ def main() -> None:
     project_root = Path(__file__).resolve().parents[3]
     diagnostics = output_dir / "diagnostics" / "objective_split_common48_rho03"
     result_dir = output_dir / "diagnostics" / "cka_validity"
-    calibration = read_manifest(
-        output_dir / "evaluation" / "manifests" / "calibration.jsonl"
-    )
+    calibration = read_manifest(output_dir / "evaluation" / "manifests" / "calibration.jsonl")
     calibration_paths = [
         output_dir / "canonical_images" / record.relative_path for record in calibration
     ]
     labels = [record.human_label for record in calibration]
     layer_rows = []
+    null_rows = []
     local_rows = []
     summaries = []
     for pair_id in PAIR_IDS:
         pair = get_pair(pair_id)
-        query_paths, query_metadata = _trial_queries(diagnostics, output_dir, pair_id)
+        query_paths, query_metadata = _clean_queries(diagnostics, output_dir, pair_id)
         proxy_paths = calibration_paths + query_paths
         proxy = _model_cache(
             pair.proxy_model,
@@ -211,6 +198,14 @@ def main() -> None:
         for proxy_layer in LAYERS:
             for target_layer in LAYERS:
                 for subset, indices in class_indices.items():
+                    proxy_subset = proxy[proxy_layer][indices]
+                    target_subset = target[target_layer][indices]
+                    baseline = cka_permutation_baseline(
+                        proxy_subset,
+                        target_subset,
+                        permutation_count=args.permutations,
+                        seed=args.seed,
+                    )
                     layer_rows.append(
                         {
                             "pair_id": pair_id,
@@ -218,12 +213,23 @@ def main() -> None:
                             "target_layer": target_layer,
                             "subset": subset,
                             "image_count": len(indices),
-                            "cka": float(
-                                linear_cka(
-                                    proxy[proxy_layer][indices],
-                                    target[target_layer][indices],
-                                )
-                            ),
+                            "cka": float(linear_cka(proxy_subset, target_subset)),
+                        }
+                    )
+                    null_rows.append(
+                        {
+                            "pair_id": pair_id,
+                            "proxy_layer": proxy_layer,
+                            "target_layer": target_layer,
+                            "subset": subset,
+                            "image_count": len(indices),
+                            "true_cka": baseline.true_cka,
+                            "null_mean": baseline.null_mean,
+                            "null_std": baseline.null_std,
+                            "z_score": baseline.z_score,
+                            "empirical_p_value": baseline.empirical_p_value,
+                            "permutations_evaluated": baseline.permutations_evaluated,
+                            "exact_null": int(baseline.exact),
                         }
                     )
         proxy_projected = proxy["projected"][:calibration_count]
@@ -259,6 +265,7 @@ def main() -> None:
         )
         _write_csv(result_dir / "layer_cka.csv", layer_rows)
         _write_csv(result_dir / "local_cka.csv", local_rows)
+        _write_csv(result_dir / "cka_permutation_null.csv", null_rows)
         write_json(result_dir / "summary.json", summaries)
     print(json.dumps(summaries, indent=2), flush=True)
 

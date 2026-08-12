@@ -105,6 +105,27 @@ below 8/8; the strict 8/8 rule is retained only as a promotion gate. Results
 are resumable under `diagnostics/objective_split_common48_rho03`. This script
 does not run the 50- or 500-image stages.
 
+Post-hoc CKA validity uses the eight canonical clean source images as local
+queries, not their adversarial variants. It writes one local-similarity row per
+pair and source image, avoiding repeated similarity observations across attack
+objectives. Layer/subset CKA is calibrated against a correspondence-shuffled
+null: all 119 non-identity permutations are used for five-image class subsets,
+while larger subsets default to 1,000 seeded permutations. Run it with:
+
+```bash
+bash scripts/run_cka_validity.sh outputs/proxy_selector_cka_v2
+```
+
+The decision-geometry output is explicitly a post-hoc, teacher-forced,
+closed-set diagnostic; final TASR remains greedy generation on frozen PNGs.
+Alongside raw margins it reports target gap closure,
+`(M_adv - M_clean) / (-M_clean)`, for clean margins below zero. This separates
+target-direction movement from the initial distance to the target boundary:
+
+```bash
+bash scripts/run_decision_geometry.sh outputs/proxy_selector_cka_v2
+```
+
 The running artifact labels `target_cka_only`, `semantic_only`, and
 `target_cka_semantic` are historical shorthand. Classification loss remains in
 all three; their precise meanings are `cls_plus_target_cka`,

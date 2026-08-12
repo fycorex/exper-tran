@@ -3,12 +3,13 @@ import csv
 import gc
 import json
 import os
+import statistics
 from pathlib import Path
 
 import torch
 import torch.nn.functional as functional
-from torchvision.transforms.functional import pil_to_tensor
 from PIL import Image
+from torchvision.transforms.functional import pil_to_tensor
 
 from primary_ml_cka.config.schema import AttackConfig
 from primary_ml_cka.data.manifests import read_manifest
@@ -159,19 +160,30 @@ def _write_csv(path: Path, rows: list[dict[str, object]]) -> None:
     import io
 
     buffer = io.StringIO()
-    writer = csv.DictWriter(buffer, fieldnames=tuple(rows[0]))
+    writer = csv.DictWriter(buffer, fieldnames=tuple(rows[0]), lineterminator="\n")
     writer.writeheader()
     writer.writerows(rows)
     atomic_text_write(path, buffer.getvalue())
 
 
-def _run_pair(output_dir: Path, project_root: Path, pair_id: str) -> list[dict[str, object]]:
+def _gap_closure(clean_margin: float, margin_change: float) -> float:
+    """Fraction of a negative clean target-margin gap closed by the attack."""
+    if clean_margin >= 0:
+        return float("nan")
+    return margin_change / -clean_margin
+
+
+def _run_pair(
+    output_dir: Path, project_root: Path, pair_id: str
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     pair = get_pair(pair_id)
     diagnostics = output_dir / "diagnostics" / "objective_split_common48_rho03"
     records = read_manifest(diagnostics / "common_clean.jsonl")
     clean = _cuda_images(output_dir / "canonical_images", records, 224)
     os.environ.pop("PRIMARY_ML_CKA_KEEP_VISION_BF16", None)
-    proxy = load_proxy(pair.proxy_model, project_root / ".hf-cache", torch.device("cuda"), AttackConfig())
+    proxy = load_proxy(
+        pair.proxy_model, project_root / ".hf-cache", torch.device("cuda"), AttackConfig()
+    )
     proxy_gradients = {}
     proxy_clean_margins = {}
     for kind in ("source_target", "robust"):
@@ -190,6 +202,7 @@ def _run_pair(output_dir: Path, project_root: Path, pair_id: str) -> list[dict[s
         for kind in ("source_target", "robust")
     }
     rows = []
+    summaries = []
     for state in _trial_states(diagnostics, pair_id):
         directory = _artifact_dir(output_dir, state)
         clean_png = _png_batch(directory, "clean", len(records))
@@ -202,6 +215,10 @@ def _run_pair(output_dir: Path, project_root: Path, pair_id: str) -> list[dict[s
             proxy_derivative = (proxy_gradients[kind] * delta).flatten(1).sum(dim=1)
             target_derivative = (target_gradients[kind] * delta).flatten(1).sum(dim=1)
             actual_change = target_adv_margin - target_clean_margins[kind]
+            gap_closures = [
+                _gap_closure(float(target_clean_margins[kind][index]), float(actual_change[index]))
+                for index in range(len(records))
+            ]
             for index, record in enumerate(records):
                 rows.append(
                     {
@@ -210,20 +227,47 @@ def _run_pair(output_dir: Path, project_root: Path, pair_id: str) -> list[dict[s
                         "margin_kind": kind,
                         "image_id": record.image_id,
                         "target_hit": int(state["target_hit_mask"][index]),
-                        "proxy_target_gradient_cosine": float(alignments[kind]["raw_cosine"][index]),
+                        "proxy_target_gradient_cosine": float(
+                            alignments[kind]["raw_cosine"][index]
+                        ),
                         "proxy_target_sign_cosine": float(alignments[kind]["sign_cosine"][index]),
-                        "proxy_target_sign_agreement": float(alignments[kind]["sign_agreement"][index]),
+                        "proxy_target_sign_agreement": float(
+                            alignments[kind]["sign_agreement"][index]
+                        ),
                         "proxy_directional_derivative": float(proxy_derivative[index]),
                         "target_directional_derivative": float(target_derivative[index]),
                         "target_clean_margin": float(target_clean_margins[kind][index]),
                         "target_actual_margin_change": float(actual_change[index]),
                         "target_adversarial_margin": float(target_adv_margin[index]),
+                        "target_gap_closure": gap_closures[index],
+                        "decision_score_type": "teacher_forced_closed_set",
                     }
                 )
+            summaries.append(
+                {
+                    "pair_id": pair_id,
+                    "objective": state["objective"],
+                    "margin_kind": kind,
+                    "image_count": len(records),
+                    "target_hits": int(state["target_hits"]),
+                    "tasr_percent": float(state["tasr_percent"]),
+                    "untargeted_hits": int(state["untargeted_hits"]),
+                    "untargeted_asr_percent": 100.0
+                    * int(state["untargeted_hits"])
+                    / int(state["target_denominator"]),
+                    "mean_clean_margin": float(target_clean_margins[kind].mean()),
+                    "mean_margin_change": float(actual_change.mean()),
+                    "mean_adversarial_margin": float(target_adv_margin.mean()),
+                    "mean_gap_closure": statistics.fmean(gap_closures),
+                    "median_gap_closure": statistics.median(gap_closures),
+                    "boundary_crossing_count": int((target_adv_margin > 0).sum()),
+                    "decision_score_type": "teacher_forced_closed_set",
+                }
+            )
     del target
     gc.collect()
     torch.cuda.empty_cache()
-    return rows
+    return rows, summaries
 
 
 def main() -> None:
@@ -235,13 +279,17 @@ def main() -> None:
     pairs = (args.pair_id,) if args.pair_id else PAIR_IDS
     result_dir = output_dir / "diagnostics" / "decision_geometry"
     all_rows = []
+    all_summaries = []
     for pair_id in pairs:
-        rows = _run_pair(output_dir, project_root, pair_id)
+        rows, summaries = _run_pair(output_dir, project_root, pair_id)
         _write_csv(result_dir / f"{pair_id}.csv", rows)
+        _write_csv(result_dir / f"{pair_id}_summary.csv", summaries)
         all_rows.extend(rows)
+        all_summaries.extend(summaries)
         print(f"complete={pair_id} rows={len(rows)}", flush=True)
     if args.pair_id is None:
         _write_csv(result_dir / "all_pairs.csv", all_rows)
+        _write_csv(result_dir / "gap_closure_summary.csv", all_summaries)
 
 
 if __name__ == "__main__":

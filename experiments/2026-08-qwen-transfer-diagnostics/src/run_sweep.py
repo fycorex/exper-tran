@@ -175,6 +175,7 @@ def _trial_state(trial: dict[str, object]):
 def _common_clean_records(
     output_dir: Path,
     pair_ids: list[str],
+    model_ids: list[str] | None,
     count: int,
     source_human_label: int,
     frozen_manifest: Path,
@@ -185,9 +186,35 @@ def _common_clean_records(
             raise RuntimeError(
                 f"Frozen common-clean manifest has {len(frozen)} images; requested {count}"
             )
+        if model_ids is not None:
+            frozen_ids = {record.image_id for record in frozen[:count]}
+            for model_id in model_ids:
+                safe_name = model_id.replace("/", "__")
+                screen_path = output_dir / "evaluation" / f"{safe_name}__clean_screen.jsonl"
+                valid_ids = {
+                    payload["image_id"]
+                    for payload in (
+                        json.loads(line)
+                        for line in screen_path.read_text(encoding="utf-8").splitlines()
+                        if line.strip()
+                    )
+                    if payload.get("parsed_label") == source_human_label
+                }
+                invalid = frozen_ids - valid_ids
+                if invalid:
+                    raise RuntimeError(
+                        f"Frozen common-clean manifest is invalid for {model_id}: "
+                        f"{sorted(invalid)}"
+                    )
         return frozen[:count]
 
-    target_ids = tuple(dict.fromkeys(get_pair(pair_id).target_model for pair_id in pair_ids))
+    target_ids = tuple(
+        dict.fromkeys(
+            model_ids
+            if model_ids is not None
+            else (get_pair(pair_id).target_model for pair_id in pair_ids)
+        )
+    )
     candidates = read_manifest(
         output_dir / "evaluation" / "manifests" / "source_validation_candidates.jsonl"
     )
@@ -290,6 +317,11 @@ def main() -> None:
                     [trial["pair_id"] for trial in trials],
                 )
             ],
+            (
+                None
+                if raw.get("common_clean_models") is None
+                else [str(model_id) for model_id in raw["common_clean_models"]]
+            ),
             int(raw.get("image_count", 8)),
             data_config.source_human_label,
             diagnostics / "common_clean.jsonl",

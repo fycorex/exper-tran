@@ -39,9 +39,10 @@ def test_target_cka_weight_changes_internal_balance() -> None:
     )
     from primary_ml_cka.attack.cka.linear import paired_token_cka, token_cka_against_bank
 
-    expected = paired_token_cka(adversarial, source).mean() - 5.0 * token_cka_against_bank(
-        adversarial, target
-    ).mean()
+    expected = (
+        paired_token_cka(adversarial, source).mean()
+        - 5.0 * token_cka_against_bank(adversarial, target).mean()
+    )
     assert torch.allclose(loss.cka, expected)
 
 
@@ -90,9 +91,32 @@ def test_semantic_only_objective_allows_zero_cka_weights() -> None:
         target_cka_weight=0.0,
         semantic_target_weight=1.0,
     )
-    assert torch.allclose(
-        loss.cka, _semantic_centroid_loss(adversarial, target, None, None)
+    assert torch.allclose(loss.cka, _semantic_centroid_loss(adversarial, target, None, None))
+
+
+def test_classifier_facing_semantic_embeddings_override_spatial_tokens() -> None:
+    source = torch.randn(2, 6, 8)
+    target_tokens = torch.randn(4, 6, 8)
+    adversarial_tokens = torch.randn(2, 6, 8)
+    target_semantic = torch.zeros(4, 5)
+    target_semantic[:, 0] = 1
+    adversarial_semantic = torch.zeros(2, 5)
+    adversarial_semantic[:, 0] = 1
+
+    loss = primary_loss(
+        torch.tensor(0.0),
+        1.0,
+        adversarial_tokens,
+        source,
+        target_tokens,
+        source_cka_weight=0.0,
+        target_cka_weight=0.0,
+        semantic_target_weight=1.0,
+        semantic_adv=adversarial_semantic,
+        semantic_reference=target_semantic,
     )
+
+    torch.testing.assert_close(loss.semantic_reference, torch.tensor(0.0))
 
 
 def test_zero_weight_cka_components_are_not_computed(monkeypatch) -> None:

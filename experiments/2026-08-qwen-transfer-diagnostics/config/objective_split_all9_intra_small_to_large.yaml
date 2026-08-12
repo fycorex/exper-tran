@@ -1,11 +1,20 @@
-diagnostics_name: objective_split_all9_common48_rho03
-phase: objective_split_all9_common48_rho03
+diagnostics_name: objective_split_all9v2_common48_rho03
+phase: objective_split_all9v2_common48_rho03
 seed: 42
 steps: 100
 early_stop_proxy_gate: false
 materialize_selection: false
 common_clean: true
 common_clean_pairs: [P02, P06, P11, P14, P16, P19, P20, P21, P22]
+common_clean_models:
+  - Qwen/Qwen3.5-2B
+  - Qwen/Qwen3.5-4B
+  - OpenGVLab/InternVL3_5-2B-HF
+  - OpenGVLab/InternVL3_5-4B-HF
+  - google/gemma-4-E2B-it
+  - google/gemma-4-E4B-it
+  - openai/clip-vit-large-patch14
+  - google/siglip2-so400m-patch14-384
 image_count: 8
 reference_count: 48
 trials:

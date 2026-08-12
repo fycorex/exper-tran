@@ -37,10 +37,17 @@ def _semantic_centroid_loss(
 
     adversarial_embeddings = pooled(adversarial, adversarial_mask)
     reference_embeddings = pooled(references, reference_mask)
-    centroid = torch.nn.functional.normalize(
-        reference_embeddings.mean(dim=0, keepdim=True), dim=-1
-    )
+    centroid = torch.nn.functional.normalize(reference_embeddings.mean(dim=0, keepdim=True), dim=-1)
     return (1.0 - (adversarial_embeddings * centroid).sum(dim=-1)).mean()
+
+
+def _semantic_embedding_centroid_loss(
+    adversarial: torch.Tensor, references: torch.Tensor
+) -> torch.Tensor:
+    adversarial = torch.nn.functional.normalize(adversarial.float(), dim=-1)
+    references = torch.nn.functional.normalize(references.float(), dim=-1)
+    centroid = torch.nn.functional.normalize(references.mean(dim=0, keepdim=True), dim=-1)
+    return (1.0 - (adversarial * centroid).sum(dim=-1)).mean()
 
 
 def primary_loss(
@@ -55,6 +62,8 @@ def primary_loss(
     source_cka_weight: float = 1.0,
     target_cka_weight: float = 1.0,
     semantic_target_weight: float = 0.0,
+    semantic_adv: torch.Tensor | None = None,
+    semantic_reference: torch.Tensor | None = None,
 ) -> PrimaryLoss:
     weights = (source_cka_weight, target_cka_weight, semantic_target_weight)
     if any(weight < 0 for weight in weights):
@@ -73,16 +82,16 @@ def primary_loss(
         else zero
     )
     cka_reference = (
-        token_cka_against_bank(
-            z_adv.float(), z_reference.float(), adv_mask, reference_mask
-        ).mean()
+        token_cka_against_bank(z_adv.float(), z_reference.float(), adv_mask, reference_mask).mean()
         if target_cka_weight > 0
         else zero
     )
     semantic_reference = (
-        _semantic_centroid_loss(
-            z_adv.float(), z_reference.float(), adv_mask, reference_mask
-        )
+        _semantic_embedding_centroid_loss(semantic_adv, semantic_reference)
+        if semantic_target_weight > 0
+        and semantic_adv is not None
+        and semantic_reference is not None
+        else _semantic_centroid_loss(z_adv.float(), z_reference.float(), adv_mask, reference_mask)
         if semantic_target_weight > 0
         else zero
     )

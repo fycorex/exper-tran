@@ -106,15 +106,25 @@ def _manifest_name(model_id: str, phase: str) -> str:
 
 def _detached_embedding_bank(
     proxy: object, images: torch.Tensor, *, chunk_size: int = 8
-) -> tuple[torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     token_chunks = []
     mask_chunks = []
+    semantic_chunks = []
     with torch.no_grad():
         for chunk in images.split(chunk_size):
             output = proxy.image_embeddings(chunk)
             token_chunks.append(output.tokens.detach().float())
             mask_chunks.append(output.mask.detach())
-    return torch.cat(token_chunks), torch.cat(mask_chunks)
+            semantic_chunks.append(
+                (
+                    output.semantic_embeddings
+                    if output.semantic_embeddings is not None
+                    else output.embeddings
+                )
+                .detach()
+                .float()
+            )
+    return torch.cat(token_chunks), torch.cat(mask_chunks), torch.cat(semantic_chunks)
 
 
 def _save_png_batch(
@@ -167,9 +177,7 @@ def attack_one_batch(
     batch_size = len(source_records)
     if batch_size < 2:
         raise ValueError("An attack/CKA batch must contain at least two images")
-    if lambda_cka > 0 and not any(
-        (cka_source_weight, cka_target_weight, semantic_target_weight)
-    ):
+    if lambda_cka > 0 and not any((cka_source_weight, cka_target_weight, semantic_target_weight)):
         raise ValueError("A positive auxiliary weight requires at least one objective component")
     if gradient_ratio is not None and lambda_cka <= 0:
         raise ValueError("gradient_ratio requires a positive auxiliary loss")
@@ -195,7 +203,10 @@ def attack_one_batch(
         clean_representation = proxy.image_embeddings(clean)
         z_clean = clean_representation.tokens.detach().float()
         clean_mask = clean_representation.mask.detach()
-    z_reference, reference_mask = _detached_embedding_bank(proxy, reference_images)
+    z_reference, reference_mask, semantic_reference_bank = _detached_embedding_bank(
+        proxy, reference_images
+    )
+    semantic_reference = semantic_reference_bank if semantic_target_weight > 0 else None
     del reference_images
     initial = (
         shared_random_start(clean, attack_config.epsilon, seed)
@@ -211,9 +222,9 @@ def attack_one_batch(
             data_config.target_human_label,
             prompt,
         )
-        grad_ml = torch.autograd.grad(
-            calibration_proxy.loss, state.adversarial, only_inputs=True
-        )[0]
+        grad_ml = torch.autograd.grad(calibration_proxy.loss, state.adversarial, only_inputs=True)[
+            0
+        ]
         del calibration_proxy
         calibration_representation = proxy.image_embeddings(state.adversarial)
         calibration_losses = primary_loss(
@@ -228,17 +239,21 @@ def attack_one_batch(
             source_cka_weight=cka_source_weight,
             target_cka_weight=cka_target_weight,
             semantic_target_weight=semantic_target_weight,
+            semantic_adv=(
+                calibration_representation.semantic_embeddings
+                if calibration_representation.semantic_embeddings is not None
+                else calibration_representation.embeddings
+            ),
+            semantic_reference=semantic_reference,
         )
-        grad_aux = torch.autograd.grad(
-            calibration_losses.cka, state.adversarial, only_inputs=True
-        )[0]
+        grad_aux = torch.autograd.grad(calibration_losses.cka, state.adversarial, only_inputs=True)[
+            0
+        ]
         effective_lambda_cka, calibration_diagnostics = calibrate_gradient_ratio(
             grad_ml, grad_aux, gradient_ratio
         )
         calibration_grad_ml_l1 = calibration_diagnostics.grad_ml_l1
-        calibration_grad_aux_weighted_l1 = (
-            calibration_diagnostics.grad_cka_weighted_l1
-        )
+        calibration_grad_aux_weighted_l1 = calibration_diagnostics.grad_cka_weighted_l1
         calibration_grad_cosine = calibration_diagnostics.cosine
         print(
             f"{pair.pair_id} calibrated rho={gradient_ratio:g} "
@@ -277,6 +292,12 @@ def attack_one_batch(
                 source_cka_weight=cka_source_weight,
                 target_cka_weight=cka_target_weight,
                 semantic_target_weight=semantic_target_weight,
+                semantic_adv=(
+                    adv_representation.semantic_embeddings
+                    if adv_representation.semantic_embeddings is not None
+                    else adv_representation.embeddings
+                ),
+                semantic_reference=semantic_reference,
             )
         if not torch.isfinite(losses.total):
             raise RuntimeError(f"Non-finite total loss at step {step}")
@@ -355,6 +376,12 @@ def attack_one_batch(
             source_cka_weight=cka_source_weight,
             target_cka_weight=cka_target_weight,
             semantic_target_weight=semantic_target_weight,
+            semantic_adv=(
+                final_representation.semantic_embeddings
+                if final_representation.semantic_embeddings is not None
+                else final_representation.embeddings
+            ),
+            semantic_reference=semantic_reference,
         )
     assert_parameter_gradients_none(proxy.model)
     representation = representation_metrics(
@@ -396,7 +423,6 @@ def attack_one_batch(
         free_generated_labels=free_labels,
     )
     memory = peak_memory()
-    zero = 0.0
     result = AttackRunResult(
         pair_id=pair.pair_id,
         phase=phase,
@@ -439,17 +465,11 @@ def attack_one_batch(
         reference_cka_gain=representation.reference_cka_gain,
         source_cka_drop=representation.source_cka_drop,
         proxy_representation_shift=representation.proxy_representation_shift,
-        grad_ml_l1=(
-            diagnostics.grad_ml_l1 if diagnostics else calibration_grad_ml_l1
-        ),
+        grad_ml_l1=(diagnostics.grad_ml_l1 if diagnostics else calibration_grad_ml_l1),
         grad_cka_weighted_l1=(
-            diagnostics.grad_cka_weighted_l1
-            if diagnostics
-            else calibration_grad_aux_weighted_l1
+            diagnostics.grad_cka_weighted_l1 if diagnostics else calibration_grad_aux_weighted_l1
         ),
-        grad_component_cosine=(
-            diagnostics.cosine if diagnostics else calibration_grad_cosine
-        ),
+        grad_component_cosine=(diagnostics.cosine if diagnostics else calibration_grad_cosine),
         linf_float=linf_float,
         linf_png=linf_png,
         elapsed_seconds=timer.elapsed(),
@@ -521,9 +541,7 @@ def result_row(
         "proxy_target_hit_mask": (
             ""
             if result.proxy_target_hit_mask is None
-            else "|".join(
-                "1" if value else "0" for value in result.proxy_target_hit_mask
-            )
+            else "|".join("1" if value else "0" for value in result.proxy_target_hit_mask)
         ),
         "proxy_min_target_logit_margin": result.proxy_min_target_logit_margin,
         "proxy_min_target_probability": result.proxy_min_target_probability,

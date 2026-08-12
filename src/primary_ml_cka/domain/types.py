@@ -54,6 +54,9 @@ class ImageEmbeddingOutput(Generic[TensorT]):
     tokens: TensorT
     mask: TensorT
     tap: TapContract
+    # Optional classifier-facing representation for semantic-centroid loss.
+    # Token CKA continues to use ``tokens`` and their real spatial structure.
+    semantic_embeddings: TensorT | None = None
 
 
 @dataclass(frozen=True, slots=True)

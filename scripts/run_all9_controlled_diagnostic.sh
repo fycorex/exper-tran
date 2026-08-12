@@ -4,8 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_DIR="${1:-outputs/proxy_selector_cka_v2}"
 WAIT_SECONDS="${PRIMARY_ML_CKA_GPU_WAIT_SECONDS:-60}"
-DIAGNOSTICS_NAME="objective_split_all9_common48_rho03"
-RESULT_SUFFIX="all9_common48_rho03"
+DIAGNOSTICS_NAME="objective_split_all9v2_common48_rho03"
+RESULT_SUFFIX="all9v2_common48_rho03"
 
 cd "$ROOT"
 export PYTHONPATH=src
@@ -17,6 +17,19 @@ while ! .venv-primary-ml-cka/bin/python -c \
   printf '%s CUDA unavailable; waiting %ss\n' "$(date -u +%FT%TZ)" "$WAIT_SECONDS"
   sleep "$WAIT_SECONDS"
 done
+
+bash scripts/run_experiment.sh tests run --output-dir "$OUTPUT_DIR"
+
+.venv-primary-ml-cka/bin/python \
+  experiments/2026-08-qwen-transfer-diagnostics/src/preflight_contrastive_clean.py \
+  --output-dir "$OUTPUT_DIR"
+
+.venv-primary-ml-cka/bin/python \
+  experiments/2026-08-qwen-transfer-diagnostics/src/run_sweep.py \
+  --config \
+    experiments/2026-08-qwen-transfer-diagnostics/config/objective_split_all9_smoke.yaml \
+  --output-dir "$OUTPUT_DIR" \
+  --resume
 
 # Priority 1: reverse-direction intra-family pairs.
 for config in \
@@ -46,6 +59,14 @@ for pair_id in P02 P06 P11 P14 P16 P19 P20 P21 P22; do
     --result-name "decision_geometry_${RESULT_SUFFIX}" \
     --pair-id "$pair_id"
 done
+
+.venv-primary-ml-cka/bin/python \
+  experiments/2026-08-qwen-transfer-diagnostics/src/summarize_all9_selector.py \
+  --output-dir "$OUTPUT_DIR" \
+  --diagnostics-name "$DIAGNOSTICS_NAME" \
+  --cka-result-name "cka_validity_${RESULT_SUFFIX}" \
+  --geometry-result-name "decision_geometry_${RESULT_SUFFIX}" \
+  --objective cls_only
 
 .venv-primary-ml-cka/bin/python \
   experiments/2026-08-qwen-transfer-diagnostics/src/summarize_all9_selector.py \

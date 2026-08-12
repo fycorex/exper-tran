@@ -108,10 +108,11 @@ does not run the 50- or 500-image stages.
 The complete controlled nine-pair matrix uses a separate phase and diagnostics
 directory so it cannot overwrite the corrected three-pair run. It first runs
 the three small-to-large intra-family pairs, then the three cross-family pairs,
-then reruns the three large-to-small pairs on the same six-target-model
-intersection. There are 41 clean-valid source candidates in that intersection;
+then reruns the three large-to-small pairs on the same eight-model intersection:
+six generative models plus CLIP and SigLIP. There are 36 clean-valid source
+candidates in that intersection;
 the first eight are frozen in
-`diagnostics/objective_split_all9_common48_rho03/common_clean.jsonl`. Each pair
+`diagnostics/objective_split_all9v2_common48_rho03/common_clean.jsonl`. Each pair
 uses the same four objectives, 48 references, seed 42, 100 steps, and initial
 gradient ratio 0.3:
 
@@ -125,7 +126,10 @@ leave-query-out local CKA, decision geometry, gap closure, and pair-level
 Spearman summaries after the 36 attacks finish. Generative proxy gates are
 reported as `generative_strict`; CLIP/SigLIP gates are reported as
 `contrastive_closed_set`, and their repeated argmax is not labeled as free
-generation. The existing P20/P21/P22 results remain the corrected historical
+generation. Contrastive semantic loss uses the same classifier-facing projected
+image representation as its closed-set logits; spatial tokens remain separate
+for token CKA. Selector reporting treats `cls_only` as primary and semantic as
+secondary. The existing P20/P21/P22 results remain the corrected historical
 three-pair diagnostic; only the new all-nine phase is used for strict common-
 image pair comparisons.
 

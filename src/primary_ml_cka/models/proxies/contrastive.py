@@ -56,21 +56,26 @@ class ContrastiveProxy(BaseProxy):
         self.class_embeddings = self._build_class_embeddings()
 
     def image_embeddings(self, images: torch.Tensor) -> ImageEmbeddingOutput[torch.Tensor]:
-        def extract(image_chunk: torch.Tensor) -> torch.Tensor:
+        def extract(image_chunk: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
             pixel_values = self.image_preprocess(image_chunk)
-            vision_output = self.model.vision_model(
-                pixel_values=pixel_values, return_dict=True
-            )
-            return vision_output.last_hidden_state
+            vision_output = self.model.vision_model(pixel_values=pixel_values, return_dict=True)
+            pooled = vision_output.pooler_output
+            projection = getattr(self.model, "visual_projection", None)
+            classifier_facing = projection(pooled) if projection is not None else pooled
+            return vision_output.last_hidden_state, classifier_facing
 
         chunk_size = self.microbatch_size or images.shape[0]
         token_chunks = []
+        semantic_chunks = []
         for image_chunk in images.split(chunk_size):
             if torch.is_grad_enabled() and images.requires_grad:
-                token_chunks.append(checkpoint(extract, image_chunk, use_reentrant=False))
+                tokens, semantic = checkpoint(extract, image_chunk, use_reentrant=False)
             else:
-                token_chunks.append(extract(image_chunk))
+                tokens, semantic = extract(image_chunk)
+            token_chunks.append(tokens)
+            semantic_chunks.append(semantic)
         tokens = torch.cat(token_chunks)
+        semantic_embeddings = torch.cat(semantic_chunks)
         if self.drop_cls_token:
             tokens = tokens[:, 1:, :]
         mask = torch.ones(tokens.shape[:2], dtype=torch.bool, device=tokens.device)
@@ -87,7 +92,9 @@ class ContrastiveProxy(BaseProxy):
             tuple(tokens.shape),
             "all spatial patch tokens; no synthetic global token",
         )
-        return ImageEmbeddingOutput(embeddings, tokens, mask, tap)
+        return ImageEmbeddingOutput(
+            embeddings, tokens, mask, tap, semantic_embeddings=semantic_embeddings
+        )
 
     def _build_class_embeddings(self) -> torch.Tensor:
         prompts = [
@@ -95,7 +102,16 @@ class ContrastiveProxy(BaseProxy):
             for class_name in CLASS_NAMES
             for template in TEMPLATES
         ]
-        tokens = self.tokenizer(prompts, padding=True, return_tensors="pt")
+        if self.model_id.startswith("google/siglip"):
+            tokens = self.tokenizer(
+                prompts,
+                padding="max_length",
+                max_length=64,
+                truncation=True,
+                return_tensors="pt",
+            )
+        else:
+            tokens = self.tokenizer(prompts, padding=True, return_tensors="pt")
         device = next(self.model.parameters()).device
         tokens = {key: value.to(device) for key, value in tokens.items()}
         with torch.no_grad():
@@ -112,9 +128,7 @@ class ContrastiveProxy(BaseProxy):
 
         def score(image_chunk: torch.Tensor) -> torch.Tensor:
             image_features = _pooled_feature(
-                self.model.get_image_features(
-                    pixel_values=self.image_preprocess(image_chunk)
-                )
+                self.model.get_image_features(pixel_values=self.image_preprocess(image_chunk))
             )
             scale = self.model.logit_scale.exp()
             bias_parameter = getattr(self.model, "logit_bias", None)
@@ -151,9 +165,7 @@ class ContrastiveProxy(BaseProxy):
             max_other_probability=output.max_other_probability.detach(),
         )
 
-    def free_generate_labels(
-        self, images: torch.Tensor, prompt: str
-    ) -> tuple[int | None, ...]:
+    def free_generate_labels(self, images: torch.Tensor, prompt: str) -> tuple[int | None, ...]:
         with torch.no_grad():
             output = self.target_loss(images, human_target_label=1, prompt=prompt)
         if output.class_logits is None:

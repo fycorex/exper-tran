@@ -1,0 +1,20 @@
+[
+  {
+    "class_centroid_cka": 0.9872483015060425,
+    "class_geometry_rsa": 0.9157497882843018,
+    "pair_id": "P20",
+    "projected_global_cka": 0.9517692923545837
+  },
+  {
+    "class_centroid_cka": 0.978129506111145,
+    "class_geometry_rsa": 0.9228204488754272,
+    "pair_id": "P21",
+    "projected_global_cka": 0.9172278642654419
+  },
+  {
+    "class_centroid_cka": 0.9971920251846313,
+    "class_geometry_rsa": 0.9892166256904602,
+    "pair_id": "P22",
+    "projected_global_cka": 0.9935379028320312
+  }
+]

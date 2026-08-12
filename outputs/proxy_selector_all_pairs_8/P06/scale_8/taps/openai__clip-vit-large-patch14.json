@@ -1,0 +1,29 @@
+{
+  "answer_label_positions": [],
+  "answer_token_ids": [],
+  "classification_logits_shape": [
+    1,
+    10
+  ],
+  "classification_loss": 17.096534729003906,
+  "dtype": "float32",
+  "error": null,
+  "extraction": "final visual patch tokens (CLS excluded when present)",
+  "free_generation_probe_label": 10,
+  "max_other_probability": 0.5955448150634766,
+  "model_id": "openai/clip-vit-large-patch14",
+  "module_path": "vision_model.last_hidden_state",
+  "normalization": "per-image L2; FP32 before CKA",
+  "pooling": "masked mean over real visual patch tokens",
+  "revision": "32bd64288804d66eefd0ccbe215aa642df71cc41",
+  "shape": [
+    8,
+    256,
+    1024
+  ],
+  "status": "validated",
+  "target_human_label": 7,
+  "target_probability": 0.008995511569082737,
+  "token_level_attack_cka": true,
+  "token_mask": "all spatial patch tokens; no synthetic global token"
+}

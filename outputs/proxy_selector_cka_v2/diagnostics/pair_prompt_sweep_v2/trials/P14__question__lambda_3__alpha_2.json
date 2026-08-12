@@ -1,0 +1,8 @@
+{
+  "alpha": 2.0,
+  "lambda_cka": 3.0,
+  "pair_id": "P14",
+  "prompt": "What is the main object in this image?\nOptions: (1) ambulance; (2) cab; (3) limousine; (4) minivan;\n(5) sports car; (6) fire engine; (7) garbage truck; (8) pickup truck;\n(9) tow truck; (10) moving van.\nOutput exactly one number from 1 through 10 and nothing else.",
+  "prompt_id": "question",
+  "status": "running"
+}

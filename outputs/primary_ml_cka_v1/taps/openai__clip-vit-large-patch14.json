@@ -1,0 +1,27 @@
+{
+  "answer_label_positions": [],
+  "answer_token_ids": [],
+  "classification_logits_shape": [
+    1,
+    10
+  ],
+  "classification_loss": 10.948974609375,
+  "dtype": "float32",
+  "error": null,
+  "extraction": "native projected image embedding",
+  "max_other_probability": 0.5901002883911133,
+  "model_id": "openai/clip-vit-large-patch14",
+  "module_path": "get_image_features",
+  "normalization": "per-image L2; FP32 before CKA",
+  "pooling": "checkpoint-native global pooling",
+  "revision": "32bd64288804d66eefd0ccbe215aa642df71cc41",
+  "shape": [
+    8,
+    1,
+    768
+  ],
+  "status": "validated",
+  "target_human_label": 7,
+  "target_probability": 0.00925939716398716,
+  "token_mask": "one valid global image token per image"
+}

@@ -1,0 +1,22 @@
+{
+  "bf16_vision_gradient_l1": 0.034035712480545044,
+  "closed_set_logit_cosine_mean": 0.999885082244873,
+  "closed_set_logit_max_abs_difference": 1.0,
+  "comparison": "all_nf4_vs_bf16_vision_and_projector_with_nf4_language",
+  "gradient_cosine_mean": 0.9946561455726624,
+  "gradient_cosine_min": 0.9727433919906616,
+  "gradient_cosine_per_image": [
+    0.9727433919906616,
+    0.999119222164154,
+    0.9987301826477051,
+    0.9959715008735657,
+    0.9994916915893555,
+    0.9997135996818542,
+    0.9994134902954102,
+    0.9920662641525269
+  ],
+  "gradient_l1_ratio_nf4_over_bf16_vision": 0.9856759905815125,
+  "image_count": 8,
+  "nf4_gradient_l1": 0.03354818373918533,
+  "pair_id": "P21"
+}

@@ -1,0 +1,662 @@
+[
+  {
+    "adversarial_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 9,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "10"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "asr_percent": 28.571428571428573,
+    "clean_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 3,
+        "parser_status": "ok",
+        "raw_output": "3"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "clean_valid_count": 7,
+    "lambda": 0.0,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "target_model": "openai/clip-vit-base-patch32",
+    "targeted_hit_count": 0,
+    "tasr_percent": 0.0,
+    "untargeted_hit_count": 2
+  },
+  {
+    "adversarial_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 9,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "asr_percent": 14.285714285714286,
+    "clean_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 3,
+        "parser_status": "ok",
+        "raw_output": "3"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "clean_valid_count": 7,
+    "lambda": 0.01,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "target_model": "openai/clip-vit-base-patch32",
+    "targeted_hit_count": 0,
+    "tasr_percent": 0.0,
+    "untargeted_hit_count": 1
+  },
+  {
+    "adversarial_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 9,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "10"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "asr_percent": 28.571428571428573,
+    "clean_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 3,
+        "parser_status": "ok",
+        "raw_output": "3"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "clean_valid_count": 7,
+    "lambda": 0.1,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "target_model": "openai/clip-vit-base-patch32",
+    "targeted_hit_count": 0,
+    "tasr_percent": 0.0,
+    "untargeted_hit_count": 2
+  },
+  {
+    "adversarial_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 9,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "10"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "asr_percent": 28.571428571428573,
+    "clean_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 3,
+        "parser_status": "ok",
+        "raw_output": "3"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "clean_valid_count": 7,
+    "lambda": 1.0,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "target_model": "openai/clip-vit-base-patch32",
+    "targeted_hit_count": 0,
+    "tasr_percent": 0.0,
+    "untargeted_hit_count": 2
+  },
+  {
+    "adversarial_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 3,
+        "parser_status": "ok",
+        "raw_output": "3"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 9,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "asr_percent": 14.285714285714286,
+    "clean_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 3,
+        "parser_status": "ok",
+        "raw_output": "3"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "clean_valid_count": 7,
+    "lambda": 10.0,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "target_model": "openai/clip-vit-base-patch32",
+    "targeted_hit_count": 0,
+    "tasr_percent": 0.0,
+    "untargeted_hit_count": 1
+  },
+  {
+    "adversarial_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 3,
+        "parser_status": "ok",
+        "raw_output": "3"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 9,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "2"
+      }
+    ],
+    "asr_percent": 28.571428571428573,
+    "clean_outputs": [
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 3,
+        "parser_status": "ok",
+        "raw_output": "3"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      },
+      {
+        "backend": "transformers-clip-contrastive",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "8"
+      }
+    ],
+    "clean_valid_count": 7,
+    "lambda": 100.0,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "target_model": "openai/clip-vit-base-patch32",
+    "targeted_hit_count": 0,
+    "tasr_percent": 0.0,
+    "untargeted_hit_count": 2
+  }
+]

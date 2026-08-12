@@ -1,0 +1,33 @@
+{
+  "answer_label_positions": [
+    169
+  ],
+  "answer_token_ids": [
+    22
+  ],
+  "classification_logits_shape": [
+    1,
+    10
+  ],
+  "classification_loss": 12.055204391479492,
+  "dtype": "bfloat16",
+  "error": null,
+  "extraction": "proxy final visual patch tokens after normalization, before merger projection",
+  "free_generation_probe_label": 10,
+  "max_other_probability": 0.4390820562839508,
+  "model_id": "Qwen/Qwen3.5-2B",
+  "module_path": "model.visual.merger.norm",
+  "normalization": "per-image L2; FP32 before CKA",
+  "pooling": "masked mean over proxy image patch tokens",
+  "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+  "shape": [
+    8,
+    256,
+    1024
+  ],
+  "status": "validated",
+  "target_human_label": 7,
+  "target_probability": 0.03941015899181366,
+  "token_level_attack_cka": true,
+  "token_mask": "grid_thw image patches only"
+}

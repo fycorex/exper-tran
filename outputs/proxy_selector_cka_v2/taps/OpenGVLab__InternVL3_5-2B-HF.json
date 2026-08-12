@@ -1,0 +1,33 @@
+{
+  "answer_label_positions": [
+    354
+  ],
+  "answer_token_ids": [
+    22
+  ],
+  "classification_logits_shape": [
+    1,
+    10
+  ],
+  "classification_loss": 7.294588565826416,
+  "dtype": "bfloat16",
+  "error": null,
+  "extraction": "proxy final InternViT patch tokens after final normalization",
+  "free_generation_probe_label": 1,
+  "max_other_probability": 0.2430824190378189,
+  "model_id": "OpenGVLab/InternVL3_5-2B-HF",
+  "module_path": "model.vision_tower.layernorm",
+  "normalization": "per-image L2; FP32 before CKA",
+  "pooling": "masked mean over proxy image patch tokens",
+  "revision": "3f301ffcf3dcbb47893afae6650ea3e78d96fb6d",
+  "shape": [
+    8,
+    1024,
+    1024
+  ],
+  "status": "validated",
+  "target_human_label": 7,
+  "target_probability": 0.1301126480102539,
+  "token_level_attack_cka": true,
+  "token_mask": "non-CLS tokens from one valid 448x448 tile per image"
+}

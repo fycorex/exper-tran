@@ -1,0 +1,50 @@
+{"class_name": "ambulance", "human_label": 1, "image_id": "val/n02701002/ILSVRC2012_val_00046706.JPEG", "relative_path": "calibration/0000_ILSVRC2012_val_00046706.png", "synset": "n02701002"}
+{"class_name": "ambulance", "human_label": 1, "image_id": "val/n02701002/ILSVRC2012_val_00021146.JPEG", "relative_path": "calibration/0001_ILSVRC2012_val_00021146.png", "synset": "n02701002"}
+{"class_name": "ambulance", "human_label": 1, "image_id": "val/n02701002/ILSVRC2012_val_00001916.JPEG", "relative_path": "calibration/0002_ILSVRC2012_val_00001916.png", "synset": "n02701002"}
+{"class_name": "ambulance", "human_label": 1, "image_id": "val/n02701002/ILSVRC2012_val_00025443.JPEG", "relative_path": "calibration/0003_ILSVRC2012_val_00025443.png", "synset": "n02701002"}
+{"class_name": "ambulance", "human_label": 1, "image_id": "val/n02701002/ILSVRC2012_val_00020826.JPEG", "relative_path": "calibration/0004_ILSVRC2012_val_00020826.png", "synset": "n02701002"}
+{"class_name": "cab", "human_label": 2, "image_id": "val/n02930766/ILSVRC2012_val_00025244.JPEG", "relative_path": "calibration/0005_ILSVRC2012_val_00025244.png", "synset": "n02930766"}
+{"class_name": "cab", "human_label": 2, "image_id": "val/n02930766/ILSVRC2012_val_00000720.JPEG", "relative_path": "calibration/0006_ILSVRC2012_val_00000720.png", "synset": "n02930766"}
+{"class_name": "cab", "human_label": 2, "image_id": "val/n02930766/ILSVRC2012_val_00004197.JPEG", "relative_path": "calibration/0007_ILSVRC2012_val_00004197.png", "synset": "n02930766"}
+{"class_name": "cab", "human_label": 2, "image_id": "val/n02930766/ILSVRC2012_val_00006258.JPEG", "relative_path": "calibration/0008_ILSVRC2012_val_00006258.png", "synset": "n02930766"}
+{"class_name": "cab", "human_label": 2, "image_id": "val/n02930766/ILSVRC2012_val_00030314.JPEG", "relative_path": "calibration/0009_ILSVRC2012_val_00030314.png", "synset": "n02930766"}
+{"class_name": "limousine", "human_label": 3, "image_id": "val/n03670208/ILSVRC2012_val_00041512.JPEG", "relative_path": "calibration/0010_ILSVRC2012_val_00041512.png", "synset": "n03670208"}
+{"class_name": "limousine", "human_label": 3, "image_id": "val/n03670208/ILSVRC2012_val_00000357.JPEG", "relative_path": "calibration/0011_ILSVRC2012_val_00000357.png", "synset": "n03670208"}
+{"class_name": "limousine", "human_label": 3, "image_id": "val/n03670208/ILSVRC2012_val_00035788.JPEG", "relative_path": "calibration/0012_ILSVRC2012_val_00035788.png", "synset": "n03670208"}
+{"class_name": "limousine", "human_label": 3, "image_id": "val/n03670208/ILSVRC2012_val_00026977.JPEG", "relative_path": "calibration/0013_ILSVRC2012_val_00026977.png", "synset": "n03670208"}
+{"class_name": "limousine", "human_label": 3, "image_id": "val/n03670208/ILSVRC2012_val_00037457.JPEG", "relative_path": "calibration/0014_ILSVRC2012_val_00037457.png", "synset": "n03670208"}
+{"class_name": "minivan", "human_label": 4, "image_id": "val/n03770679/ILSVRC2012_val_00045492.JPEG", "relative_path": "calibration/0015_ILSVRC2012_val_00045492.png", "synset": "n03770679"}
+{"class_name": "minivan", "human_label": 4, "image_id": "val/n03770679/ILSVRC2012_val_00038133.JPEG", "relative_path": "calibration/0016_ILSVRC2012_val_00038133.png", "synset": "n03770679"}
+{"class_name": "minivan", "human_label": 4, "image_id": "val/n03770679/ILSVRC2012_val_00026907.JPEG", "relative_path": "calibration/0017_ILSVRC2012_val_00026907.png", "synset": "n03770679"}
+{"class_name": "minivan", "human_label": 4, "image_id": "val/n03770679/ILSVRC2012_val_00013466.JPEG", "relative_path": "calibration/0018_ILSVRC2012_val_00013466.png", "synset": "n03770679"}
+{"class_name": "minivan", "human_label": 4, "image_id": "val/n03770679/ILSVRC2012_val_00004700.JPEG", "relative_path": "calibration/0019_ILSVRC2012_val_00004700.png", "synset": "n03770679"}
+{"class_name": "sports car", "human_label": 5, "image_id": "val/n04285008/ILSVRC2012_val_00010206.JPEG", "relative_path": "calibration/0020_ILSVRC2012_val_00010206.png", "synset": "n04285008"}
+{"class_name": "sports car", "human_label": 5, "image_id": "val/n04285008/ILSVRC2012_val_00016638.JPEG", "relative_path": "calibration/0021_ILSVRC2012_val_00016638.png", "synset": "n04285008"}
+{"class_name": "sports car", "human_label": 5, "image_id": "val/n04285008/ILSVRC2012_val_00032944.JPEG", "relative_path": "calibration/0022_ILSVRC2012_val_00032944.png", "synset": "n04285008"}
+{"class_name": "sports car", "human_label": 5, "image_id": "val/n04285008/ILSVRC2012_val_00045210.JPEG", "relative_path": "calibration/0023_ILSVRC2012_val_00045210.png", "synset": "n04285008"}
+{"class_name": "sports car", "human_label": 5, "image_id": "val/n04285008/ILSVRC2012_val_00035603.JPEG", "relative_path": "calibration/0024_ILSVRC2012_val_00035603.png", "synset": "n04285008"}
+{"class_name": "fire engine", "human_label": 6, "image_id": "val/n03345487/ILSVRC2012_val_00024593.JPEG", "relative_path": "calibration/0025_ILSVRC2012_val_00024593.png", "synset": "n03345487"}
+{"class_name": "fire engine", "human_label": 6, "image_id": "val/n03345487/ILSVRC2012_val_00047888.JPEG", "relative_path": "calibration/0026_ILSVRC2012_val_00047888.png", "synset": "n03345487"}
+{"class_name": "fire engine", "human_label": 6, "image_id": "val/n03345487/ILSVRC2012_val_00000764.JPEG", "relative_path": "calibration/0027_ILSVRC2012_val_00000764.png", "synset": "n03345487"}
+{"class_name": "fire engine", "human_label": 6, "image_id": "val/n03345487/ILSVRC2012_val_00036198.JPEG", "relative_path": "calibration/0028_ILSVRC2012_val_00036198.png", "synset": "n03345487"}
+{"class_name": "fire engine", "human_label": 6, "image_id": "val/n03345487/ILSVRC2012_val_00029595.JPEG", "relative_path": "calibration/0029_ILSVRC2012_val_00029595.png", "synset": "n03345487"}
+{"class_name": "garbage truck", "human_label": 7, "image_id": "val/n03417042/ILSVRC2012_val_00033842.JPEG", "relative_path": "calibration/0030_ILSVRC2012_val_00033842.png", "synset": "n03417042"}
+{"class_name": "garbage truck", "human_label": 7, "image_id": "val/n03417042/ILSVRC2012_val_00042802.JPEG", "relative_path": "calibration/0031_ILSVRC2012_val_00042802.png", "synset": "n03417042"}
+{"class_name": "garbage truck", "human_label": 7, "image_id": "val/n03417042/ILSVRC2012_val_00042487.JPEG", "relative_path": "calibration/0032_ILSVRC2012_val_00042487.png", "synset": "n03417042"}
+{"class_name": "garbage truck", "human_label": 7, "image_id": "val/n03417042/ILSVRC2012_val_00025379.JPEG", "relative_path": "calibration/0033_ILSVRC2012_val_00025379.png", "synset": "n03417042"}
+{"class_name": "garbage truck", "human_label": 7, "image_id": "val/n03417042/ILSVRC2012_val_00036233.JPEG", "relative_path": "calibration/0034_ILSVRC2012_val_00036233.png", "synset": "n03417042"}
+{"class_name": "pickup truck", "human_label": 8, "image_id": "val/n03930630/ILSVRC2012_val_00025131.JPEG", "relative_path": "calibration/0035_ILSVRC2012_val_00025131.png", "synset": "n03930630"}
+{"class_name": "pickup truck", "human_label": 8, "image_id": "val/n03930630/ILSVRC2012_val_00015879.JPEG", "relative_path": "calibration/0036_ILSVRC2012_val_00015879.png", "synset": "n03930630"}
+{"class_name": "pickup truck", "human_label": 8, "image_id": "val/n03930630/ILSVRC2012_val_00013435.JPEG", "relative_path": "calibration/0037_ILSVRC2012_val_00013435.png", "synset": "n03930630"}
+{"class_name": "pickup truck", "human_label": 8, "image_id": "val/n03930630/ILSVRC2012_val_00035897.JPEG", "relative_path": "calibration/0038_ILSVRC2012_val_00035897.png", "synset": "n03930630"}
+{"class_name": "pickup truck", "human_label": 8, "image_id": "val/n03930630/ILSVRC2012_val_00026503.JPEG", "relative_path": "calibration/0039_ILSVRC2012_val_00026503.png", "synset": "n03930630"}
+{"class_name": "tow truck", "human_label": 9, "image_id": "val/n04461696/ILSVRC2012_val_00020258.JPEG", "relative_path": "calibration/0040_ILSVRC2012_val_00020258.png", "synset": "n04461696"}
+{"class_name": "tow truck", "human_label": 9, "image_id": "val/n04461696/ILSVRC2012_val_00047720.JPEG", "relative_path": "calibration/0041_ILSVRC2012_val_00047720.png", "synset": "n04461696"}
+{"class_name": "tow truck", "human_label": 9, "image_id": "val/n04461696/ILSVRC2012_val_00048241.JPEG", "relative_path": "calibration/0042_ILSVRC2012_val_00048241.png", "synset": "n04461696"}
+{"class_name": "tow truck", "human_label": 9, "image_id": "val/n04461696/ILSVRC2012_val_00022323.JPEG", "relative_path": "calibration/0043_ILSVRC2012_val_00022323.png", "synset": "n04461696"}
+{"class_name": "tow truck", "human_label": 9, "image_id": "val/n04461696/ILSVRC2012_val_00023473.JPEG", "relative_path": "calibration/0044_ILSVRC2012_val_00023473.png", "synset": "n04461696"}
+{"class_name": "moving van", "human_label": 10, "image_id": "val/n03796401/ILSVRC2012_val_00000434.JPEG", "relative_path": "calibration/0045_ILSVRC2012_val_00000434.png", "synset": "n03796401"}
+{"class_name": "moving van", "human_label": 10, "image_id": "val/n03796401/ILSVRC2012_val_00031455.JPEG", "relative_path": "calibration/0046_ILSVRC2012_val_00031455.png", "synset": "n03796401"}
+{"class_name": "moving van", "human_label": 10, "image_id": "val/n03796401/ILSVRC2012_val_00027892.JPEG", "relative_path": "calibration/0047_ILSVRC2012_val_00027892.png", "synset": "n03796401"}
+{"class_name": "moving van", "human_label": 10, "image_id": "val/n03796401/ILSVRC2012_val_00032494.JPEG", "relative_path": "calibration/0048_ILSVRC2012_val_00032494.png", "synset": "n03796401"}
+{"class_name": "moving van", "human_label": 10, "image_id": "val/n03796401/ILSVRC2012_val_00032190.JPEG", "relative_path": "calibration/0049_ILSVRC2012_val_00032190.png", "synset": "n03796401"}

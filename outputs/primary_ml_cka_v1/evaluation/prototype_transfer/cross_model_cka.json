@@ -1,0 +1,112 @@
+[
+  {
+    "adversarial_cka": 0.9567478895187378,
+    "adversarial_minus_clean": -0.01545095443725586,
+    "clean_cka": 0.9721988439559937,
+    "image_count": 8,
+    "image_ids": [
+      "val/n03930630/ILSVRC2012_val_00025131.JPEG",
+      "val/n03930630/ILSVRC2012_val_00013435.JPEG",
+      "val/n03930630/ILSVRC2012_val_00035897.JPEG",
+      "val/n03930630/ILSVRC2012_val_00026503.JPEG",
+      "val/n03930630/ILSVRC2012_val_00025354.JPEG",
+      "val/n03930630/ILSVRC2012_val_00039508.JPEG",
+      "val/n03930630/ILSVRC2012_val_00037136.JPEG",
+      "val/n03930630/ILSVRC2012_val_00017708.JPEG"
+    ],
+    "lambda_prototype": 0.0,
+    "proxy_embedding_dimension": 768,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "status": "evaluation_only_target_features_available",
+    "target_embedding_dimension": 512,
+    "target_model": "openai/clip-vit-base-patch32"
+  },
+  {
+    "adversarial_cka": 0.9625576734542847,
+    "adversarial_minus_clean": -0.009641170501708984,
+    "clean_cka": 0.9721988439559937,
+    "image_count": 8,
+    "image_ids": [
+      "val/n03930630/ILSVRC2012_val_00025131.JPEG",
+      "val/n03930630/ILSVRC2012_val_00013435.JPEG",
+      "val/n03930630/ILSVRC2012_val_00035897.JPEG",
+      "val/n03930630/ILSVRC2012_val_00026503.JPEG",
+      "val/n03930630/ILSVRC2012_val_00025354.JPEG",
+      "val/n03930630/ILSVRC2012_val_00039508.JPEG",
+      "val/n03930630/ILSVRC2012_val_00037136.JPEG",
+      "val/n03930630/ILSVRC2012_val_00017708.JPEG"
+    ],
+    "lambda_prototype": 0.01,
+    "proxy_embedding_dimension": 768,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "status": "evaluation_only_target_features_available",
+    "target_embedding_dimension": 512,
+    "target_model": "openai/clip-vit-base-patch32"
+  },
+  {
+    "adversarial_cka": 0.9203065037727356,
+    "adversarial_minus_clean": -0.05189234018325806,
+    "clean_cka": 0.9721988439559937,
+    "image_count": 8,
+    "image_ids": [
+      "val/n03930630/ILSVRC2012_val_00025131.JPEG",
+      "val/n03930630/ILSVRC2012_val_00013435.JPEG",
+      "val/n03930630/ILSVRC2012_val_00035897.JPEG",
+      "val/n03930630/ILSVRC2012_val_00026503.JPEG",
+      "val/n03930630/ILSVRC2012_val_00025354.JPEG",
+      "val/n03930630/ILSVRC2012_val_00039508.JPEG",
+      "val/n03930630/ILSVRC2012_val_00037136.JPEG",
+      "val/n03930630/ILSVRC2012_val_00017708.JPEG"
+    ],
+    "lambda_prototype": 0.1,
+    "proxy_embedding_dimension": 768,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "status": "evaluation_only_target_features_available",
+    "target_embedding_dimension": 512,
+    "target_model": "openai/clip-vit-base-patch32"
+  },
+  {
+    "adversarial_cka": 0.9374278783798218,
+    "adversarial_minus_clean": -0.034770965576171875,
+    "clean_cka": 0.9721988439559937,
+    "image_count": 8,
+    "image_ids": [
+      "val/n03930630/ILSVRC2012_val_00025131.JPEG",
+      "val/n03930630/ILSVRC2012_val_00013435.JPEG",
+      "val/n03930630/ILSVRC2012_val_00035897.JPEG",
+      "val/n03930630/ILSVRC2012_val_00026503.JPEG",
+      "val/n03930630/ILSVRC2012_val_00025354.JPEG",
+      "val/n03930630/ILSVRC2012_val_00039508.JPEG",
+      "val/n03930630/ILSVRC2012_val_00037136.JPEG",
+      "val/n03930630/ILSVRC2012_val_00017708.JPEG"
+    ],
+    "lambda_prototype": 1.0,
+    "proxy_embedding_dimension": 768,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "status": "evaluation_only_target_features_available",
+    "target_embedding_dimension": 512,
+    "target_model": "openai/clip-vit-base-patch32"
+  },
+  {
+    "adversarial_cka": 0.9199632406234741,
+    "adversarial_minus_clean": -0.05223560333251953,
+    "clean_cka": 0.9721988439559937,
+    "image_count": 8,
+    "image_ids": [
+      "val/n03930630/ILSVRC2012_val_00025131.JPEG",
+      "val/n03930630/ILSVRC2012_val_00013435.JPEG",
+      "val/n03930630/ILSVRC2012_val_00035897.JPEG",
+      "val/n03930630/ILSVRC2012_val_00026503.JPEG",
+      "val/n03930630/ILSVRC2012_val_00025354.JPEG",
+      "val/n03930630/ILSVRC2012_val_00039508.JPEG",
+      "val/n03930630/ILSVRC2012_val_00037136.JPEG",
+      "val/n03930630/ILSVRC2012_val_00017708.JPEG"
+    ],
+    "lambda_prototype": 10.0,
+    "proxy_embedding_dimension": 768,
+    "proxy_model": "openai/clip-vit-large-patch14",
+    "status": "evaluation_only_target_features_available",
+    "target_embedding_dimension": 512,
+    "target_model": "openai/clip-vit-base-patch32"
+  }
+]

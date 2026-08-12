@@ -1,0 +1,109 @@
+{
+  "adversarial_outputs": [
+    {
+      "backend": "transformers",
+      "parsed_label": null,
+      "parser_status": "invalid",
+      "raw_output": "7 garbage truck"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": null,
+      "parser_status": "invalid",
+      "raw_output": "5 sports car"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": null,
+      "parser_status": "invalid",
+      "raw_output": "2 cab\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": null,
+      "parser_status": "invalid",
+      "raw_output": "5 sports car"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 10,
+      "parser_status": "ok",
+      "raw_output": "10\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": null,
+      "parser_status": "invalid",
+      "raw_output": "8 pickup truck"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 10,
+      "parser_status": "ok",
+      "raw_output": "10\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": null,
+      "parser_status": "invalid",
+      "raw_output": "2 cab\n"
+    }
+  ],
+  "clean_outputs": [
+    {
+      "backend": "transformers",
+      "parsed_label": null,
+      "parser_status": "invalid",
+      "raw_output": "6 fire engine"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    }
+  ],
+  "rates": {
+    "asr_percent": 100.0,
+    "clean_valid_count": 7,
+    "targeted_hit_count": 0,
+    "tasr_percent": 0.0,
+    "untargeted_hit_count": 7
+  }
+}

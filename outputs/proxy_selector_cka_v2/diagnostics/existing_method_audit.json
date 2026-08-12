@@ -1,0 +1,95 @@
+{
+  "eligibility": "status complete; proxy closed-set 8/8; proxy free-generation 8/8; target denominator 8",
+  "eligible_trials": 85,
+  "limitations": "Repeated images, heterogeneous prompts/objectives, and pair confounding; correlations are descriptive diagnostics, not inferential evidence.",
+  "per_pair": [
+    {
+      "best_target_hits_of_8": 0,
+      "eligible_trials": 5,
+      "mean_target_hits_of_8": 0.0,
+      "pair_id": "P02",
+      "reference_gain_spearman": null
+    },
+    {
+      "best_target_hits_of_8": 0,
+      "eligible_trials": 5,
+      "mean_target_hits_of_8": 0.0,
+      "pair_id": "P06",
+      "reference_gain_spearman": null
+    },
+    {
+      "best_target_hits_of_8": 0,
+      "eligible_trials": 5,
+      "mean_target_hits_of_8": 0.0,
+      "pair_id": "P11",
+      "reference_gain_spearman": null
+    },
+    {
+      "best_target_hits_of_8": 1,
+      "eligible_trials": 14,
+      "mean_target_hits_of_8": 0.429,
+      "pair_id": "P14",
+      "reference_gain_spearman": 0.179
+    },
+    {
+      "best_target_hits_of_8": 0,
+      "eligible_trials": 3,
+      "mean_target_hits_of_8": 0.0,
+      "pair_id": "P16",
+      "reference_gain_spearman": null
+    },
+    {
+      "best_target_hits_of_8": 1,
+      "eligible_trials": 5,
+      "mean_target_hits_of_8": 0.6,
+      "pair_id": "P19",
+      "reference_gain_spearman": 0.0
+    },
+    {
+      "best_target_hits_of_8": 4,
+      "eligible_trials": 14,
+      "mean_target_hits_of_8": 2.857,
+      "pair_id": "P20",
+      "reference_gain_spearman": -0.263
+    },
+    {
+      "best_target_hits_of_8": 2,
+      "eligible_trials": 13,
+      "mean_target_hits_of_8": 0.308,
+      "pair_id": "P21",
+      "reference_gain_spearman": -0.045
+    },
+    {
+      "best_target_hits_of_8": 1,
+      "eligible_trials": 21,
+      "mean_target_hits_of_8": 0.095,
+      "pair_id": "P22",
+      "reference_gain_spearman": -0.455
+    }
+  ],
+  "pooled_correlations": {
+    "proxy_min_margin": {
+      "n": 85,
+      "pearson": -0.376,
+      "spearman": -0.515
+    },
+    "proxy_min_probability": {
+      "n": 85,
+      "pearson": -0.278,
+      "spearman": -0.304
+    },
+    "reference_cka_gain": {
+      "n": 85,
+      "pearson": -0.203,
+      "spearman": -0.227
+    },
+    "source_cka_drop": {
+      "n": 85,
+      "pearson": 0.211,
+      "spearman": 0.157
+    }
+  },
+  "scope": "historical pre-projector/mixed-tap diagnostic trials only",
+  "target_hits": 55,
+  "target_opportunities": 680
+}

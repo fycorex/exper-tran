@@ -1,0 +1,33 @@
+{
+  "answer_label_positions": [
+    355
+  ],
+  "answer_token_ids": [
+    236832
+  ],
+  "classification_logits_shape": [
+    1,
+    10
+  ],
+  "classification_loss": 32.87074279785156,
+  "dtype": "bfloat16",
+  "error": null,
+  "extraction": "pooled Gemma visual soft tokens passed to the language model",
+  "free_generation_probe_label": 10,
+  "max_other_probability": 0.52286696434021,
+  "model_id": "google/gemma-4-E4B-it",
+  "module_path": "model.embed_vision",
+  "normalization": "per-image L2; FP32 before CKA",
+  "pooling": "masked mean over non-padding visual soft tokens",
+  "revision": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+  "shape": [
+    8,
+    256,
+    2560
+  ],
+  "status": "validated",
+  "target_human_label": 7,
+  "target_probability": 4.293314123060554e-05,
+  "token_level_attack_cka": true,
+  "token_mask": "derived from non-padding image_position_ids and pooling kernel"
+}

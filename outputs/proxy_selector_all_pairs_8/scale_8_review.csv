@@ -1,0 +1,10 @@
+pair_id,type,proxy_model,target_model,status,proxy_hits,target_hits,denominator,tasr_percent,lambda,alpha,reference_cka_gain,passes_proxy_gate,passes_3_of_8_review,failure_reason
+P02,Cross-Family,Qwen/Qwen3.5-4B,google/gemma-4-E4B-it,ok,8,0,8,0.0,3.0,4.0,0.13962075114250183,True,False,
+P06,Cross-Family,openai/clip-vit-large-patch14,OpenGVLab/InternVL3_5-2B-HF,ok,8,0,8,0.0,3.0,4.0,0.008963119238615036,True,False,
+P11,Cross-Family,google/siglip2-so400m-patch14-384,google/gemma-4-E2B-it,ok,8,0,8,0.0,3.0,4.0,0.1482974886894226,True,False,
+P14,Intra-Family,Qwen/Qwen3.5-2B,Qwen/Qwen3.5-4B,ok,8,1,8,12.5,3.0,4.0,0.1084919422864914,True,False,
+P20,Intra-Family,Qwen/Qwen3.5-4B,Qwen/Qwen3.5-2B,ok,8,3,8,37.5,0.5,4.0,0.08228535950183868,True,True,
+P16,Intra-Family,OpenGVLab/InternVL3_5-2B-HF,OpenGVLab/InternVL3_5-4B-HF,proxy_target_not_reached,7,,8,,0.5,4.0,0.041898466646671295,False,False,Frozen PNG proxy target criterion reached for 7/8 images
+P21,Intra-Family,OpenGVLab/InternVL3_5-4B-HF,OpenGVLab/InternVL3_5-2B-HF,ok,8,0,8,0.0,0.5,1.0,0.012167640030384064,True,False,
+P19,Intra-Family,google/gemma-4-E2B-it,google/gemma-4-E4B-it,ok,8,0,8,0.0,0.5,4.0,0.1394934058189392,True,False,
+P22,Intra-Family,google/gemma-4-E4B-it,google/gemma-4-E2B-it,ok,8,1,8,12.5,3.0,1.0,-0.06103888154029846,True,False,

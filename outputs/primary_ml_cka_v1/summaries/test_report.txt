@@ -1,0 +1,41 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.0rc1, pytest-8.3.4, pluggy-1.6.0
+rootdir: /home/ubuntu/exper-tran
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 59 items
+
+tests/unit/attack/test_answer_mask.py ..                                 [  3%]
+tests/unit/attack/test_clip_target_index.py ...                          [  8%]
+tests/unit/attack/test_configured_target_label.py .                      [ 10%]
+tests/unit/attack/test_linear_cka.py ...                                 [ 15%]
+tests/unit/attack/test_loss_sign.py ...                                  [ 20%]
+tests/unit/attack/test_momentum_pgd.py .                                 [ 22%]
+tests/unit/attack/test_projection.py .                                   [ 23%]
+tests/unit/attack/test_prototype_contrastive.py ...                      [ 28%]
+tests/unit/attack/test_shared_geometry.py .....                          [ 37%]
+tests/unit/data/test_preprocessing.py .                                  [ 38%]
+tests/unit/domain/test_labels.py .....                                   [ 47%]
+tests/unit/evaluation/test_metrics.py ..                                 [ 50%]
+tests/unit/models/test_contrastive_outputs.py ..                         [ 54%]
+tests/unit/models/test_masks.py ..                                       [ 57%]
+tests/unit/models/test_pooling.py .                                      [ 59%]
+tests/unit/models/test_tap_contracts.py .                                [ 61%]
+tests/unit/prompts/test_parser.py ........                               [ 74%]
+tests/integration/test_answer_masks_real_tokenizers.py ......            [ 84%]
+tests/integration/test_finite_difference.py .                            [ 86%]
+tests/integration/test_import_boundaries.py .                            [ 88%]
+tests/integration/test_lambda_selection.py .                             [ 89%]
+tests/integration/test_main_confirmation_disjoint.py .                   [ 91%]
+tests/integration/test_png_roundtrip.py .                                [ 93%]
+tests/integration/test_reference_order.py ..                             [ 96%]
+tests/integration/test_source_is_clean.py .                              [ 98%]
+tests/integration/test_target_gradient_path.py .                         [100%]
+
+=============================== warnings summary ===============================
+.venv-primary-ml-cka/lib/python3.11/site-packages/pkg_resources/_vendor/pyparsing.py:87
+  /home/ubuntu/exper-tran/.venv-primary-ml-cka/lib/python3.11/site-packages/pkg_resources/_vendor/pyparsing.py:87: DeprecationWarning: module 'sre_constants' is deprecated
+    import sre_constants
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 59 passed, 1 warning in 9.60s =========================

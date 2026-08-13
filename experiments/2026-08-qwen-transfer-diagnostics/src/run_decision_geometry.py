@@ -44,6 +44,11 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--pair-id", choices=PAIR_IDS)
     parser.add_argument("--diagnostics-name", default="objective_split_common48_rho03")
     parser.add_argument("--result-name", default="decision_geometry")
+    parser.add_argument(
+        "--skip-gradients",
+        action="store_true",
+        help="Compute finite margin changes without proxy/target input gradients.",
+    )
     return parser.parse_args()
 
 
@@ -188,32 +193,54 @@ def _run_pair(
     project_root: Path,
     pair_id: str,
     diagnostics_name: str,
+    *,
+    skip_gradients: bool = False,
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     pair = get_pair(pair_id)
     diagnostics = output_dir / "diagnostics" / diagnostics_name
     records = read_manifest(diagnostics / "common_clean.jsonl")
     clean = _cuda_images(output_dir / "canonical_images", records, 224)
-    os.environ.pop("PRIMARY_ML_CKA_KEEP_VISION_BF16", None)
-    proxy = load_proxy(
-        pair.proxy_model, project_root / ".hf-cache", torch.device("cuda"), AttackConfig()
-    )
-    proxy_gradients = {}
-    proxy_clean_margins = {}
-    for kind in ("source_target", "robust"):
-        proxy_gradients[kind], proxy_clean_margins[kind] = _gradient(proxy, clean, kind)
-    del proxy
-    gc.collect()
-    torch.cuda.empty_cache()
+    gradient_kinds = ("source_target", "robust")
+    if skip_gradients:
+        proxy_gradients = {
+            kind: torch.full_like(clean, float("nan"), device="cpu") for kind in gradient_kinds
+        }
+    else:
+        os.environ.pop("PRIMARY_ML_CKA_KEEP_VISION_BF16", None)
+        proxy = load_proxy(
+            pair.proxy_model, project_root / ".hf-cache", torch.device("cuda"), AttackConfig()
+        )
+        proxy_gradients = {}
+        for kind in gradient_kinds:
+            proxy_gradients[kind], _ = _gradient(proxy, clean, kind)
+        del proxy
+        gc.collect()
+        torch.cuda.empty_cache()
 
     target = _bf16_target_adapter(pair.target_model, project_root / ".hf-cache")
-    target_gradients = {}
-    target_clean_margins = {}
-    for kind in ("source_target", "robust"):
-        target_gradients[kind], target_clean_margins[kind] = _gradient(target, clean, kind)
-    alignments = {
-        kind: _alignment(proxy_gradients[kind], target_gradients[kind])
-        for kind in ("source_target", "robust")
-    }
+    if skip_gradients:
+        with torch.no_grad():
+            target_clean_logits = _batched_logits(target, clean).detach().float().cpu()
+        target_clean_margins = {kind: _margin(target_clean_logits, kind) for kind in gradient_kinds}
+        target_gradients = {
+            kind: torch.full_like(clean, float("nan"), device="cpu") for kind in gradient_kinds
+        }
+        alignments = {
+            kind: {
+                metric: torch.full((len(clean),), float("nan"))
+                for metric in ("raw_cosine", "sign_cosine", "sign_agreement")
+            }
+            for kind in gradient_kinds
+        }
+    else:
+        target_gradients = {}
+        target_clean_margins = {}
+        for kind in gradient_kinds:
+            target_gradients[kind], target_clean_margins[kind] = _gradient(target, clean, kind)
+        alignments = {
+            kind: _alignment(proxy_gradients[kind], target_gradients[kind])
+            for kind in gradient_kinds
+        }
     rows = []
     summaries = []
     for state in _trial_states(diagnostics, pair_id):
@@ -254,6 +281,7 @@ def _run_pair(
                         "target_adversarial_margin": float(target_adv_margin[index]),
                         "target_gap_closure": gap_closures[index],
                         "decision_score_type": "teacher_forced_closed_set",
+                        "gradient_diagnostics_available": int(not skip_gradients),
                     }
                 )
             summaries.append(
@@ -275,6 +303,7 @@ def _run_pair(
                     "median_gap_closure": statistics.median(gap_closures),
                     "boundary_crossing_count": int((target_adv_margin > 0).sum()),
                     "decision_score_type": "teacher_forced_closed_set",
+                    "gradient_diagnostics_available": int(not skip_gradients),
                 }
             )
     del target
@@ -294,7 +323,13 @@ def main() -> None:
     all_rows = []
     all_summaries = []
     for pair_id in pairs:
-        rows, summaries = _run_pair(output_dir, project_root, pair_id, args.diagnostics_name)
+        rows, summaries = _run_pair(
+            output_dir,
+            project_root,
+            pair_id,
+            args.diagnostics_name,
+            skip_gradients=args.skip_gradients,
+        )
         _write_csv(result_dir / f"{pair_id}.csv", rows)
         _write_csv(result_dir / f"{pair_id}_summary.csv", summaries)
         all_rows.extend(rows)

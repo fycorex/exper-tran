@@ -246,6 +246,12 @@ change or rotate that semantic prototype. This output directory is dedicated
 to scale-50 and must not be reused by the older confirmation pipeline, whose
 main/confirmation manifests have different semantics.
 
+Gemma E4B as the P22 proxy exceeds the A4000 memory limit at batch size eight,
+so P22 alone uses batches of four; all scientific settings and the fixed
+48-reference prototype remain unchanged. Final validation is based on exactly
+50 proxy and target observations per pair rather than assuming a common batch
+count.
+
 ## Status
 
 The projected-token sweep is resumable and is the only baseline that should be

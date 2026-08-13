@@ -6,6 +6,7 @@ OUTPUT_DIR="${1:-outputs/proxy_selector_cka_v2_scale50}"
 WAIT_SECONDS="${PRIMARY_ML_CKA_GPU_WAIT_SECONDS:-60}"
 DATA_CONFIG="$ROOT/configs/data/scale_50_common.yaml"
 ATTACK_CONFIG="$ROOT/configs/attacks/all9_semantic_scale50.yaml"
+P22_ATTACK_CONFIG="$ROOT/configs/attacks/all9_semantic_scale50_p22.yaml"
 
 cd "$ROOT"
 export PYTHONPATH=src
@@ -66,9 +67,13 @@ done
 bash scripts/run_experiment.sh tests run --output-dir "$OUTPUT_DIR"
 
 for pair_id in P20 P19 P22 P14 P16 P21 P02 P06 P11; do
+  pair_attack_config="$ATTACK_CONFIG"
+  if [[ "$pair_id" == "P22" ]]; then
+    pair_attack_config="$P22_ATTACK_CONFIG"
+  fi
   bash scripts/run_experiment.sh attack scaled \
     --pair-id "$pair_id" --resume --image-count 50 \
-    --config "$ATTACK_CONFIG" --output-dir "$OUTPUT_DIR"
+    --config "$pair_attack_config" --output-dir "$OUTPUT_DIR"
 done
 
 .venv-primary-ml-cka/bin/python \

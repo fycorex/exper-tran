@@ -92,6 +92,11 @@ def _load_rates(path: Path) -> AttackRates:
     return AttackRates(**payload["rates"])
 
 
+def _reference_batch_index(fixed_reference_bank: bool) -> int | None:
+    """Freeze the first reference bank when running a controlled scale-up."""
+    return 0 if fixed_reference_bank else None
+
+
 def _evaluate_pending_batches(
     context: CommandContext,
     pair: ModelPair,
@@ -175,6 +180,7 @@ def run_scaled(context: CommandContext) -> str:
     prompt = get_prompt(os.environ.get("PRIMARY_ML_CKA_PROMPT_ID", "original"))
     phase = f"scale_{context.image_count}"
     evaluate_all_frozen = os.environ.get("PRIMARY_ML_CKA_EVALUATE_ALL_FROZEN") == "1"
+    fixed_reference_bank = os.environ.get("PRIMARY_ML_CKA_FIXED_REFERENCE_BANK") == "1"
     pairs = tuple(
         pair for pair in MODEL_PAIRS if context.pair_id is None or pair.pair_id == context.pair_id
     )
@@ -221,6 +227,7 @@ def run_scaled(context: CommandContext) -> str:
                         source_records=source,
                         reference_records=references,
                         source_batch_index=batch_index,
+                        reference_batch_index=_reference_batch_index(fixed_reference_bank),
                         lambda_cka=lambda_cka,
                         seed=(context.seed if context.seed is not None else 42) + batch_index,
                         steps=attack_config.steps,

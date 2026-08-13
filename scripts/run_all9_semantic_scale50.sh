@@ -11,6 +11,7 @@ cd "$ROOT"
 export PYTHONPATH=src
 export PRIMARY_ML_CKA_DATA_CONFIG="$DATA_CONFIG"
 export PRIMARY_ML_CKA_EVALUATE_ALL_FROZEN=1
+export PRIMARY_ML_CKA_FIXED_REFERENCE_BANK=1
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 while ! .venv-primary-ml-cka/bin/python -c \

@@ -222,11 +222,14 @@ requested counts are exactly 8, 50, and 500 rather than 8, 48, and 496. The
 50/500 configurations use source-class ImageNet training images; validation
 has only 50 images per class and cannot supply 500 attacks.
 
-The controlled 50-image confirmation keeps only the strongest recipe from the
-all-nine smoke (`classification + semantic centroid`, initial gradient ratio
-0.3). It prepares 100 candidates, screens all six generative models plus CLIP
-and SigLIP, freezes the first 50 images that every model calls class 8, and
-attacks them in resumable batches of at most eight:
+The controlled 50-image confirmation keeps the selected recipe from the
+all-nine eight-image controlled diagnostic (`classification + semantic
+centroid`, initial gradient ratio 0.3). It prepares 100 candidates, screens all
+six generative models plus CLIP and SigLIP, freezes the first 50 images that
+every model calls class 8, and attacks them in resumable batches of at most
+eight. This is an all-model-consensus clean cohort, so its TASR is conditional
+on every participating model classifying the clean image correctly; it is not
+an unfiltered random ImageNet sample:
 
 ```bash
 bash scripts/run_all9_semantic_scale50.sh \
@@ -237,6 +240,11 @@ Every frozen adversarial PNG is evaluated on the target, even when its batch
 does not satisfy the strict all-proxy-hit gate. The final
 `summaries/scale_50_semantic_all9.csv` therefore reports both unconditional
 50-image TASR/ASR and targeted hits conditional on the per-image proxy mask.
+All seven source batches use the same frozen first 48 target references as the
+eight-image controlled diagnostic; the final two-image partial batch does not
+change or rotate that semantic prototype. This output directory is dedicated
+to scale-50 and must not be reused by the older confirmation pipeline, whose
+main/confirmation manifests have different semantics.
 
 ## Status
 

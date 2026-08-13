@@ -1,0 +1,9 @@
+pair_id,objective,margin_kind,image_count,target_hits,tasr_percent,untargeted_hits,untargeted_asr_percent,mean_clean_margin,mean_margin_change,mean_adversarial_margin,mean_gap_closure,median_gap_closure,boundary_crossing_count,decision_score_type,gradient_diagnostics_available
+P14,cls_only,source_target,8,0,0.0,4,50.0,-6.53125,3.546875,-2.984375,0.5508322451959725,0.5035186683015871,0,teacher_forced_closed_set,1
+P14,cls_only,robust,8,0,0.0,4,50.0,-6.53125,2.265625,-4.265625,0.3441729146048578,0.41434927697441604,0,teacher_forced_closed_set,1
+P14,semantic_only,source_target,8,1,12.5,6,75.0,-6.53125,6.46875,-0.0625000149011612,0.9976597122378278,1.0,4,teacher_forced_closed_set,1
+P14,semantic_only,robust,8,1,12.5,6,75.0,-6.53125,5.421459197998047,-1.1097910404205322,0.8339173349432081,0.8342995169082126,2,teacher_forced_closed_set,1
+P14,target_cka_semantic,source_target,8,0,0.0,3,37.5,-6.53125,3.046875,-3.484375,0.4562833200469231,0.4026360544217687,0,teacher_forced_closed_set,1
+P14,target_cka_semantic,robust,8,0,0.0,3,37.5,-6.53125,2.46875,-4.0625,0.37719437095465447,0.3401360756145313,0,teacher_forced_closed_set,1
+P14,target_cka_only,source_target,8,0,0.0,5,62.5,-6.53125,3.15625,-3.375,0.4870377054947883,0.43103448275862066,0,teacher_forced_closed_set,1
+P14,target_cka_only,robust,8,0,0.0,5,62.5,-6.53125,1.609375,-4.921875,0.24906934992898144,0.24789274149927598,0,teacher_forced_closed_set,1

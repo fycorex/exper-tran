@@ -1,0 +1,7 @@
+metric,outcome,pair_count,spearman
+global_cka,tasr_percent,9,0.8176588542291553
+global_cka,mean_gap_closure,9,0.8692679567468138
+global_cka_z_score,tasr_percent,9,0.7706746355884524
+global_cka_z_score,mean_gap_closure,9,0.8333333333333333
+mean_local_cka_normalized,tasr_percent,9,0.5963553727767786
+mean_local_cka_normalized,mean_gap_closure,9,0.6833333333333332

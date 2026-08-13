@@ -1,0 +1,53 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.0rc1, pytest-8.3.4, pluggy-1.6.0
+rootdir: /home/ubuntu/exper-tran
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 90 items
+
+tests/unit/attack/test_answer_mask.py ....                               [  4%]
+tests/unit/attack/test_clip_target_index.py ....                         [  8%]
+tests/unit/attack/test_configured_target_label.py .                      [ 10%]
+tests/unit/attack/test_generative_scores.py .                            [ 11%]
+tests/unit/attack/test_gradient_ratio.py ..                              [ 13%]
+tests/unit/attack/test_linear_cka.py ......                              [ 20%]
+tests/unit/attack/test_loss_sign.py ........                             [ 28%]
+tests/unit/attack/test_momentum_pgd.py .                                 [ 30%]
+tests/unit/attack/test_projection.py .                                   [ 31%]
+tests/unit/attack/test_reference_bank.py ..                              [ 33%]
+tests/unit/data/test_preprocessing.py ..                                 [ 35%]
+tests/unit/domain/test_labels.py .....                                   [ 41%]
+tests/unit/evaluation/test_metrics.py .                                  [ 42%]
+tests/unit/evaluation/test_model_similarity.py .....                     [ 47%]
+tests/unit/evaluation/test_representation_metrics.py .                   [ 48%]
+tests/unit/experiment/test_cka_validity_outputs.py .                     [ 50%]
+tests/unit/experiment/test_decision_geometry_microbatch.py .             [ 51%]
+tests/unit/experiment/test_disjoint_calibration.py .                     [ 52%]
+tests/unit/experiment/test_scaled_reference_bank.py ..                   [ 54%]
+tests/unit/experiment/test_scaled_resume.py ..                           [ 56%]
+tests/unit/models/test_contrastive_outputs.py ...                        [ 60%]
+tests/unit/models/test_masks.py ..                                       [ 62%]
+tests/unit/models/test_pooling.py .                                      [ 63%]
+tests/unit/models/test_projected_proxy_taps.py ..                        [ 65%]
+tests/unit/models/test_proxy_precision.py .                              [ 66%]
+tests/unit/models/test_tap_contracts.py .                                [ 67%]
+tests/unit/prompts/test_parser.py ........                               [ 76%]
+tests/integration/test_answer_masks_real_tokenizers.py ......            [ 83%]
+tests/integration/test_finite_difference.py .                            [ 84%]
+tests/integration/test_import_boundaries.py .                            [ 85%]
+tests/integration/test_lambda_selection.py .                             [ 86%]
+tests/integration/test_main_confirmation_disjoint.py ..                  [ 88%]
+tests/integration/test_png_roundtrip.py .                                [ 90%]
+tests/integration/test_proxy_visual_preprocessing.py ....                [ 94%]
+tests/integration/test_qwen_visual_preprocessing.py .                    [ 95%]
+tests/integration/test_reference_order.py ..                             [ 97%]
+tests/integration/test_source_is_clean.py .                              [ 98%]
+tests/integration/test_target_gradient_path.py .                         [100%]
+
+=============================== warnings summary ===============================
+.venv-primary-ml-cka/lib/python3.11/site-packages/pkg_resources/_vendor/pyparsing.py:87
+  /home/ubuntu/exper-tran/.venv-primary-ml-cka/lib/python3.11/site-packages/pkg_resources/_vendor/pyparsing.py:87: DeprecationWarning: module 'sre_constants' is deprecated
+    import sre_constants
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 90 passed, 1 warning in 19.99s ========================

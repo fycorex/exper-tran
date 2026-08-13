@@ -1,0 +1,109 @@
+{
+  "adversarial_outputs": [
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 7,
+      "parser_status": "ok",
+      "raw_output": "7\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 7,
+      "parser_status": "ok",
+      "raw_output": "7\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 7,
+      "parser_status": "ok",
+      "raw_output": "7\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 7,
+      "parser_status": "ok",
+      "raw_output": "7\n"
+    }
+  ],
+  "clean_outputs": [
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8\n"
+    }
+  ],
+  "rates": {
+    "asr_percent": 50.0,
+    "clean_valid_count": 8,
+    "targeted_hit_count": 4,
+    "tasr_percent": 50.0,
+    "untargeted_hit_count": 4
+  }
+}

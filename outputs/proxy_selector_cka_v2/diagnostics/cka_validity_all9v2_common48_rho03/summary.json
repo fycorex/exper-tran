@@ -1,0 +1,56 @@
+[
+  {
+    "class_centroid_cka": 0.9261670112609863,
+    "class_geometry_rsa": 0.5851856470108032,
+    "pair_id": "P02",
+    "projected_global_cka": 0.8166780471801758
+  },
+  {
+    "class_centroid_cka": 0.9215932488441467,
+    "class_geometry_rsa": 0.555756151676178,
+    "pair_id": "P06",
+    "projected_global_cka": 0.7502443790435791
+  },
+  {
+    "class_centroid_cka": 0.8970783352851868,
+    "class_geometry_rsa": 0.34012189507484436,
+    "pair_id": "P11",
+    "projected_global_cka": 0.7164037227630615
+  },
+  {
+    "class_centroid_cka": 0.9884939193725586,
+    "class_geometry_rsa": 0.9458025097846985,
+    "pair_id": "P14",
+    "projected_global_cka": 0.9478523135185242
+  },
+  {
+    "class_centroid_cka": 0.9703049659729004,
+    "class_geometry_rsa": 0.9089258313179016,
+    "pair_id": "P16",
+    "projected_global_cka": 0.9171384572982788
+  },
+  {
+    "class_centroid_cka": 0.9971452355384827,
+    "class_geometry_rsa": 0.989033043384552,
+    "pair_id": "P19",
+    "projected_global_cka": 0.993607759475708
+  },
+  {
+    "class_centroid_cka": 0.9884939193725586,
+    "class_geometry_rsa": 0.9458025097846985,
+    "pair_id": "P20",
+    "projected_global_cka": 0.9478523135185242
+  },
+  {
+    "class_centroid_cka": 0.9703049659729004,
+    "class_geometry_rsa": 0.9089259505271912,
+    "pair_id": "P21",
+    "projected_global_cka": 0.9171384572982788
+  },
+  {
+    "class_centroid_cka": 0.9971452355384827,
+    "class_geometry_rsa": 0.989033043384552,
+    "pair_id": "P22",
+    "projected_global_cka": 0.993607759475708
+  }
+]

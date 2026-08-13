@@ -1,0 +1,33 @@
+{
+  "answer_label_positions": [
+    354
+  ],
+  "answer_token_ids": [
+    22
+  ],
+  "classification_logits_shape": [
+    1,
+    10
+  ],
+  "classification_loss": 7.876944065093994,
+  "dtype": "bfloat16",
+  "error": null,
+  "extraction": "post-pixel-shuffle InternVL visual soft tokens passed to the language model",
+  "free_generation_probe_label": 1,
+  "max_other_probability": 0.2868584096431732,
+  "model_id": "OpenGVLab/InternVL3_5-2B-HF",
+  "module_path": "model.get_image_features.pooler_output",
+  "normalization": "per-image L2; FP32 before CKA",
+  "pooling": "masked mean over projected proxy image tokens",
+  "revision": "3f301ffcf3dcbb47893afae6650ea3e78d96fb6d",
+  "shape": [
+    8,
+    256,
+    2048
+  ],
+  "status": "validated",
+  "target_human_label": 7,
+  "target_probability": 0.11958037316799164,
+  "token_level_attack_cka": true,
+  "token_mask": "non-CLS tokens from one valid 448x448 tile per image"
+}

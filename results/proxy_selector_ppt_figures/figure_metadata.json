@@ -1,0 +1,18 @@
+{
+  "source_contact_sheet_images": [
+    "0001_ILSVRC2012_val_00015879.png",
+    "0003_ILSVRC2012_val_00035897.png",
+    "0004_ILSVRC2012_val_00026503.png",
+    "0005_ILSVRC2012_val_00025354.png",
+    "0006_ILSVRC2012_val_00039508.png",
+    "0007_ILSVRC2012_val_00037136.png",
+    "0009_ILSVRC2012_val_00049612.png",
+    "0012_ILSVRC2012_val_00010012.png"
+  ],
+  "triptych_pair": "P20",
+  "triptych_image_index": 0,
+  "triptych_clean_label": 8,
+  "triptych_adversarial_label": 7,
+  "all9_objective": "semantic_only",
+  "all9_image_count": 8
+}

@@ -53,6 +53,8 @@ def _pooled_row(value: torch.Tensor | tuple[torch.Tensor, ...]) -> torch.Tensor:
         if len(value) != 1:
             raise RuntimeError("Expected exactly one image feature tensor")
         value = value[0]
+    if not isinstance(value, torch.Tensor):
+        value = getattr(value, "pooler_output", None)
     if not isinstance(value, torch.Tensor) or value.ndim < 2:
         raise RuntimeError("Visual layer did not return token features")
     tokens = value.reshape(-1, value.shape[-1]).float()

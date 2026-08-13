@@ -222,6 +222,22 @@ requested counts are exactly 8, 50, and 500 rather than 8, 48, and 496. The
 50/500 configurations use source-class ImageNet training images; validation
 has only 50 images per class and cannot supply 500 attacks.
 
+The controlled 50-image confirmation keeps only the strongest recipe from the
+all-nine smoke (`classification + semantic centroid`, initial gradient ratio
+0.3). It prepares 100 candidates, screens all six generative models plus CLIP
+and SigLIP, freezes the first 50 images that every model calls class 8, and
+attacks them in resumable batches of at most eight:
+
+```bash
+bash scripts/run_all9_semantic_scale50.sh \
+  outputs/proxy_selector_cka_v2_scale50
+```
+
+Every frozen adversarial PNG is evaluated on the target, even when its batch
+does not satisfy the strict all-proxy-hit gate. The final
+`summaries/scale_50_semantic_all9.csv` therefore reports both unconditional
+50-image TASR/ASR and targeted hits conditional on the per-image proxy mask.
+
 ## Status
 
 The projected-token sweep is resumable and is the only baseline that should be

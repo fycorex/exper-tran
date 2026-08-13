@@ -83,9 +83,7 @@ def _artifact_dir(
     )
 
 
-def _evaluation_path(
-    output_dir: Path, pair: ModelPair, phase: str, batch_index: int
-) -> Path:
+def _evaluation_path(output_dir: Path, pair: ModelPair, phase: str, batch_index: int) -> Path:
     return output_dir / "evaluation" / phase / pair.pair_id / f"batch_{batch_index:02d}.json"
 
 
@@ -103,11 +101,13 @@ def _evaluate_pending_batches(
     source_label: int,
     target_label: int,
     prompt: str,
+    *,
+    evaluate_all_frozen: bool = False,
 ) -> dict[int, AttackRates]:
     rates_by_batch: dict[int, AttackRates] = {}
     pending = []
     for batch_index, result in attacks:
-        if not result.proxy_target_all_hit:
+        if not evaluate_all_frozen and not result.proxy_target_all_hit:
             continue
         path = _evaluation_path(context.output_dir, pair, phase, batch_index)
         if context.resume and path.is_file():
@@ -124,20 +124,14 @@ def _evaluate_pending_batches(
         model = load_target_for_generation(snapshot, torch.device("cuda"))
         generator = TransformersTargetGenerator(model, processor)
         for batch_index, result, path in pending:
-            artifact_dir = _artifact_dir(
-                context.output_dir, pair, phase, batch_index, lambda_cka
-            )
+            artifact_dir = _artifact_dir(context.output_dir, pair, phase, batch_index, lambda_cka)
             count = len(result.source_image_ids)
             clean_outputs = tuple(
-                generator.generate_label(
-                    artifact_dir / f"{index:02d}_clean.png", prompt
-                )
+                generator.generate_label(artifact_dir / f"{index:02d}_clean.png", prompt)
                 for index in range(count)
             )
             adversarial_outputs = tuple(
-                generator.generate_label(
-                    artifact_dir / f"{index:02d}_adv.png", prompt
-                )
+                generator.generate_label(artifact_dir / f"{index:02d}_adv.png", prompt)
                 for index in range(count)
             )
             rates = attack_rates(
@@ -150,9 +144,7 @@ def _evaluate_pending_batches(
                 path,
                 {
                     "clean_outputs": tuple(asdict(output) for output in clean_outputs),
-                    "adversarial_outputs": tuple(
-                        asdict(output) for output in adversarial_outputs
-                    ),
+                    "adversarial_outputs": tuple(asdict(output) for output in adversarial_outputs),
                     "rates": asdict(rates),
                 },
             )
@@ -175,19 +167,16 @@ def run_scaled(context: CommandContext) -> str:
     require_real_run_ready(context)
     if context.image_count not in {8, 50, 500}:
         raise ValueError("attack scaled requires --image-count 8, 50, or 500")
-    attack_config = resolve_attack_config(
-        context, require_canonical_lambda_grid=False
-    )
+    attack_config = resolve_attack_config(context, require_canonical_lambda_grid=False)
     if len(attack_config.lambdas) != 1:
         raise ValueError("Scaled runs require exactly one selected lambda")
     lambda_cka = attack_config.lambdas[0]
     data_config = resolve_data_config(context)
     prompt = get_prompt(os.environ.get("PRIMARY_ML_CKA_PROMPT_ID", "original"))
     phase = f"scale_{context.image_count}"
+    evaluate_all_frozen = os.environ.get("PRIMARY_ML_CKA_EVALUATE_ALL_FROZEN") == "1"
     pairs = tuple(
-        pair
-        for pair in MODEL_PAIRS
-        if context.pair_id is None or pair.pair_id == context.pair_id
+        pair for pair in MODEL_PAIRS if context.pair_id is None or pair.pair_id == context.pair_id
     )
     if context.dry_run:
         return (
@@ -216,9 +205,7 @@ def run_scaled(context: CommandContext) -> str:
                 for start in range(0, len(selected), batch_size)
             )
             for batch_index, source in enumerate(batches):
-                log_path = _log_path(
-                    context.output_dir, pair, phase, batch_index, lambda_cka
-                )
+                log_path = _log_path(context.output_dir, pair, phase, batch_index, lambda_cka)
                 if context.resume and log_path.is_file():
                     result = _load_attack_result(log_path)
                     print(
@@ -262,6 +249,7 @@ def run_scaled(context: CommandContext) -> str:
                 data_config.source_human_label,
                 data_config.target_human_label,
                 prompt,
+                evaluate_all_frozen=evaluate_all_frozen,
             )
             seed = context.seed if context.seed is not None else attack_config.main_seed
             for batch_index, result in attacks:
@@ -277,9 +265,10 @@ def run_scaled(context: CommandContext) -> str:
             proxy_eligible = sum(result.proxy_target_all_hit for _, result in attacks)
             target_hits = sum(item.targeted_hit_count for item in rates.values())
             target_denominator = sum(item.clean_valid_count for item in rates.values())
+            metric_name = "frozen_TASR" if evaluate_all_frozen else "conditional_TASR"
             summaries.append(
                 f"{pair.pair_id}: proxy_eligible_batches={proxy_eligible}/{len(attacks)} "
-                f"conditional_TASR={target_hits}/{target_denominator}"
+                f"{metric_name}={target_hits}/{target_denominator}"
             )
         except Exception as exc:
             seed = context.seed if context.seed is not None else attack_config.main_seed
@@ -294,7 +283,5 @@ def run_scaled(context: CommandContext) -> str:
                 )
             )
             summaries.append(f"{pair.pair_id}: BLOCKED {exc!r}")
-        write_results_csv(
-            context.output_dir / "summaries" / f"{phase}_results.csv", rows
-        )
+        write_results_csv(context.output_dir / "summaries" / f"{phase}_results.csv", rows)
     return "\n".join(summaries)

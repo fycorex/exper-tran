@@ -1,5 +1,5 @@
 {
-  "git_commit": "71ba1f2314e8d862b1903a23eb3506d0a025e013",
+  "git_commit": "9690dd93c1d0760a1b8bc594236b237de522d6f3",
   "python": "3.11.0rc1 (main, Aug 12 2022, 10:02:14) [GCC 11.2.0]",
   "platform": "Linux-6.8.0-40-generic-x86_64-with-glibc2.35",
   "torch": "2.5.1+cu124",

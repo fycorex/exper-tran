@@ -50,4 +50,4 @@ tests/integration/test_target_gradient_path.py .                         [100%]
     import sre_constants
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-======================== 90 passed, 1 warning in 19.99s ========================
+======================== 90 passed, 1 warning in 19.93s ========================

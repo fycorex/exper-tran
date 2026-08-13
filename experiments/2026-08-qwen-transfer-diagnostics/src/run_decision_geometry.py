@@ -107,11 +107,19 @@ def _margin(logits: torch.Tensor, kind: str) -> torch.Tensor:
 
 
 def _gradient(adapter, images: torch.Tensor, kind: str) -> tuple[torch.Tensor, torch.Tensor]:
-    differentiated = images.detach().clone().requires_grad_(True)
-    logits = _logits(adapter, differentiated)
-    margins = _margin(logits, kind)
-    gradient = torch.autograd.grad(margins.sum(), differentiated, only_inputs=True)[0]
-    return gradient.detach().float().cpu(), margins.detach().float().cpu()
+    gradients = []
+    margins = []
+    for image in images.split(1):
+        differentiated = image.detach().clone().requires_grad_(True)
+        margin = _margin(_logits(adapter, differentiated), kind)
+        gradient = torch.autograd.grad(margin.sum(), differentiated, only_inputs=True)[0]
+        gradients.append(gradient.detach().float().cpu())
+        margins.append(margin.detach().float().cpu())
+    return torch.cat(gradients), torch.cat(margins)
+
+
+def _batched_logits(adapter, images: torch.Tensor) -> torch.Tensor:
+    return torch.cat([_logits(adapter, image) for image in images.split(1)])
 
 
 def _png_batch(directory: Path, suffix: str, count: int) -> torch.Tensor:
@@ -214,7 +222,7 @@ def _run_pair(
         adversarial = _png_batch(directory, "adv", len(records))
         delta = (adversarial - clean_png).float().cpu()
         with torch.no_grad():
-            target_adv_logits = _logits(target, adversarial).detach().float().cpu()
+            target_adv_logits = _batched_logits(target, adversarial).detach().float().cpu()
         for kind in ("source_target", "robust"):
             target_adv_margin = _margin(target_adv_logits, kind)
             proxy_derivative = (proxy_gradients[kind] * delta).flatten(1).sum(dim=1)

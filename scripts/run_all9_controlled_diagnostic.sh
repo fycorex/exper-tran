@@ -64,7 +64,7 @@ done
 
 for pair_id in P02 P06 P11 P14 P16 P19 P20 P21 P22; do
   geometry_args=()
-  if [[ "$pair_id" == "P02" ]]; then
+  if [[ "$pair_id" == "P02" || "$pair_id" == "P19" ]]; then
     # Gemma E4B plus an input-gradient graph exceeds the A4000. Preserve the
     # exact 8-bit target margin/gap-closure diagnostic without substituting a
     # lower-precision target; gradient-alignment fields are explicitly absent.
@@ -76,6 +76,7 @@ for pair_id in P02 P06 P11 P14 P16 P19 P20 P21 P22; do
     --diagnostics-name "$DIAGNOSTICS_NAME" \
     --result-name "decision_geometry_${RESULT_SUFFIX}" \
     --pair-id "$pair_id" \
+    --resume \
     "${geometry_args[@]}"
 done
 

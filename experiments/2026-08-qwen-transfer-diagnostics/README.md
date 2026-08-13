@@ -140,12 +140,13 @@ requiring any attack to be rerun. The existing P20/P21/P22 results remain the co
 three-pair diagnostic; only the new all-nine phase is used for strict common-
 image pair comparisons.
 
-On the single A4000, P02's 8-bit Gemma E4B target does not leave enough memory
-for an input-gradient graph even at one image per microbatch. P02 therefore
-retains the exact teacher-forced clean/adversarial margins and gap closure under
-`torch.no_grad`, while its gradient-alignment fields are marked unavailable.
-The other eight pairs retain the full gradient diagnostics; the runner does not
-substitute a lower-precision P02 target merely to manufacture those fields.
+On the single A4000, the P02 and P19 8-bit Gemma E4B targets do not leave enough
+memory for an input-gradient graph even at one image per microbatch. These two
+pairs therefore retain the exact teacher-forced clean/adversarial margins and
+gap closure under `torch.no_grad`, while their gradient-alignment fields are
+marked unavailable. The other seven pairs retain the full gradient diagnostics;
+the runner does not substitute a lower-precision E4B target merely to
+manufacture those fields. Completed per-pair geometry files are resumable.
 
 Post-hoc CKA validity uses the eight canonical clean source images as local
 queries, not their adversarial variants. It writes one local-similarity row per

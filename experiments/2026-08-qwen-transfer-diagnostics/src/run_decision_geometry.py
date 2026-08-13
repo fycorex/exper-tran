@@ -44,6 +44,7 @@ def _arguments() -> argparse.Namespace:
     parser.add_argument("--pair-id", choices=PAIR_IDS)
     parser.add_argument("--diagnostics-name", default="objective_split_common48_rho03")
     parser.add_argument("--result-name", default="decision_geometry")
+    parser.add_argument("--resume", action="store_true")
     parser.add_argument(
         "--skip-gradients",
         action="store_true",
@@ -323,6 +324,11 @@ def main() -> None:
     all_rows = []
     all_summaries = []
     for pair_id in pairs:
+        pair_path = result_dir / f"{pair_id}.csv"
+        summary_path = result_dir / f"{pair_id}_summary.csv"
+        if args.resume and pair_path.is_file() and summary_path.is_file():
+            print(f"resumed={pair_id}", flush=True)
+            continue
         rows, summaries = _run_pair(
             output_dir,
             project_root,
@@ -330,8 +336,8 @@ def main() -> None:
             args.diagnostics_name,
             skip_gradients=args.skip_gradients,
         )
-        _write_csv(result_dir / f"{pair_id}.csv", rows)
-        _write_csv(result_dir / f"{pair_id}_summary.csv", summaries)
+        _write_csv(pair_path, rows)
+        _write_csv(summary_path, summaries)
         all_rows.extend(rows)
         all_summaries.extend(summaries)
         print(f"complete={pair_id} rows={len(rows)}", flush=True)

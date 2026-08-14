@@ -1,0 +1,10 @@
+pair_id,strict_evaluated_trials,zero_hit_trials,at_most_one_hit_trials,at_least_two_hit_trials,best_target_hits,denominator
+P02,4,4,4,0,0,8
+P06,4,4,4,0,0,8
+P11,4,4,4,0,0,8
+P14,16,10,16,0,1,8
+P16,3,3,3,0,0,8
+P19,4,2,4,0,1,8
+P20,29,17,18,11,4,8
+P21,4,3,4,0,1,8
+P22,4,3,4,0,1,8

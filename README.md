@@ -39,5 +39,5 @@ records. See `docs/reproduction.md` before starting GPU work.
 ## Experiments
 
 - `experiments/2026-08-qwen-transfer-diagnostics`: audits Qwen preprocessing
-  and answer scoring, performs the resumable prompt/lambda/alpha sweep, and
-  provides one resumable sweep-to-8/50/500 full experiment workflow.
+  and answer scoring, performs resumable semantic and original token-CKA
+  transfer searches, and provides controlled 8/50/500 workflows.

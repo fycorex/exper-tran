@@ -105,6 +105,57 @@ below 8/8; the strict 8/8 rule is retained only as a promotion gate. Results
 are resumable under `diagnostics/objective_split_common48_rho03`. This script
 does not run the 50- or 500-image stages.
 
+The exploratory Gemma clean-anchor target-token correspondence smoke is:
+
+```bash
+PYTHONPATH=src .venv-primary-ml-cka/bin/python \
+  experiments/2026-08-qwen-transfer-diagnostics/src/run_sweep.py \
+  --config experiments/2026-08-qwen-transfer-diagnostics/config/gemma_clean_anchor_cka_smoke.yaml \
+  --output-dir outputs/proxy_selector_cka_v2 \
+  --fail-on-error
+```
+
+It runs P22 (Gemma E4B to E2B) on eight frozen clean-valid images for three
+steps and eight target references. Unlike the original spatial-index comparison,
+`clean_anchor_soft` aligns reference tokens to each clean source in the frozen
+proxy feature space before optimizing source-away plus target-toward CKA. It
+executes frozen-PNG proxy and target evaluation and records TASR, ASR, source
+repulsion success, and target attraction success under
+`diagnostics/gemma_clean_anchor_cka_smoke`.
+The smoke is fail-fast unless both source CKA decreases and aligned-target CKA
+increases; this prevents a source-repulsion-only run from being reported as a
+successful contrastive mechanism check.
+
+This is an explicitly separate method variant, not a correction silently
+applied to the original token-CKA objective. The full controlled search of the
+original objective is:
+
+```bash
+bash scripts/run_original_token_cka_transfer_search.sh \
+  outputs/proxy_selector_cka_v2
+```
+
+It uses `beta=0` and `target_cka_mode=spatial_index_legacy`, scans 60
+rho/alpha settings, promotes candidates through 30 and 100 steps with target
+evaluation, and confirms one setting per family with 48 references. Compact
+and raw results are archived under
+`results/original_token_cka_transfer_search`.
+
+To run the complete three-family CKA smoke in one resumable command:
+
+```bash
+bash scripts/run_contrastive_cka_three_pair_smoke.sh \
+  outputs/proxy_selector_cka_v2
+```
+
+This script is independent of every 50-image workflow. It first scans
+`rho={0.1,0.3}` and `alpha={2,4,8}` for P20/P21/P22 using three attack steps
+without repeatedly loading target models. It selects only trials where source
+CKA decreases and clean-anchored target CKA increases, then runs one selected
+20-step eight-image attack per pair with frozen-PNG target evaluation. Final
+proxy hits, TASR, ASR, CKA changes, and runtime are written under
+`diagnostics/contrastive_cka_three_pair_full_smoke/final_summary`.
+
 The complete controlled nine-pair matrix uses a separate phase and diagnostics
 directory so it cannot overwrite the corrected three-pair run. It first runs
 the three small-to-large intra-family pairs, then the three cross-family pairs,

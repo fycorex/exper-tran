@@ -1,0 +1,22 @@
+diagnostics_name: gemma_clean_anchor_cka_smoke
+phase: gemma_clean_anchor_cka_smoke
+seed: 42
+steps: 3
+early_stop_proxy_gate: false
+materialize_selection: false
+require_auxiliary_progress: true
+common_clean: true
+common_clean_pairs: [P22]
+image_count: 8
+reference_count: 8
+trials:
+  - pair: P22
+    prompt: original
+    objective: clean_anchor_contrastive_alpha4
+    lambda: 1
+    rho: 0.3
+    source_weight: 1
+    alpha: 4
+    beta: 0
+    target_cka_mode: clean_anchor_soft
+    target_alignment_temperature: 0.07

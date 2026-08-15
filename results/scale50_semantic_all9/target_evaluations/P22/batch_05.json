@@ -1,0 +1,61 @@
+{
+  "adversarial_outputs": [
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 9,
+      "parser_status": "ok",
+      "raw_output": "9"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 9,
+      "parser_status": "ok",
+      "raw_output": "9"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 9,
+      "parser_status": "ok",
+      "raw_output": "9"
+    }
+  ],
+  "clean_outputs": [
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8"
+    },
+    {
+      "backend": "transformers",
+      "parsed_label": 8,
+      "parser_status": "ok",
+      "raw_output": "8"
+    }
+  ],
+  "rates": {
+    "asr_percent": 75.0,
+    "clean_valid_count": 4,
+    "targeted_hit_count": 0,
+    "tasr_percent": 0.0,
+    "untargeted_hit_count": 3
+  }
+}

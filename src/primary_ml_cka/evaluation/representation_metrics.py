@@ -22,15 +22,29 @@ def representation_metrics(
     clean_mask: torch.Tensor | None = None,
     adv_mask: torch.Tensor | None = None,
     reference_mask: torch.Tensor | None = None,
+    aligned_target: torch.Tensor | None = None,
+    aligned_target_mask: torch.Tensor | None = None,
 ) -> RepresentationMetrics:
     """Summarize the same per-image token CKA geometry used by the attack."""
-    clean_reference = token_cka_against_bank(
-        z_clean, z_reference, clean_mask, reference_mask
-    ).mean()
+    clean_reference = (
+        paired_token_cka(
+            z_clean, aligned_target, clean_mask, aligned_target_mask
+        ).mean()
+        if aligned_target is not None
+        else token_cka_against_bank(
+            z_clean, z_reference, clean_mask, reference_mask
+        ).mean()
+    )
     adv_source = paired_token_cka(z_adv, z_clean, adv_mask, clean_mask).mean()
-    adv_reference = token_cka_against_bank(
-        z_adv, z_reference, adv_mask, reference_mask
-    ).mean()
+    adv_reference = (
+        paired_token_cka(
+            z_adv, aligned_target, adv_mask, aligned_target_mask
+        ).mean()
+        if aligned_target is not None
+        else token_cka_against_bank(
+            z_adv, z_reference, adv_mask, reference_mask
+        ).mean()
+    )
     reference_gain = adv_reference - clean_reference
     source_drop = 1.0 - adv_source
     shift = reference_gain + source_drop

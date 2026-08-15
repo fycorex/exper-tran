@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as functional
 
 
 def linear_cka(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
@@ -113,3 +114,64 @@ def token_cka_against_bank(
             )
         values.append(torch.stack(row))
     return torch.stack(values)
+
+
+def clean_anchored_reference_prototype(
+    clean: torch.Tensor,
+    references: torch.Tensor,
+    clean_mask: torch.Tensor | None = None,
+    reference_mask: torch.Tensor | None = None,
+    *,
+    temperature: float = 0.07,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Align target tokens to each clean image without spatial-index pairing.
+
+    Target images do not have a defensible patch-position correspondence with
+    a source image.  This routine establishes a fixed, differentiability-free
+    correspondence in the proxy feature space: every clean token softly
+    retrieves semantically similar tokens from each target reference, then the
+    aligned references are averaged into one per-source target prototype.
+
+    The returned prototype is detached.  During an attack, gradients therefore
+    flow only through the adversarial representation, never through clean or
+    target-reference images.
+    """
+    if clean.ndim != 3 or references.ndim != 3:
+        raise ValueError("Aligned target inputs must have shape [B,T,D] and [K,T,D]")
+    if clean.shape[2] != references.shape[2]:
+        raise ValueError("Clean and target tokens must share the proxy feature width")
+    if temperature <= 0:
+        raise ValueError("Alignment temperature must be positive")
+    if clean_mask is None:
+        clean_mask = torch.ones(clean.shape[:2], dtype=torch.bool, device=clean.device)
+    if reference_mask is None:
+        reference_mask = torch.ones(
+            references.shape[:2], dtype=torch.bool, device=references.device
+        )
+    if clean_mask.shape != clean.shape[:2] or reference_mask.shape != references.shape[:2]:
+        raise ValueError("Alignment masks must match the token dimensions")
+
+    with torch.no_grad():
+        clean_fp32 = clean.detach().float()
+        references_fp32 = references.detach().float()
+        prototypes = torch.zeros_like(clean_fp32)
+        for image_index in range(clean.shape[0]):
+            clean_valid = clean_mask[image_index].bool()
+            if int(clean_valid.sum()) < 2:
+                raise ValueError("Every clean image needs at least two valid tokens")
+            queries = functional.normalize(clean_fp32[image_index, clean_valid], dim=-1)
+            aligned_sum = torch.zeros_like(clean_fp32[image_index, clean_valid])
+            valid_reference_count = 0
+            for reference_index in range(references.shape[0]):
+                reference_valid = reference_mask[reference_index].bool()
+                if int(reference_valid.sum()) < 2:
+                    continue
+                reference_tokens = references_fp32[reference_index, reference_valid]
+                keys = functional.normalize(reference_tokens, dim=-1)
+                weights = torch.softmax((queries @ keys.T) / temperature, dim=-1)
+                aligned_sum.add_(weights @ reference_tokens)
+                valid_reference_count += 1
+            if valid_reference_count == 0:
+                raise ValueError("Target bank has no reference with two valid tokens")
+            prototypes[image_index, clean_valid] = aligned_sum / valid_reference_count
+    return prototypes.detach(), clean_mask.detach().bool()

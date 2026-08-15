@@ -1,0 +1,77 @@
+diagnostics_name: original_token_cka_wide_scan
+phase: original_token_cka_wide_scan
+seed: 42
+steps: 10
+early_stop_proxy_gate: false
+materialize_selection: false
+evaluate_target: false
+require_auxiliary_progress: false
+common_clean: true
+common_clean_pairs: [P20, P21, P22]
+image_count: 8
+reference_count: 8
+trials:
+  # The runner expands no grids inside `trials`, so these are generated below
+  # explicitly to keep every resumable state self-describing.
+  - {pair: P20, objective: original_cka_a0.5, lambda: 1, rho: 0.03, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a1, lambda: 1, rho: 0.03, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a2, lambda: 1, rho: 0.03, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a4, lambda: 1, rho: 0.03, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a8, lambda: 1, rho: 0.03, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a0.5, lambda: 1, rho: 0.1, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a1, lambda: 1, rho: 0.1, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a2, lambda: 1, rho: 0.1, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a4, lambda: 1, rho: 0.1, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a8, lambda: 1, rho: 0.1, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a0.5, lambda: 1, rho: 0.3, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a1, lambda: 1, rho: 0.3, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a2, lambda: 1, rho: 0.3, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a4, lambda: 1, rho: 0.3, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a8, lambda: 1, rho: 0.3, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a0.5, lambda: 1, rho: 1, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a1, lambda: 1, rho: 1, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a2, lambda: 1, rho: 1, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a4, lambda: 1, rho: 1, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P20, objective: original_cka_a8, lambda: 1, rho: 1, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+
+  - {pair: P21, objective: original_cka_a0.5, lambda: 1, rho: 0.03, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a1, lambda: 1, rho: 0.03, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a2, lambda: 1, rho: 0.03, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a4, lambda: 1, rho: 0.03, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a8, lambda: 1, rho: 0.03, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a0.5, lambda: 1, rho: 0.1, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a1, lambda: 1, rho: 0.1, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a2, lambda: 1, rho: 0.1, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a4, lambda: 1, rho: 0.1, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a8, lambda: 1, rho: 0.1, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a0.5, lambda: 1, rho: 0.3, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a1, lambda: 1, rho: 0.3, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a2, lambda: 1, rho: 0.3, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a4, lambda: 1, rho: 0.3, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a8, lambda: 1, rho: 0.3, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a0.5, lambda: 1, rho: 1, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a1, lambda: 1, rho: 1, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a2, lambda: 1, rho: 1, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a4, lambda: 1, rho: 1, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P21, objective: original_cka_a8, lambda: 1, rho: 1, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+
+  - {pair: P22, objective: original_cka_a0.5, lambda: 1, rho: 0.03, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a1, lambda: 1, rho: 0.03, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a2, lambda: 1, rho: 0.03, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a4, lambda: 1, rho: 0.03, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a8, lambda: 1, rho: 0.03, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a0.5, lambda: 1, rho: 0.1, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a1, lambda: 1, rho: 0.1, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a2, lambda: 1, rho: 0.1, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a4, lambda: 1, rho: 0.1, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a8, lambda: 1, rho: 0.1, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a0.5, lambda: 1, rho: 0.3, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a1, lambda: 1, rho: 0.3, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a2, lambda: 1, rho: 0.3, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a4, lambda: 1, rho: 0.3, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a8, lambda: 1, rho: 0.3, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a0.5, lambda: 1, rho: 1, source_weight: 1, alpha: 0.5, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a1, lambda: 1, rho: 1, source_weight: 1, alpha: 1, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a2, lambda: 1, rho: 1, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a4, lambda: 1, rho: 1, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: spatial_index_legacy}
+  - {pair: P22, objective: original_cka_a8, lambda: 1, rho: 1, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: spatial_index_legacy}

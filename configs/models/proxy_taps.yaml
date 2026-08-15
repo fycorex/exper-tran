@@ -1,12 +1,15 @@
 Qwen/Qwen3.5-4B:
-  path: model.visual.merger.norm
-  representation: normalized proxy visual patch tokens before merger projection
+  path: model.get_image_features.pooler_output
+  representation: post-merger projected visual soft tokens passed to the language model
 Qwen/Qwen3.5-2B:
-  path: model.visual.merger.norm
-  representation: normalized proxy visual patch tokens before merger projection
+  path: model.get_image_features.pooler_output
+  representation: post-merger projected visual soft tokens passed to the language model
 OpenGVLab/InternVL3_5-2B-HF:
-  path: model.vision_tower.layernorm
-  representation: final normalized proxy InternViT patch tokens
+  path: model.get_image_features.pooler_output
+  representation: post-pixel-shuffle projected visual soft tokens passed to the language model
+OpenGVLab/InternVL3_5-4B-HF:
+  path: model.get_image_features.pooler_output
+  representation: post-pixel-shuffle projected visual soft tokens passed to the language model
 openai/clip-vit-large-patch14:
   path: vision_model.last_hidden_state
   representation: final spatial patch tokens with CLS excluded
@@ -14,5 +17,8 @@ google/siglip2-so400m-patch14-384:
   path: vision_model.last_hidden_state
   representation: final spatial patch tokens
 google/gemma-4-E2B-it:
+  path: model.embed_vision
+  representation: pooled visual soft tokens with differentiable native preprocessing
+google/gemma-4-E4B-it:
   path: model.embed_vision
   representation: pooled visual soft tokens with differentiable native preprocessing

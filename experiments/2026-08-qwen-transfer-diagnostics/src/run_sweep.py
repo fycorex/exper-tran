@@ -32,6 +32,8 @@ FIELDNAMES = (
     "source_weight",
     "alpha",
     "beta",
+    "target_cka_mode",
+    "target_alignment_temperature",
     "reference_count",
     "status",
     "proxy_hits",
@@ -47,12 +49,15 @@ FIELDNAMES = (
     "proxy_hit_target_denominator",
     "tasr_percent",
     "untargeted_hits",
+    "asr_percent",
     "proxy_min_margin",
     "proxy_min_probability",
     "cka_adv_source",
     "cka_adv_reference",
     "reference_cka_gain",
     "source_cka_drop",
+    "source_repulsion_achieved",
+    "target_attraction_achieved",
     "grad_ml_l1",
     "grad_cka_weighted_l1",
     "grad_component_cosine",
@@ -95,12 +100,19 @@ def _objective(
     *,
     objective_id: str | None = None,
     rho: float | None = None,
+    target_cka_mode: str = "spatial_index_legacy",
+    target_alignment_temperature: float = 0.07,
 ) -> str:
+    target_suffix = (
+        ""
+        if target_cka_mode == "spatial_index_legacy"
+        else f"_{target_cka_mode}_temp_{target_alignment_temperature:g}"
+    )
     if objective_id is not None:
         rho_suffix = "" if rho is None else f"_rho_{rho:g}"
-        return f"{objective_id}{rho_suffix}"
+        return f"{objective_id}{rho_suffix}{target_suffix}"
     suffix = "" if beta == 0 else f"_beta_{beta:g}"
-    return f"prompt_{prompt_id}_alpha_{alpha:g}{suffix}"
+    return f"prompt_{prompt_id}_alpha_{alpha:g}{suffix}{target_suffix}"
 
 
 def _state_path(
@@ -112,13 +124,23 @@ def _state_path(
     beta: float,
     objective_id: str | None = None,
     rho: float | None = None,
+    target_cka_mode: str = "spatial_index_legacy",
+    target_alignment_temperature: float = 0.07,
 ) -> Path:
     beta_suffix = "" if beta == 0 else f"__beta_{beta:g}"
     objective_suffix = "" if objective_id is None else f"__objective_{objective_id}"
     rho_suffix = "" if rho is None else f"__rho_{rho:g}"
+    target_mode_suffix = (
+        ""
+        if target_cka_mode == "spatial_index_legacy"
+        else (
+            f"__target_{target_cka_mode}"
+            f"__temperature_{target_alignment_temperature:g}"
+        )
+    )
     name = (
         f"{pair_id}__{prompt_id}__lambda_{lambda_cka:g}__alpha_{alpha:g}"
-        f"{beta_suffix}{objective_suffix}{rho_suffix}.json"
+        f"{beta_suffix}{objective_suffix}{rho_suffix}{target_mode_suffix}.json"
     )
     return diagnostics / "trials" / name
 
@@ -174,6 +196,29 @@ def _trial_state(trial: dict[str, object]):
     return {
         **trial,
         "status": "running",
+    }
+
+
+def _attack_diagnostic_fields(result: object) -> dict[str, object]:
+    return {
+        "proxy_hits": result.proxy_target_hit_count,
+        "proxy_denominator": result.proxy_target_hit_denominator,
+        "proxy_hit_mask": list(result.proxy_target_hit_mask),
+        "free_generation_hits": result.proxy_free_target_hit_count,
+        "effective_lambda_cka": result.effective_lambda_cka,
+        "proxy_min_margin": result.proxy_min_target_logit_margin,
+        "proxy_min_probability": result.proxy_min_target_probability,
+        "cka_adv_source": result.cka_adv_source,
+        "cka_adv_reference": result.cka_adv_reference,
+        "reference_cka_gain": result.reference_cka_gain,
+        "source_cka_drop": result.source_cka_drop,
+        "source_repulsion_achieved": result.source_repulsion_achieved,
+        "target_attraction_achieved": result.target_attraction_achieved,
+        "grad_ml_l1": result.grad_ml_l1,
+        "grad_cka_weighted_l1": result.grad_cka_weighted_l1,
+        "grad_component_cosine": result.grad_component_cosine,
+        "elapsed_seconds": result.elapsed_seconds,
+        "attack": asdict(result),
     }
 
 
@@ -271,6 +316,8 @@ def main() -> None:
     phase = str(raw.get("phase", "tuning"))
     early_stop_proxy_gate = bool(raw.get("early_stop_proxy_gate", True))
     materialize_selection = bool(raw.get("materialize_selection", False))
+    require_auxiliary_progress = bool(raw.get("require_auxiliary_progress", False))
+    evaluate_target = bool(raw.get("evaluate_target", True))
     if "trials" in raw:
         trials = [
             {
@@ -282,6 +329,12 @@ def main() -> None:
                 "source_weight": float(trial.get("source_weight", 1)),
                 "rho": (None if trial.get("rho") is None else float(trial["rho"])),
                 "reference_count": int(trial.get("reference_count", raw.get("reference_count", 8))),
+                "target_cka_mode": str(
+                    trial.get("target_cka_mode", "spatial_index_legacy")
+                ),
+                "target_alignment_temperature": float(
+                    trial.get("target_alignment_temperature", 0.07)
+                ),
                 "objective": trial.get("objective"),
             }
             for trial in raw["trials"]
@@ -297,6 +350,8 @@ def main() -> None:
                 "source_weight": 1.0,
                 "rho": None,
                 "reference_count": int(raw.get("reference_count", 8)),
+                "target_cka_mode": "spatial_index_legacy",
+                "target_alignment_temperature": 0.07,
                 "objective": None,
             }
             for pair_id in raw["pairs"]
@@ -354,6 +409,8 @@ def main() -> None:
         source_weight = float(trial["source_weight"])
         rho = trial["rho"]
         reference_count = int(trial["reference_count"])
+        target_cka_mode = str(trial["target_cka_mode"])
+        target_alignment_temperature = float(trial["target_alignment_temperature"])
         objective_id = trial["objective"]
         state_path = _state_path(
             diagnostics,
@@ -364,6 +421,8 @@ def main() -> None:
             beta,
             None if objective_id is None else str(objective_id),
             None if rho is None else float(rho),
+            target_cka_mode,
+            target_alignment_temperature,
         )
         planned_state_paths.append(state_path)
         if args.resume and state_path.is_file():
@@ -392,12 +451,14 @@ def main() -> None:
                 beta,
                 objective_id=None if objective_id is None else str(objective_id),
                 rho=None if rho is None else float(rho),
+                target_cka_mode=target_cka_mode,
+                target_alignment_temperature=target_alignment_temperature,
             )
             print(
                 f"trial={trial_index}/{len(trials)} pair={pair_id} prompt={prompt_id} "
                 f"objective={objective} lambda={lambda_cka:g} rho={rho} "
                 f"source={source_weight:g} alpha={alpha:g} beta={beta:g} "
-                f"references={reference_count}",
+                f"references={reference_count} target_cka_mode={target_cka_mode}",
                 flush=True,
             )
             result = attack_one_batch(
@@ -417,12 +478,44 @@ def main() -> None:
                 cka_source_weight=source_weight,
                 cka_target_weight=alpha,
                 semantic_target_weight=beta,
+                target_cka_mode=target_cka_mode,
+                target_alignment_temperature=target_alignment_temperature,
                 gradient_ratio=None if rho is None else float(rho),
                 objective_tag=objective,
                 early_stop_proxy_gate=early_stop_proxy_gate,
                 progress_interval=10,
                 prompt=prompt,
             )
+            if require_auxiliary_progress:
+                failed_components = []
+                if source_weight > 0 and not result.source_repulsion_achieved:
+                    failed_components.append("source_repulsion")
+                if alpha > 0 and not result.target_attraction_achieved:
+                    failed_components.append("target_attraction")
+                if failed_components:
+                    raise RuntimeError(
+                        "Auxiliary objective did not improve required components: "
+                        + ", ".join(failed_components)
+                    )
+            if not evaluate_target:
+                state.update(
+                    {
+                        "status": "complete",
+                        "proxy_gate_type": proxy_gate_type,
+                        "proxy_free_check_applicable": proxy_free_check_applicable,
+                        "target_hits": "",
+                        "target_denominator": "",
+                        "target_hit_mask": "",
+                        "target_hits_among_proxy_hits": "",
+                        "proxy_hit_target_denominator": "",
+                        "tasr_percent": "",
+                        "untargeted_hits": "",
+                        "asr_percent": "",
+                        "error": "",
+                        **_attack_diagnostic_fields(result),
+                    }
+                )
+                continue
             artifact_dir = (
                 output_dir
                 / "attacks"
@@ -465,12 +558,8 @@ def main() -> None:
             state.update(
                 {
                     "status": "complete",
-                    "proxy_hits": result.proxy_target_hit_count,
-                    "proxy_denominator": result.proxy_target_hit_denominator,
-                    "proxy_hit_mask": list(result.proxy_target_hit_mask),
                     "proxy_gate_type": proxy_gate_type,
                     "proxy_free_check_applicable": proxy_free_check_applicable,
-                    "free_generation_hits": result.proxy_free_target_hit_count,
                     "target_hits": rates.targeted_hit_count,
                     "target_denominator": rates.clean_valid_count,
                     "target_hit_mask": list(target_hit_mask),
@@ -478,19 +567,9 @@ def main() -> None:
                     "proxy_hit_target_denominator": proxy_hit_target_denominator,
                     "tasr_percent": rates.tasr_percent,
                     "untargeted_hits": rates.untargeted_hit_count,
-                    "effective_lambda_cka": result.effective_lambda_cka,
-                    "proxy_min_margin": result.proxy_min_target_logit_margin,
-                    "proxy_min_probability": result.proxy_min_target_probability,
-                    "cka_adv_source": result.cka_adv_source,
-                    "cka_adv_reference": result.cka_adv_reference,
-                    "reference_cka_gain": result.reference_cka_gain,
-                    "source_cka_drop": result.source_cka_drop,
-                    "grad_ml_l1": result.grad_ml_l1,
-                    "grad_cka_weighted_l1": result.grad_cka_weighted_l1,
-                    "grad_component_cosine": result.grad_component_cosine,
-                    "elapsed_seconds": result.elapsed_seconds,
+                    "asr_percent": rates.asr_percent,
                     "error": "",
-                    "attack": asdict(result),
+                    **_attack_diagnostic_fields(result),
                 }
             )
         except Exception as exc:

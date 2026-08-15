@@ -13,7 +13,12 @@ def test_legacy_attack_result_fields_are_migrated_without_fabricating_mask() -> 
     assert migrated["effective_lambda_cka"] == 3.0
     assert migrated["gradient_ratio"] is None
     assert migrated["cka_source_weight"] == 1.0
+    assert migrated["cka_target_weight"] == 1.0
     assert migrated["semantic_target_weight"] == 0.0
+    assert migrated["target_cka_mode"] == "spatial_index_legacy"
+    assert migrated["target_alignment_temperature"] == 0.07
+    assert migrated["source_repulsion_achieved"] is None
+    assert migrated["target_attraction_achieved"] is None
     assert migrated["proxy_target_hit_mask"] is None
     assert migrated["proxy_tap_path"] == "legacy-unrecorded"
     assert migrated["source_image_ids"] == ("a", "b")

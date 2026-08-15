@@ -2,6 +2,7 @@ import pytest
 import torch
 
 from primary_ml_cka.attack.cka.linear import (
+    clean_anchored_reference_prototype,
     linear_cka,
     paired_token_cka,
     token_cka_against_bank,
@@ -54,3 +55,23 @@ def test_token_cka_bank_matches_explicit_pairwise_values() -> None:
         ]
     )
     assert torch.allclose(values, expected, atol=1e-6, rtol=1e-5)
+
+
+def test_clean_anchored_target_is_invariant_to_reference_token_order() -> None:
+    clean = torch.randn(2, 6, 5)
+    references = torch.randn(3, 6, 5)
+    prototype, mask = clean_anchored_reference_prototype(clean, references)
+    permutation = torch.tensor([4, 0, 5, 2, 1, 3])
+    permuted, permuted_mask = clean_anchored_reference_prototype(
+        clean, references[:, permutation]
+    )
+    torch.testing.assert_close(prototype, permuted, atol=1e-5, rtol=1e-5)
+    assert torch.equal(mask, permuted_mask)
+    assert not prototype.requires_grad
+
+
+def test_clean_anchored_target_rejects_feature_width_mismatch() -> None:
+    with pytest.raises(ValueError, match="feature width"):
+        clean_anchored_reference_prototype(
+            torch.randn(2, 6, 5), torch.randn(3, 6, 7)
+        )

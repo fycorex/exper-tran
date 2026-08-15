@@ -77,6 +77,24 @@ def test_target_only_objective_removes_source_repulsion() -> None:
     assert torch.allclose(loss.cka, expected)
 
 
+def test_aligned_target_overrides_legacy_spatial_reference_pairing() -> None:
+    source = torch.randn(2, 6, 8)
+    target_bank = torch.randn(4, 6, 8)
+    aligned_target = torch.randn(2, 6, 8)
+    adversarial = aligned_target.clone()
+    loss = primary_loss(
+        torch.tensor(0.0),
+        1.0,
+        adversarial,
+        source,
+        target_bank,
+        source_cka_weight=0.0,
+        target_cka_weight=1.0,
+        aligned_target=aligned_target,
+    )
+    torch.testing.assert_close(loss.cka, torch.tensor(-1.0), atol=1e-5, rtol=1e-5)
+
+
 def test_semantic_only_objective_allows_zero_cka_weights() -> None:
     source = torch.randn(2, 6, 8)
     target = torch.randn(4, 6, 8)

@@ -1,0 +1,33 @@
+diagnostics_name: contrastive_cka_rho_alpha_smoke
+phase: contrastive_cka_rho_alpha_smoke
+seed: 42
+steps: 3
+early_stop_proxy_gate: false
+materialize_selection: false
+evaluate_target: false
+require_auxiliary_progress: false
+common_clean: true
+common_clean_pairs: [P20, P21, P22]
+image_count: 8
+reference_count: 8
+trials:
+  - {pair: P20, objective: clean_anchor_a2, lambda: 1, rho: 0.1, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P20, objective: clean_anchor_a4, lambda: 1, rho: 0.1, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P20, objective: clean_anchor_a8, lambda: 1, rho: 0.1, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P20, objective: clean_anchor_a2, lambda: 1, rho: 0.3, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P20, objective: clean_anchor_a4, lambda: 1, rho: 0.3, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P20, objective: clean_anchor_a8, lambda: 1, rho: 0.3, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: clean_anchor_soft}
+
+  - {pair: P21, objective: clean_anchor_a2, lambda: 1, rho: 0.1, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P21, objective: clean_anchor_a4, lambda: 1, rho: 0.1, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P21, objective: clean_anchor_a8, lambda: 1, rho: 0.1, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P21, objective: clean_anchor_a2, lambda: 1, rho: 0.3, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P21, objective: clean_anchor_a4, lambda: 1, rho: 0.3, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P21, objective: clean_anchor_a8, lambda: 1, rho: 0.3, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: clean_anchor_soft}
+
+  - {pair: P22, objective: clean_anchor_a2, lambda: 1, rho: 0.1, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P22, objective: clean_anchor_a4, lambda: 1, rho: 0.1, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P22, objective: clean_anchor_a8, lambda: 1, rho: 0.1, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P22, objective: clean_anchor_a2, lambda: 1, rho: 0.3, source_weight: 1, alpha: 2, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P22, objective: clean_anchor_a4, lambda: 1, rho: 0.3, source_weight: 1, alpha: 4, beta: 0, target_cka_mode: clean_anchor_soft}
+  - {pair: P22, objective: clean_anchor_a8, lambda: 1, rho: 0.3, source_weight: 1, alpha: 8, beta: 0, target_cka_mode: clean_anchor_soft}

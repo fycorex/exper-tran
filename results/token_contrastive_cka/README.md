@@ -75,6 +75,12 @@ not included here as evidence about the full source-away plus target-toward
 objective. A fully controlled all-nine contrastive arm with common images, 48
 references, and gradient-ratio calibration has not yet been run.
 
+The archived trials use the original same-spatial-index target-token
+comparison. Unrelated images do not guarantee semantic patch correspondence,
+but changing that correspondence changes the hypothesis. The optional
+`clean_anchor_soft` variant is therefore archived separately; historical CSV
+values are never silently reinterpreted under another definition.
+
 ## Provenance
 
 The exported tables are derived from:

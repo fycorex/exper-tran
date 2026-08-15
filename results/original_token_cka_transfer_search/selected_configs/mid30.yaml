@@ -1,0 +1,133 @@
+diagnostics_name: original_token_cka_mid_transfer
+phase: original_token_cka_mid_transfer
+seed: 42
+steps: 30
+early_stop_proxy_gate: false
+materialize_selection: false
+evaluate_target: true
+require_auxiliary_progress: false
+common_clean: true
+common_clean_pairs:
+- P20
+- P21
+- P22
+image_count: 8
+reference_count: 8
+trials:
+- pair: P20
+  prompt: original
+  objective: classification_only
+  lambda: 0
+  source_weight: 0
+  alpha: 0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P20
+  prompt: original
+  objective: original_cka_mid_1
+  lambda: 1
+  rho: 0.3
+  source_weight: 1
+  alpha: 4.0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P20
+  prompt: original
+  objective: original_cka_mid_2
+  lambda: 1
+  rho: 1.0
+  source_weight: 1
+  alpha: 4.0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P20
+  prompt: original
+  objective: original_cka_mid_3
+  lambda: 1
+  rho: 0.1
+  source_weight: 1
+  alpha: 8.0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P21
+  prompt: original
+  objective: classification_only
+  lambda: 0
+  source_weight: 0
+  alpha: 0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P21
+  prompt: original
+  objective: original_cka_mid_1
+  lambda: 1
+  rho: 0.03
+  source_weight: 1
+  alpha: 4.0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P21
+  prompt: original
+  objective: original_cka_mid_2
+  lambda: 1
+  rho: 1.0
+  source_weight: 1
+  alpha: 8.0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P21
+  prompt: original
+  objective: original_cka_mid_3
+  lambda: 1
+  rho: 0.03
+  source_weight: 1
+  alpha: 2.0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P22
+  prompt: original
+  objective: classification_only
+  lambda: 0
+  source_weight: 0
+  alpha: 0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P22
+  prompt: original
+  objective: original_cka_mid_1
+  lambda: 1
+  rho: 1.0
+  source_weight: 1
+  alpha: 8.0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P22
+  prompt: original
+  objective: original_cka_mid_2
+  lambda: 1
+  rho: 1.0
+  source_weight: 1
+  alpha: 4.0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy
+- pair: P22
+  prompt: original
+  objective: original_cka_mid_3
+  lambda: 1
+  rho: 0.03
+  source_weight: 1
+  alpha: 2.0
+  beta: 0
+  reference_count: 8
+  target_cka_mode: spatial_index_legacy

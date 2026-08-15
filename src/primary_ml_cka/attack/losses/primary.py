@@ -64,6 +64,8 @@ def primary_loss(
     semantic_target_weight: float = 0.0,
     semantic_adv: torch.Tensor | None = None,
     semantic_reference: torch.Tensor | None = None,
+    aligned_target: torch.Tensor | None = None,
+    aligned_target_mask: torch.Tensor | None = None,
 ) -> PrimaryLoss:
     weights = (source_cka_weight, target_cka_weight, semantic_target_weight)
     if any(weight < 0 for weight in weights):
@@ -81,11 +83,21 @@ def primary_loss(
         if source_cka_weight > 0
         else zero
     )
-    cka_reference = (
-        token_cka_against_bank(z_adv.float(), z_reference.float(), adv_mask, reference_mask).mean()
-        if target_cka_weight > 0
-        else zero
-    )
+    if target_cka_weight > 0:
+        cka_reference = (
+            paired_token_cka(
+                z_adv.float(),
+                aligned_target.float(),
+                adv_mask,
+                aligned_target_mask,
+            ).mean()
+            if aligned_target is not None
+            else token_cka_against_bank(
+                z_adv.float(), z_reference.float(), adv_mask, reference_mask
+            ).mean()
+        )
+    else:
+        cka_reference = zero
     semantic_reference = (
         _semantic_embedding_centroid_loss(semantic_adv, semantic_reference)
         if semantic_target_weight > 0

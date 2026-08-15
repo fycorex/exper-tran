@@ -10,6 +10,7 @@ from primary_ml_cka.artifacts.png import load_png_tensor, save_png_tensor
 from primary_ml_cka.artifacts.schemas import ALL_RESULTS_COLUMNS, ResultRow
 from primary_ml_cka.artifacts.writers import write_json
 from primary_ml_cka.attack.cka.batches import fixed_reference_batch
+from primary_ml_cka.attack.cka.linear import clean_anchored_reference_prototype
 from primary_ml_cka.attack.likelihood.contrastive_ce import proxy_target_diagnostics
 from primary_ml_cka.attack.losses.component_gradients import (
     calibrate_gradient_ratio,
@@ -43,6 +44,8 @@ class AttackRunResult:
     cka_source_weight: float
     cka_target_weight: float
     semantic_target_weight: float
+    target_cka_mode: str
+    target_alignment_temperature: float
     proxy_tap_path: str
     source_human_label: int
     target_human_label: int
@@ -69,6 +72,8 @@ class AttackRunResult:
     cka_adv_reference: float
     reference_cka_gain: float
     source_cka_drop: float
+    source_repulsion_achieved: bool | None
+    target_attraction_achieved: bool | None
     proxy_representation_shift: float
     grad_ml_l1: float
     grad_cka_weighted_l1: float
@@ -168,6 +173,8 @@ def attack_one_batch(
     cka_source_weight: float = 1.0,
     cka_target_weight: float = 1.0,
     semantic_target_weight: float = 0.0,
+    target_cka_mode: str = "spatial_index_legacy",
+    target_alignment_temperature: float = 0.07,
     gradient_ratio: float | None = None,
     objective_tag: str | None = None,
     early_stop_proxy_gate: bool = False,
@@ -181,6 +188,10 @@ def attack_one_batch(
         raise ValueError("A positive auxiliary weight requires at least one objective component")
     if gradient_ratio is not None and lambda_cka <= 0:
         raise ValueError("gradient_ratio requires a positive auxiliary loss")
+    if target_cka_mode not in {"spatial_index_legacy", "clean_anchor_soft"}:
+        raise ValueError(f"Unknown target CKA mode: {target_cka_mode}")
+    if target_alignment_temperature <= 0:
+        raise ValueError("target_alignment_temperature must be positive")
     device = torch.device("cuda")
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; CPU attack execution is forbidden")
@@ -206,6 +217,20 @@ def attack_one_batch(
     z_reference, reference_mask, semantic_reference_bank = _detached_embedding_bank(
         proxy, reference_images
     )
+    aligned_target = None
+    aligned_target_mask = None
+    if (
+        lambda_cka > 0
+        and cka_target_weight > 0
+        and target_cka_mode == "clean_anchor_soft"
+    ):
+        aligned_target, aligned_target_mask = clean_anchored_reference_prototype(
+            z_clean,
+            z_reference,
+            clean_mask,
+            reference_mask,
+            temperature=target_alignment_temperature,
+        )
     semantic_reference = semantic_reference_bank if semantic_target_weight > 0 else None
     del reference_images
     initial = (
@@ -245,6 +270,8 @@ def attack_one_batch(
                 else calibration_representation.embeddings
             ),
             semantic_reference=semantic_reference,
+            aligned_target=aligned_target,
+            aligned_target_mask=aligned_target_mask,
         )
         grad_aux = torch.autograd.grad(calibration_losses.cka, state.adversarial, only_inputs=True)[
             0
@@ -298,6 +325,8 @@ def attack_one_batch(
                     else adv_representation.embeddings
                 ),
                 semantic_reference=semantic_reference,
+                aligned_target=aligned_target,
+                aligned_target_mask=aligned_target_mask,
             )
         if not torch.isfinite(losses.total):
             raise RuntimeError(f"Non-finite total loss at step {step}")
@@ -382,6 +411,8 @@ def attack_one_batch(
                 else final_representation.embeddings
             ),
             semantic_reference=semantic_reference,
+            aligned_target=aligned_target,
+            aligned_target_mask=aligned_target_mask,
         )
     assert_parameter_gradients_none(proxy.model)
     representation = representation_metrics(
@@ -391,6 +422,8 @@ def attack_one_batch(
         clean_representation.mask,
         final_representation.mask,
         reference_mask,
+        aligned_target,
+        aligned_target_mask,
     )
     artifact_dir = output_dir / "attacks" / pair.pair_id / phase / f"batch_{source_batch_index:02d}"
     if objective_tag is not None:
@@ -433,6 +466,8 @@ def attack_one_batch(
         cka_source_weight=cka_source_weight,
         cka_target_weight=cka_target_weight,
         semantic_target_weight=semantic_target_weight,
+        target_cka_mode=target_cka_mode,
+        target_alignment_temperature=target_alignment_temperature,
         proxy_tap_path=final_representation.tap.module_path,
         source_human_label=data_config.source_human_label,
         target_human_label=data_config.target_human_label,
@@ -464,6 +499,12 @@ def attack_one_batch(
         cka_adv_reference=representation.cka_adv_reference,
         reference_cka_gain=representation.reference_cka_gain,
         source_cka_drop=representation.source_cka_drop,
+        source_repulsion_achieved=(
+            representation.source_cka_drop > 0 if cka_source_weight > 0 else None
+        ),
+        target_attraction_achieved=(
+            representation.reference_cka_gain > 0 if cka_target_weight > 0 else None
+        ),
         proxy_representation_shift=representation.proxy_representation_shift,
         grad_ml_l1=(diagnostics.grad_ml_l1 if diagnostics else calibration_grad_ml_l1),
         grad_cka_weighted_l1=(
@@ -524,6 +565,8 @@ def result_row(
         "cka_source_weight": result.cka_source_weight,
         "cka_target_weight": result.cka_target_weight,
         "semantic_target_weight": result.semantic_target_weight,
+        "target_cka_mode": result.target_cka_mode,
+        "target_alignment_temperature": result.target_alignment_temperature,
         "seed": seed,
         "steps": steps,
         "clean_valid_count": (
@@ -557,6 +600,8 @@ def result_row(
         "cka_adv_reference": result.cka_adv_reference,
         "reference_cka_gain": result.reference_cka_gain,
         "source_cka_drop": result.source_cka_drop,
+        "source_repulsion_achieved": result.source_repulsion_achieved,
+        "target_attraction_achieved": result.target_attraction_achieved,
         "proxy_representation_shift": result.proxy_representation_shift,
         "grad_ml_l1": result.grad_ml_l1,
         "grad_cka_weighted_l1": result.grad_cka_weighted_l1,

@@ -26,3 +26,24 @@ def test_metrics_use_per_image_token_cka_and_reference_bank() -> None:
         float(adv_reference - clean_reference)
     )
     assert result.source_cka_drop == pytest.approx(float(1.0 - adv_source))
+
+
+def test_metrics_use_clean_aligned_target_when_provided() -> None:
+    clean = torch.randn(2, 6, 8)
+    adversarial = torch.randn(2, 6, 8)
+    references = torch.randn(3, 6, 8)
+    aligned = torch.randn(2, 6, 8)
+
+    result = representation_metrics(
+        clean,
+        adversarial,
+        references,
+        aligned_target=aligned,
+    )
+
+    assert result.cka_clean_reference == pytest.approx(
+        float(paired_token_cka(clean, aligned).mean())
+    )
+    assert result.cka_adv_reference == pytest.approx(
+        float(paired_token_cka(adversarial, aligned).mean())
+    )

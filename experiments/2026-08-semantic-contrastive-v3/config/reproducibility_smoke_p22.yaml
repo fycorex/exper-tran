@@ -1,0 +1,11 @@
+pair_id: P22
+seed: 42
+steps: 5
+reference_count: 48
+representation_type: vision_encoder
+representation_layer: 15
+representation_pooling: mean
+semantic_temperature: 0.1
+arms:
+  - {name: reproducibility_a, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.3, target_logit_weight: 1, source_logit_weight: 0.25}
+  - {name: reproducibility_b, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.3, target_logit_weight: 1, source_logit_weight: 0.25}

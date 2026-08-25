@@ -9,6 +9,7 @@ from primary_ml_cka.domain.identifiers import MODEL_REVISIONS
 from primary_ml_cka.domain.labels import CLASS_NAMES, human_label_to_index
 from primary_ml_cka.domain.types import ImageEmbeddingOutput, ProxyLossOutput, TapContract
 from primary_ml_cka.models.proxies.base import BaseProxy
+from primary_ml_cka.models.representations import RepresentationSpec, resolve_vision_layer
 from primary_ml_cka.models.taps.pooling import masked_mean_l2
 
 TEMPLATES = (
@@ -55,14 +56,39 @@ class ContrastiveProxy(BaseProxy):
         self.microbatch_size = microbatch_size
         self.class_embeddings = self._build_class_embeddings()
 
-    def image_embeddings(self, images: torch.Tensor) -> ImageEmbeddingOutput[torch.Tensor]:
+    def image_embeddings(
+        self,
+        images: torch.Tensor,
+        *,
+        representation_type: str = "legacy_projected",
+        layer: int = -1,
+        pooling: str = "mean",
+    ) -> ImageEmbeddingOutput[torch.Tensor]:
+        spec = RepresentationSpec(representation_type, layer, pooling)
+        spec.validate()
+        total_layers = int(self.model.config.vision_config.num_hidden_layers)
+        resolved = (
+            resolve_vision_layer(layer, total_layers)
+            if representation_type == "vision_encoder"
+            else None
+        )
+
         def extract(image_chunk: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
             pixel_values = self.image_preprocess(image_chunk)
-            vision_output = self.model.vision_model(pixel_values=pixel_values, return_dict=True)
+            vision_output = self.model.vision_model(
+                pixel_values=pixel_values,
+                output_hidden_states=representation_type == "vision_encoder",
+                return_dict=True,
+            )
+            selected = (
+                vision_output.hidden_states[resolved + 1]
+                if representation_type == "vision_encoder"
+                else vision_output.last_hidden_state
+            )
             pooled = vision_output.pooler_output
             projection = getattr(self.model, "visual_projection", None)
             classifier_facing = projection(pooled) if projection is not None else pooled
-            return vision_output.last_hidden_state, classifier_facing
+            return selected, classifier_facing
 
         chunk_size = self.microbatch_size or images.shape[0]
         token_chunks = []
@@ -83,17 +109,37 @@ class ContrastiveProxy(BaseProxy):
         tap = TapContract(
             self.model_id,
             MODEL_REVISIONS[self.model_id],
-            "vision_model.last_hidden_state",
-            "final visual patch tokens (CLS excluded when present)",
-            "masked mean over real visual patch tokens",
+            (
+                f"model.vision_model.encoder.layers.{resolved}"
+                if representation_type == "vision_encoder"
+                else "vision_model.last_hidden_state"
+            ),
+            "selected Vision Encoder block output"
+            if representation_type == "vision_encoder"
+            else "final visual patch tokens (CLS excluded when present)",
+            "none" if pooling == "none" else "masked mean over real visual patch tokens",
             "per-image L2; FP32 before CKA",
             str(tokens.dtype).removeprefix("torch."),
             "validated_by_forward",
             tuple(tokens.shape),
             "all spatial patch tokens; no synthetic global token",
+            representation_type=representation_type,
+            requested_layer=layer,
+            resolved_layer=resolved,
+            total_vision_layers=total_layers,
         )
         return ImageEmbeddingOutput(
-            embeddings, tokens, mask, tap, semantic_embeddings=semantic_embeddings
+            tokens if pooling == "none" else embeddings,
+            tokens,
+            mask,
+            tap,
+            semantic_embeddings=(
+                embeddings
+                if representation_type == "vision_encoder" and pooling == "mean"
+                else semantic_embeddings
+                if pooling == "mean"
+                else None
+            ),
         )
 
     def _build_class_embeddings(self) -> torch.Tensor:
@@ -122,7 +168,11 @@ class ContrastiveProxy(BaseProxy):
         return functional.normalize(text.reshape(10, 4, -1).mean(dim=1), dim=-1)
 
     def target_loss(
-        self, images: torch.Tensor, human_target_label: int, prompt: str
+        self,
+        images: torch.Tensor,
+        human_target_label: int,
+        prompt: str,
+        cls_loss_mode: str = "ce_margin",
     ) -> ProxyLossOutput[torch.Tensor]:
         target_index = human_label_to_index(human_target_label)
 
@@ -155,13 +205,23 @@ class ContrastiveProxy(BaseProxy):
             temperature=self.margin_temperature,
         )
         target_nll = -output.logits.log_softmax(dim=-1)[:, target_index].mean()
+        objectives = {
+            "none": logits.sum() * 0.0,
+            "closedset_ce": output.cross_entropy,
+            "margin_only": output.margin_penalty,
+            "ce_margin": output.total,
+        }
+        if cls_loss_mode == "target_token_nll":
+            raise ValueError("target_token_nll is only defined for generative proxies")
+        if cls_loss_mode not in objectives:
+            raise ValueError(f"Unknown classification loss mode: {cls_loss_mode}")
         return ProxyLossOutput(
-            loss=output.total,
-            target_nll=target_nll.detach(),
+            loss=objectives[cls_loss_mode],
+            target_nll=target_nll,
             target_probability=output.target_probability.detach(),
             class_logits=output.logits,
-            classification_ce=output.cross_entropy.detach(),
-            margin_loss=output.margin_penalty.detach(),
+            classification_ce=output.cross_entropy,
+            margin_loss=output.margin_penalty,
             max_other_probability=output.max_other_probability.detach(),
         )
 

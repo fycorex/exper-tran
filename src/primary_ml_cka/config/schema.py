@@ -38,6 +38,15 @@ class AttackConfig:
     semantic_target_weight: float = 0.0
     gradient_ratio: float | None = None
     reference_bank_size: int = 8
+    cls_loss_mode: str = "ce_margin"
+    lambda_cls: float = 1.0
+    semantic_mode: str = "target_only"
+    semantic_temperature: float = 0.1
+    semantic_target_logit_weight: float = 1.0
+    semantic_source_logit_weight: float = 1.0
+    representation_type: str = "legacy_projected"
+    representation_layer: int = -1
+    representation_pooling: str = "mean"
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +60,7 @@ class DataConfig:
     candidate_split: str = "val"
     calibration_per_class: int = 5
     allow_partial_main_batch: bool = False
+    source_reference_count: int = 48
 
 
 @dataclass(frozen=True, slots=True)

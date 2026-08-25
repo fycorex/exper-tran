@@ -8,6 +8,7 @@ from primary_ml_cka.config.schema import (
 )
 from primary_ml_cka.domain.constants import LAMBDAS
 from primary_ml_cka.domain.labels import human_label_to_index
+from primary_ml_cka.models.representations import RepresentationSpec
 
 
 def validate_attack_config(
@@ -19,9 +20,7 @@ def validate_attack_config(
         raise ValueError("Attack canvas must be at least 16 and divisible by 16")
     if require_canonical_lambda_grid and config.lambdas != LAMBDAS:
         raise ValueError(f"Lambda grid must be exactly {LAMBDAS}")
-    if not config.lambdas or any(
-        not math.isfinite(value) or value < 0 for value in config.lambdas
-    ):
+    if not config.lambdas or any(not math.isfinite(value) or value < 0 for value in config.lambdas):
         raise ValueError("Lambda values must be finite and non-negative")
     if config.epsilon <= 0 or config.step_size <= 0:
         raise ValueError("epsilon and step_size must be positive")
@@ -48,6 +47,33 @@ def validate_attack_config(
         raise ValueError("gradient_ratio must be finite and positive when configured")
     if config.reference_bank_size < config.batch_size:
         raise ValueError("reference_bank_size must be at least batch_size")
+    if config.cls_loss_mode not in {
+        "none",
+        "target_token_nll",
+        "closedset_ce",
+        "margin_only",
+        "ce_margin",
+    }:
+        raise ValueError(f"Unknown cls_loss_mode: {config.cls_loss_mode}")
+    if not math.isfinite(config.lambda_cls) or config.lambda_cls < 0:
+        raise ValueError("lambda_cls must be finite and non-negative")
+    if config.semantic_mode not in {"target_only", "prototype", "mean_reference"}:
+        raise ValueError(f"Unknown semantic_mode: {config.semantic_mode}")
+    if not math.isfinite(config.semantic_temperature) or config.semantic_temperature <= 0:
+        raise ValueError("semantic_temperature must be finite and positive")
+    semantic_logit_weights = (
+        config.semantic_target_logit_weight,
+        config.semantic_source_logit_weight,
+    )
+    if any(not math.isfinite(value) or value < 0 for value in semantic_logit_weights):
+        raise ValueError("Semantic logit weights must be finite and non-negative")
+    if config.semantic_mode != "target_only" and not any(semantic_logit_weights):
+        raise ValueError("A contrastive semantic mode needs a positive logit weight")
+    RepresentationSpec(
+        config.representation_type,
+        config.representation_layer,
+        config.representation_pooling,
+    ).validate()
 
 
 def validate_data_config(config: DataConfig) -> None:
@@ -74,6 +100,8 @@ def validate_data_config(config: DataConfig) -> None:
             "target_reference_count must cover disjoint main and confirmation "
             f"references ({required_references})"
         )
+    if config.source_reference_count < 1:
+        raise ValueError("source_reference_count must be positive")
 
 
 def validate_smoke_config(config: SmokeConfig, attack_config: AttackConfig) -> None:

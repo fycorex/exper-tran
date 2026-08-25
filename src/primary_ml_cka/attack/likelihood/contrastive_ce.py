@@ -51,6 +51,8 @@ def proxy_target_diagnostics(
         if len(free_generated_labels) != logits.shape[0]:
             raise ValueError("Free-generation labels must match the batch size")
         free_hits = torch.tensor(
+            # Free-generation parsing returns semantic human labels (1..10),
+            # while target_index remains zero-based internally.
             tuple(label == target_index + 1 for label in free_generated_labels),
             device=logits.device,
             dtype=torch.bool,

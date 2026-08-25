@@ -83,18 +83,19 @@ def load_proxy(
     if model_id.startswith("Qwen/"):
         visual_inputs = qwen_visual_inputs
 
-        def image_embedding_fn(images: torch.Tensor):
-            return qwen_proxy_embeddings(model_id, model, images)
+        def image_embedding_fn(images: torch.Tensor, **representation_kwargs):
+            return qwen_proxy_embeddings(model_id, model, images, **representation_kwargs)
 
     elif model_id.startswith("OpenGVLab/InternVL"):
         visual_inputs = internvl_visual_inputs
 
-        def image_embedding_fn(images: torch.Tensor):
+        def image_embedding_fn(images: torch.Tensor, **representation_kwargs):
             return internvl_proxy_embeddings(
                 model_id,
                 model,
                 images,
                 microbatch_size=(2 if model_id.endswith("4B-HF") else 4),
+                **representation_kwargs,
             )
 
     elif model_id.startswith("google/gemma"):
@@ -102,8 +103,10 @@ def load_proxy(
         def visual_inputs(images: torch.Tensor):
             return gemma_visual_inputs(processor, images)
 
-        def image_embedding_fn(images: torch.Tensor):
-            return gemma_proxy_embeddings(model_id, model, processor, images)
+        def image_embedding_fn(images: torch.Tensor, **representation_kwargs):
+            return gemma_proxy_embeddings(
+                model_id, model, processor, images, **representation_kwargs
+            )
 
     else:
         raise ValueError(f"Unsupported generative proxy: {model_id}")

@@ -30,7 +30,8 @@ def test_generative_proxy_selects_configured_target_answer() -> None:
     images = torch.rand(2, 3, 16, 16)
     output = proxy.target_loss(images, human_target_label=3, prompt="prompt")
 
-    assert output.target_nll.item() == -3.0
-    assert output.answer_token_ids == (103,)
-    assert output.label_positions == (3,)
-    assert output.rendered_prompt == "rendered:3"
+    # Semantic class 3 is represented by the zero-based model answer code "2".
+    assert output.target_nll.item() == -2.0
+    assert output.answer_token_ids == (102,)
+    assert output.label_positions == (2,)
+    assert output.rendered_prompt == "rendered:2"

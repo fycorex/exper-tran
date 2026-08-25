@@ -30,7 +30,7 @@ def test_exact_answer_positions_for_cached_processor(model_id: str) -> None:
         snapshot, local_files_only=True, trust_remote_code=False
     )
     tokenizer = processor.tokenizer
-    for answer in (str(label) for label in range(1, 11)):
+    for answer in (str(code) for code in range(10)):
         messages = classification_messages(CLASSIFICATION_PROMPT, answer)
         prompt = render_chat_template(
             processor, messages.prompt_only, add_generation_prompt=True

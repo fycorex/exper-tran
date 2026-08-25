@@ -1,0 +1,21 @@
+pair_id: P21
+seed: 42
+steps: 30
+reference_count: 48
+representation_type: vision_encoder
+representation_layer: 17
+representation_pooling: mean
+semantic_temperature: 0.1
+arms:
+  - {name: ws_r01_t1_s1, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.1, target_logit_weight: 1, source_logit_weight: 1}
+  - {name: ws_r03_t1_s1, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.3, target_logit_weight: 1, source_logit_weight: 1}
+  - {name: ws_r06_t1_s1, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.6, target_logit_weight: 1, source_logit_weight: 1}
+  - {name: ws_r10_t1_s1, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 1.0, target_logit_weight: 1, source_logit_weight: 1}
+  - {name: ws_r03_t1_s05, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.3, target_logit_weight: 1, source_logit_weight: 0.5}
+  - {name: ws_r06_t1_s05, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.6, target_logit_weight: 1, source_logit_weight: 0.5}
+  - {name: ws_r10_t1_s05, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 1.0, target_logit_weight: 1, source_logit_weight: 0.5}
+  - {name: ws_r03_t1_s025, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.3, target_logit_weight: 1, source_logit_weight: 0.25}
+  - {name: ws_r06_t1_s025, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.6, target_logit_weight: 1, source_logit_weight: 0.25}
+  - {name: ws_r03_t1_s0, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.3, target_logit_weight: 1, source_logit_weight: 0}
+  - {name: ws_r06_t1_s0, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.6, target_logit_weight: 1, source_logit_weight: 0}
+  - {name: ws_r03_t2_s1, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.3, target_logit_weight: 2, source_logit_weight: 1}

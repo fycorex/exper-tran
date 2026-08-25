@@ -1,0 +1,17 @@
+pair_id: P20
+seed: 42
+steps: 100
+reference_count: 48
+representation_type: vision_encoder
+# Proxy-only depth audit found the final raw mean representation nearly
+# collinear across source/target banks; layer 17 has the strongest clean gap.
+representation_layer: 17
+representation_pooling: mean
+semantic_temperature: 0.1
+arms:
+  - {name: cls_only, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: target_only, lambda_sem: 0, rho: null}
+  - {name: semantic_only, cls_loss_mode: none, lambda_cls: 0, semantic_mode: target_only, lambda_sem: 1, rho: null}
+  - {name: cls_plus_semantic, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: target_only, lambda_sem: 1, rho: 0.3}
+  - {name: contrastive_only, cls_loss_mode: none, lambda_cls: 0, semantic_mode: prototype, lambda_sem: 1, rho: null}
+  - {name: cls_plus_contrastive, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho: 0.3}
+  - {name: mean_reference_only, cls_loss_mode: none, lambda_cls: 0, semantic_mode: mean_reference, lambda_sem: 1, rho: null}

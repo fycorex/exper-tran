@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import torch
 
 from primary_ml_cka.attack.cka.linear import paired_token_cka, token_cka_against_bank
+from primary_ml_cka.attack.losses.semantic_contrastive import semantic_representation_loss
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,16 +65,30 @@ def primary_loss(
     semantic_target_weight: float = 0.0,
     semantic_adv: torch.Tensor | None = None,
     semantic_reference: torch.Tensor | None = None,
+    semantic_source_reference: torch.Tensor | None = None,
+    semantic_mode: str = "target_only",
+    semantic_temperature: float = 0.1,
+    semantic_target_logit_weight: float = 1.0,
+    semantic_source_logit_weight: float = 1.0,
+    lambda_cls: float = 1.0,
     aligned_target: torch.Tensor | None = None,
     aligned_target_mask: torch.Tensor | None = None,
 ) -> PrimaryLoss:
-    weights = (source_cka_weight, target_cka_weight, semantic_target_weight)
+    weights = (source_cka_weight, target_cka_weight, semantic_target_weight, lambda_cls)
     if any(weight < 0 for weight in weights):
         raise ValueError("CKA and semantic component weights must be non-negative")
     if lambda_cka == 0:
         zero = loss_ml.new_zeros(())
-        return PrimaryLoss(loss_ml, loss_ml, zero, zero, zero, zero)
-    if z_adv is None or z_clean is None or z_reference is None:
+        weighted_ml = lambda_cls * loss_ml
+        return PrimaryLoss(weighted_ml, loss_ml, zero, zero, zero, zero)
+    needs_token_representations = source_cka_weight > 0 or target_cka_weight > 0
+    needs_token_semantic_fallback = (
+        semantic_target_weight > 0
+        and (semantic_adv is None or semantic_reference is None)
+    )
+    if (needs_token_representations or needs_token_semantic_fallback) and (
+        z_adv is None or z_clean is None or z_reference is None
+    ):
         raise ValueError(
             "Positive lambda requires adversarial, clean, and proxy-reference embeddings"
         )
@@ -99,7 +114,15 @@ def primary_loss(
     else:
         cka_reference = zero
     semantic_reference = (
-        _semantic_embedding_centroid_loss(semantic_adv, semantic_reference)
+        semantic_representation_loss(
+            semantic_adv,
+            semantic_reference,
+            semantic_source_reference,
+            mode=semantic_mode,
+            tau=semantic_temperature,
+            target_logit_weight=semantic_target_logit_weight,
+            source_logit_weight=semantic_source_logit_weight,
+        ).loss
         if semantic_target_weight > 0
         and semantic_adv is not None
         and semantic_reference is not None
@@ -113,7 +136,7 @@ def primary_loss(
         + semantic_target_weight * semantic_reference
     )
     return PrimaryLoss(
-        loss_ml + lambda_cka * loss_cka,
+        lambda_cls * loss_ml + lambda_cka * loss_cka,
         loss_ml,
         loss_cka,
         cka_source,

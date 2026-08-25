@@ -17,6 +17,7 @@ from primary_ml_cka.attack.losses.component_gradients import (
     component_gradient_diagnostics,
 )
 from primary_ml_cka.attack.losses.primary import primary_loss
+from primary_ml_cka.attack.losses.semantic_contrastive import semantic_representation_loss
 from primary_ml_cka.attack.optimization.momentum_pgd import MomentumPGDState, descent_step
 from primary_ml_cka.attack.optimization.random_start import shared_random_start
 from primary_ml_cka.config.schema import AttackConfig, DataConfig
@@ -25,8 +26,12 @@ from primary_ml_cka.data.preprocessing import ensure_canvas
 from primary_ml_cka.domain.identifiers import MODEL_REVISIONS, ModelPair
 from primary_ml_cka.domain.labels import human_label_to_index
 from primary_ml_cka.evaluation.attack_metrics import AttackRates
-from primary_ml_cka.evaluation.representation_metrics import representation_metrics
+from primary_ml_cka.evaluation.representation_metrics import (
+    RepresentationMetrics,
+    representation_metrics,
+)
 from primary_ml_cka.infrastructure.memory import peak_memory, reset_peak_memory
+from primary_ml_cka.infrastructure.seeds import seed_everything
 from primary_ml_cka.infrastructure.timing import Timer
 from primary_ml_cka.models.common.gradients import assert_parameter_gradients_none
 from primary_ml_cka.models.proxies.registry import load_proxy
@@ -86,6 +91,24 @@ class AttackRunResult:
     initial_total: float
     final_total: float
     status: str
+    cls_loss_mode: str = "ce_margin"
+    lambda_cls: float = 1.0
+    semantic_mode: str = "target_only"
+    semantic_temperature: float = 0.1
+    semantic_target_logit_weight: float = 1.0
+    semantic_source_logit_weight: float = 1.0
+    representation_type: str = "legacy_projected"
+    representation_layer: int = -1
+    representation_pooling: str = "mean"
+    source_reference_ids: tuple[str, ...] = ()
+    target_similarity_clean: float = float("nan")
+    target_similarity_adversarial: float = float("nan")
+    source_similarity_clean: float = float("nan")
+    source_similarity_adversarial: float = float("nan")
+    semantic_gap_clean: float = float("nan")
+    semantic_gap_adversarial: float = float("nan")
+    semantic_gap_gain: float = float("nan")
+    gradient_trace: tuple[dict[str, object], ...] = ()
     failure_reason: str = ""
 
 
@@ -110,14 +133,25 @@ def _manifest_name(model_id: str, phase: str) -> str:
 
 
 def _detached_embedding_bank(
-    proxy: object, images: torch.Tensor, *, chunk_size: int = 8
+    proxy: object,
+    images: torch.Tensor,
+    *,
+    chunk_size: int = 8,
+    representation_type: str = "legacy_projected",
+    layer: int = -1,
+    pooling: str = "mean",
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     token_chunks = []
     mask_chunks = []
     semantic_chunks = []
     with torch.no_grad():
         for chunk in images.split(chunk_size):
-            output = proxy.image_embeddings(chunk)
+            output = proxy.image_embeddings(
+                chunk,
+                representation_type=representation_type,
+                layer=layer,
+                pooling=pooling,
+            )
             token_chunks.append(output.tokens.detach().float())
             mask_chunks.append(output.mask.detach())
             semantic_chunks.append(
@@ -130,6 +164,34 @@ def _detached_embedding_bank(
                 .float()
             )
     return torch.cat(token_chunks), torch.cat(mask_chunks), torch.cat(semantic_chunks)
+
+
+def _detached_semantic_bank(
+    proxy: object,
+    images: torch.Tensor,
+    *,
+    chunk_size: int = 8,
+    representation_type: str = "legacy_projected",
+    layer: int = -1,
+    pooling: str = "mean",
+) -> torch.Tensor:
+    chunks = []
+    with torch.no_grad():
+        for chunk in images.split(chunk_size):
+            output = proxy.image_embeddings(
+                chunk,
+                representation_type=representation_type,
+                layer=layer,
+                pooling=pooling,
+            )
+            semantic = (
+                output.semantic_embeddings
+                if output.semantic_embeddings is not None
+                else output.embeddings
+            )
+            chunks.append(semantic.detach().float())
+            del output
+    return torch.cat(chunks)
 
 
 def _save_png_batch(
@@ -154,6 +216,58 @@ def _save_png_batch(
     return linf_float, linf_png, adversarial_reloaded
 
 
+def _pixel_gradient_stats(gradient: torch.Tensor) -> dict[str, object]:
+    value = gradient.detach().float()
+    return {
+        "mean_abs": float(value.abs().mean()),
+        "rms": float(value.square().mean().sqrt()),
+        "l2_norm": float(value.norm()),
+        "max_abs": float(value.abs().max()),
+        "zero_fraction": float(value.eq(0).float().mean()),
+        "finite": bool(torch.isfinite(value).all()),
+    }
+
+
+def _gradient_trace_row(
+    step: int,
+    adversarial: torch.Tensor,
+    proxy_output: object,
+    representation_loss: torch.Tensor,
+) -> dict[str, object]:
+    components = {
+        "target_token": proxy_output.target_nll,
+        "closedset_ce": proxy_output.classification_ce,
+        "margin": proxy_output.margin_loss,
+        "cls_total": proxy_output.loss,
+        "representation": representation_loss,
+    }
+    gradients = {}
+    for name, loss in components.items():
+        if loss is None or not loss.requires_grad:
+            continue
+        gradients[name] = torch.autograd.grad(
+            loss,
+            adversarial,
+            retain_graph=True,
+            only_inputs=True,
+            allow_unused=False,
+        )[0]
+    row: dict[str, object] = {"step": step}
+    for name, gradient in gradients.items():
+        row[name] = _pixel_gradient_stats(gradient)
+    cls = gradients.get("cls_total")
+    representation = gradients.get("representation")
+    if cls is not None and representation is not None:
+        left = cls.detach().float().flatten(1)
+        right = representation.detach().float().flatten(1)
+        row["cls_rep_cosine"] = float(
+            torch.nn.functional.cosine_similarity(left, right, dim=1).mean()
+        )
+    else:
+        row["cls_rep_cosine"] = None
+    return row
+
+
 def attack_one_batch(
     pair: ModelPair,
     *,
@@ -162,6 +276,7 @@ def attack_one_batch(
     phase: str,
     source_records: tuple[ImageRecord, ...],
     reference_records: tuple[ImageRecord, ...],
+    source_reference_records: tuple[ImageRecord, ...] | None = None,
     source_batch_index: int,
     lambda_cka: float,
     seed: int,
@@ -180,7 +295,23 @@ def attack_one_batch(
     early_stop_proxy_gate: bool = False,
     progress_interval: int = 0,
     prompt: str = CLASSIFICATION_PROMPT,
+    cls_loss_mode: str = "ce_margin",
+    lambda_cls: float = 1.0,
+    semantic_mode: str = "target_only",
+    semantic_temperature: float = 0.1,
+    semantic_target_logit_weight: float = 1.0,
+    semantic_source_logit_weight: float = 1.0,
+    representation_type: str = "legacy_projected",
+    representation_layer: int = -1,
+    representation_pooling: str = "mean",
+    gradient_trace_steps: tuple[int, ...] = (),
+    checkpoint_steps: tuple[int, ...] = (),
 ) -> AttackRunResult:
+    # The public ``seed`` controls the complete attack, including any stochastic
+    # work performed while materializing a quantized proxy.  Previously only the
+    # random-start tensor used this seed, so otherwise identical NF4 reruns could
+    # follow different sign-PGD trajectories.
+    seed_everything(seed)
     batch_size = len(source_records)
     if batch_size < 2:
         raise ValueError("An attack/CKA batch must contain at least two images")
@@ -188,10 +319,17 @@ def attack_one_batch(
         raise ValueError("A positive auxiliary weight requires at least one objective component")
     if gradient_ratio is not None and lambda_cka <= 0:
         raise ValueError("gradient_ratio requires a positive auxiliary loss")
+    if gradient_ratio is not None and lambda_cls <= 0:
+        raise ValueError("gradient_ratio requires a positive classification weight")
     if target_cka_mode not in {"spatial_index_legacy", "clean_anchor_soft"}:
         raise ValueError(f"Unknown target CKA mode: {target_cka_mode}")
     if target_alignment_temperature <= 0:
         raise ValueError("target_alignment_temperature must be positive")
+    if semantic_mode != "target_only" and not source_reference_records:
+        raise ValueError(f"semantic mode {semantic_mode!r} requires source references")
+    resolved_checkpoint_steps = tuple(sorted(set(checkpoint_steps)))
+    if any(step < 1 or step > steps for step in resolved_checkpoint_steps):
+        raise ValueError("checkpoint_steps must be between 1 and the attack step count")
     device = torch.device("cuda")
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; CPU attack execution is forbidden")
@@ -205,25 +343,66 @@ def attack_one_batch(
         batch_size,
         reference_count=reference_bank_size,
     )
+    source_references = (
+        fixed_reference_batch(
+            source_reference_records,
+            0,
+            batch_size,
+            reference_count=reference_bank_size,
+        )
+        if source_reference_records
+        else ()
+    )
     clean = _cuda_images(canonical_root, source_records, attack_config.canvas_size)
     reference_images = _cuda_images(canonical_root, references, attack_config.canvas_size)
+    source_reference_images = (
+        _cuda_images(canonical_root, source_references, attack_config.canvas_size)
+        if source_references
+        else None
+    )
     timer = Timer()
     reset_peak_memory()
     proxy = load_proxy(pair.proxy_model, project_root / ".hf-cache", device, attack_config)
     with torch.no_grad():
-        clean_representation = proxy.image_embeddings(clean)
+        clean_representation = proxy.image_embeddings(
+            clean,
+            representation_type=representation_type,
+            layer=representation_layer,
+            pooling=representation_pooling,
+        )
         z_clean = clean_representation.tokens.detach().float()
         clean_mask = clean_representation.mask.detach()
-    z_reference, reference_mask, semantic_reference_bank = _detached_embedding_bank(
-        proxy, reference_images
-    )
+    needs_token_reference = cka_source_weight > 0 or cka_target_weight > 0
+    if needs_token_reference:
+        z_reference, reference_mask, semantic_reference_bank = _detached_embedding_bank(
+            proxy,
+            reference_images,
+            representation_type=representation_type,
+            layer=representation_layer,
+            pooling=representation_pooling,
+        )
+    else:
+        z_reference = None
+        reference_mask = None
+        semantic_reference_bank = _detached_semantic_bank(
+            proxy,
+            reference_images,
+            representation_type=representation_type,
+            layer=representation_layer,
+            pooling=representation_pooling,
+        )
+    semantic_source_reference = None
+    if source_reference_images is not None:
+        semantic_source_reference = _detached_semantic_bank(
+            proxy,
+            source_reference_images,
+            representation_type=representation_type,
+            layer=representation_layer,
+            pooling=representation_pooling,
+        )
     aligned_target = None
     aligned_target_mask = None
-    if (
-        lambda_cka > 0
-        and cka_target_weight > 0
-        and target_cka_mode == "clean_anchor_soft"
-    ):
+    if lambda_cka > 0 and cka_target_weight > 0 and target_cka_mode == "clean_anchor_soft":
         aligned_target, aligned_target_mask = clean_anchored_reference_prototype(
             z_clean,
             z_reference,
@@ -232,7 +411,7 @@ def attack_one_batch(
             temperature=target_alignment_temperature,
         )
     semantic_reference = semantic_reference_bank if semantic_target_weight > 0 else None
-    del reference_images
+    del reference_images, source_reference_images
     initial = (
         shared_random_start(clean, attack_config.epsilon, seed)
         if attack_config.random_start
@@ -246,12 +425,20 @@ def attack_one_batch(
             state.adversarial,
             data_config.target_human_label,
             prompt,
+            cls_loss_mode,
         )
-        grad_ml = torch.autograd.grad(calibration_proxy.loss, state.adversarial, only_inputs=True)[
-            0
-        ]
+        grad_ml = torch.autograd.grad(
+            lambda_cls * calibration_proxy.loss,
+            state.adversarial,
+            only_inputs=True,
+        )[0]
         del calibration_proxy
-        calibration_representation = proxy.image_embeddings(state.adversarial)
+        calibration_representation = proxy.image_embeddings(
+            state.adversarial,
+            representation_type=representation_type,
+            layer=representation_layer,
+            pooling=representation_pooling,
+        )
         calibration_losses = primary_loss(
             state.adversarial.new_zeros(()),
             1.0,
@@ -270,6 +457,12 @@ def attack_one_batch(
                 else calibration_representation.embeddings
             ),
             semantic_reference=semantic_reference,
+            semantic_source_reference=semantic_source_reference,
+            semantic_mode=semantic_mode,
+            semantic_temperature=semantic_temperature,
+            semantic_target_logit_weight=semantic_target_logit_weight,
+            semantic_source_logit_weight=semantic_source_logit_weight,
+            lambda_cls=lambda_cls,
             aligned_target=aligned_target,
             aligned_target_mask=aligned_target_mask,
         )
@@ -297,16 +490,24 @@ def attack_one_batch(
     initial_total = float("nan")
     last_losses = None
     last_proxy = None
+    gradient_trace_rows: list[dict[str, object]] = []
+    checkpoint_adversarials: dict[int, torch.Tensor] = {}
     for step in range(steps):
         proxy_output = proxy.target_loss(
             state.adversarial,
             data_config.target_human_label,
             prompt,
+            cls_loss_mode,
         )
         if effective_lambda_cka == 0:
-            losses = primary_loss(proxy_output.loss, 0)
+            losses = primary_loss(proxy_output.loss, 0, lambda_cls=lambda_cls)
         else:
-            adv_representation = proxy.image_embeddings(state.adversarial)
+            adv_representation = proxy.image_embeddings(
+                state.adversarial,
+                representation_type=representation_type,
+                layer=representation_layer,
+                pooling=representation_pooling,
+            )
             losses = primary_loss(
                 proxy_output.loss,
                 effective_lambda_cka,
@@ -325,11 +526,21 @@ def attack_one_batch(
                     else adv_representation.embeddings
                 ),
                 semantic_reference=semantic_reference,
+                semantic_source_reference=semantic_source_reference,
+                semantic_mode=semantic_mode,
+                semantic_temperature=semantic_temperature,
+                semantic_target_logit_weight=semantic_target_logit_weight,
+                semantic_source_logit_weight=semantic_source_logit_weight,
+                lambda_cls=lambda_cls,
                 aligned_target=aligned_target,
                 aligned_target_mask=aligned_target_mask,
             )
         if not torch.isfinite(losses.total):
             raise RuntimeError(f"Non-finite total loss at step {step}")
+        if step in gradient_trace_steps:
+            gradient_trace_rows.append(
+                _gradient_trace_row(step, state.adversarial, proxy_output, losses.cka)
+            )
         step_diagnostics = proxy_target_diagnostics(
             proxy_output.class_logits,
             target_index=human_label_to_index(data_config.target_human_label),
@@ -371,7 +582,10 @@ def attack_one_batch(
                 and pair.proxy_model not in memory_heavy_diagnostic_proxies
             ):
                 diagnostics = component_gradient_diagnostics(
-                    losses.ml, losses.cka, state.adversarial, effective_lambda_cka
+                    lambda_cls * losses.ml,
+                    losses.cka,
+                    state.adversarial,
+                    effective_lambda_cka,
                 )
         state = descent_step(
             losses.total,
@@ -381,6 +595,11 @@ def attack_one_batch(
             step_size=attack_config.step_size,
             momentum=attack_config.momentum,
         )
+        completed_step = step + 1
+        if completed_step in resolved_checkpoint_steps:
+            # Keep checkpoints off GPU: Gemma runs leave too little VRAM for
+            # several full-resolution adversarial batches to remain resident.
+            checkpoint_adversarials[completed_step] = state.adversarial.detach().cpu()
         last_losses = losses
         last_proxy = proxy_output
     assert last_losses is not None and last_proxy is not None
@@ -390,8 +609,14 @@ def attack_one_batch(
             adversarial,
             data_config.target_human_label,
             prompt,
+            cls_loss_mode,
         )
-        final_representation = proxy.image_embeddings(adversarial)
+        final_representation = proxy.image_embeddings(
+            adversarial,
+            representation_type=representation_type,
+            layer=representation_layer,
+            pooling=representation_pooling,
+        )
         z_adv_final = final_representation.tokens.float()
         final_losses = primary_loss(
             final_proxy.loss,
@@ -411,19 +636,64 @@ def attack_one_batch(
                 else final_representation.embeddings
             ),
             semantic_reference=semantic_reference,
+            semantic_source_reference=semantic_source_reference,
+            semantic_mode=semantic_mode,
+            semantic_temperature=semantic_temperature,
+            semantic_target_logit_weight=semantic_target_logit_weight,
+            semantic_source_logit_weight=semantic_source_logit_weight,
+            lambda_cls=lambda_cls,
             aligned_target=aligned_target,
             aligned_target_mask=aligned_target_mask,
         )
     assert_parameter_gradients_none(proxy.model)
-    representation = representation_metrics(
-        clean_representation.tokens.float(),
-        final_representation.tokens.float(),
-        z_reference,
-        clean_representation.mask,
-        final_representation.mask,
-        reference_mask,
-        aligned_target,
-        aligned_target_mask,
+    representation = (
+        representation_metrics(
+            clean_representation.tokens.float(),
+            final_representation.tokens.float(),
+            z_reference,
+            clean_representation.mask,
+            final_representation.mask,
+            reference_mask,
+            aligned_target,
+            aligned_target_mask,
+        )
+        if z_reference is not None
+        else RepresentationMetrics(
+            float("nan"),
+            float("nan"),
+            float("nan"),
+            float("nan"),
+            float("nan"),
+            float("nan"),
+        )
+    )
+    clean_semantic = (
+        clean_representation.semantic_embeddings
+        if clean_representation.semantic_embeddings is not None
+        else clean_representation.embeddings
+    )
+    adversarial_semantic = (
+        final_representation.semantic_embeddings
+        if final_representation.semantic_embeddings is not None
+        else final_representation.embeddings
+    )
+    clean_semantic_metrics = semantic_representation_loss(
+        clean_semantic,
+        semantic_reference_bank,
+        semantic_source_reference,
+        mode=semantic_mode,
+        tau=semantic_temperature,
+        target_logit_weight=semantic_target_logit_weight,
+        source_logit_weight=semantic_source_logit_weight,
+    )
+    adversarial_semantic_metrics = semantic_representation_loss(
+        adversarial_semantic,
+        semantic_reference_bank,
+        semantic_source_reference,
+        mode=semantic_mode,
+        tau=semantic_temperature,
+        target_logit_weight=semantic_target_logit_weight,
+        source_logit_weight=semantic_source_logit_weight,
     )
     artifact_dir = output_dir / "attacks" / pair.pair_id / phase / f"batch_{source_batch_index:02d}"
     if objective_tag is not None:
@@ -435,11 +705,64 @@ def attack_one_batch(
         adversarial,
         attack_config.epsilon,
     )
+    checkpoint_rows: list[dict[str, object]] = []
+    for checkpoint_step, checkpoint_cpu in checkpoint_adversarials.items():
+        checkpoint_dir = artifact_dir / f"checkpoint_step_{checkpoint_step:03d}"
+        checkpoint_gpu = checkpoint_cpu.to(device)
+        checkpoint_linf_float, checkpoint_linf_png, checkpoint_png = _save_png_batch(
+            checkpoint_dir,
+            clean,
+            checkpoint_gpu,
+            attack_config.epsilon,
+        )
+        with torch.no_grad():
+            checkpoint_proxy = proxy.target_loss(
+                checkpoint_png,
+                data_config.target_human_label,
+                prompt,
+                cls_loss_mode,
+            )
+        checkpoint_diagnostics = proxy_target_diagnostics(
+            checkpoint_proxy.class_logits,
+            target_index=human_label_to_index(data_config.target_human_label),
+            required_margin=attack_config.class_margin,
+            required_probability=attack_config.proxy_probability_threshold,
+        )
+        checkpoint_free_labels = (
+            proxy.free_generate_labels(checkpoint_png, prompt)
+            if attack_config.require_proxy_free_generation and checkpoint_diagnostics.all_hit
+            else None
+        )
+        checkpoint_rows.append(
+            {
+                "step": checkpoint_step,
+                "artifact_dir": str(checkpoint_dir),
+                "proxy_hit_count": checkpoint_diagnostics.hit_count,
+                "proxy_hit_mask": list(checkpoint_diagnostics.hit_mask),
+                "proxy_all_hit": checkpoint_diagnostics.all_hit,
+                "proxy_min_margin": checkpoint_diagnostics.minimum_logit_margin,
+                "proxy_min_probability": checkpoint_diagnostics.minimum_target_probability,
+                "proxy_free_hit_count": (
+                    sum(
+                        label == data_config.target_human_label
+                        for label in checkpoint_free_labels
+                    )
+                    if checkpoint_free_labels is not None
+                    else None
+                ),
+                "linf_float": checkpoint_linf_float,
+                "linf_png": checkpoint_linf_png,
+            }
+        )
+        del checkpoint_cpu, checkpoint_gpu, checkpoint_png, checkpoint_proxy
+    if checkpoint_rows:
+        write_json(artifact_dir / "checkpoint_summary.json", checkpoint_rows)
     with torch.no_grad():
         png_proxy = proxy.target_loss(
             adversarial_png,
             data_config.target_human_label,
             prompt,
+            cls_loss_mode,
         )
     if png_proxy.class_logits is None or not torch.isfinite(png_proxy.class_logits).all():
         raise RuntimeError("Frozen PNG proxy class logits are missing or non-finite")
@@ -519,6 +842,26 @@ def attack_one_batch(
         initial_total=initial_total,
         final_total=float(final_losses.total),
         status="ok" if proxy_diagnostics.all_hit else "proxy_target_not_reached",
+        cls_loss_mode=cls_loss_mode,
+        lambda_cls=lambda_cls,
+        semantic_mode=semantic_mode,
+        semantic_temperature=semantic_temperature,
+        semantic_target_logit_weight=semantic_target_logit_weight,
+        semantic_source_logit_weight=semantic_source_logit_weight,
+        representation_type=representation_type,
+        representation_layer=representation_layer,
+        representation_pooling=representation_pooling,
+        source_reference_ids=tuple(record.image_id for record in source_references),
+        target_similarity_clean=float(clean_semantic_metrics.target_similarity),
+        target_similarity_adversarial=float(adversarial_semantic_metrics.target_similarity),
+        source_similarity_clean=float(clean_semantic_metrics.source_similarity),
+        source_similarity_adversarial=float(adversarial_semantic_metrics.source_similarity),
+        semantic_gap_clean=float(clean_semantic_metrics.semantic_gap),
+        semantic_gap_adversarial=float(adversarial_semantic_metrics.semantic_gap),
+        semantic_gap_gain=float(
+            adversarial_semantic_metrics.semantic_gap - clean_semantic_metrics.semantic_gap
+        ),
+        gradient_trace=tuple(gradient_trace_rows),
         failure_reason=(
             ""
             if proxy_diagnostics.all_hit

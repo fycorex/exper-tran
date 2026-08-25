@@ -1,0 +1,12 @@
+representation_type: vision_encoder
+layer: -1
+pooling: mean
+models:
+  - Qwen/Qwen3.5-2B
+  - Qwen/Qwen3.5-4B
+  - OpenGVLab/InternVL3_5-2B-HF
+  - OpenGVLab/InternVL3_5-4B-HF
+  - google/gemma-4-E2B-it
+  - google/gemma-4-E4B-it
+  - openai/clip-vit-large-patch14
+  - google/siglip2-so400m-patch14-384

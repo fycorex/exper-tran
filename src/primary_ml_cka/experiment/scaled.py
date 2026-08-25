@@ -53,6 +53,8 @@ def _migrate_attack_result_payload(payload: dict[str, object]) -> dict[str, obje
     migrated.setdefault("cka_source_weight", 1.0)
     migrated.setdefault("cka_target_weight", 1.0)
     migrated.setdefault("semantic_target_weight", 0.0)
+    migrated.setdefault("semantic_target_logit_weight", 1.0)
+    migrated.setdefault("semantic_source_logit_weight", 1.0)
     migrated.setdefault("target_cka_mode", "spatial_index_legacy")
     migrated.setdefault("target_alignment_temperature", 0.07)
     migrated.setdefault("source_repulsion_achieved", None)

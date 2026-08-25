@@ -11,6 +11,7 @@ from primary_ml_cka.attack.likelihood.answer_mask import (
 from primary_ml_cka.attack.likelihood.contrastive_ce import proxy_classification_loss
 from primary_ml_cka.attack.likelihood.generative_nll import mean_answer_token_log_probability
 from primary_ml_cka.domain.labels import human_label_to_index
+from primary_ml_cka.domain.output_codes import human_label_to_output_code
 from primary_ml_cka.domain.types import ImageEmbeddingOutput, ProxyLossOutput
 from primary_ml_cka.models.proxies.base import BaseProxy
 from primary_ml_cka.prompts.chat_templates import (
@@ -42,16 +43,35 @@ class GenerativeProxy(BaseProxy):
         self.margin_temperature = margin_temperature
         self.microbatch_size = microbatch_size
 
-    def image_embeddings(self, images: torch.Tensor) -> ImageEmbeddingOutput[torch.Tensor]:
-        return self.image_embedding_fn(images)
+    def image_embeddings(
+        self,
+        images: torch.Tensor,
+        *,
+        representation_type: str = "legacy_projected",
+        layer: int = -1,
+        pooling: str = "mean",
+    ) -> ImageEmbeddingOutput[torch.Tensor]:
+        return self.image_embedding_fn(
+            images,
+            representation_type=representation_type,
+            layer=layer,
+            pooling=pooling,
+        )
 
     def target_loss(
-        self, images: torch.Tensor, human_target_label: int, prompt: str
+        self,
+        images: torch.Tensor,
+        human_target_label: int,
+        prompt: str,
+        cls_loss_mode: str = "ce_margin",
     ) -> ProxyLossOutput[torch.Tensor]:
         target_index = human_label_to_index(human_target_label)
         joint = self._joint_answer_scores(images, prompt)
         if joint is None:
-            scored = [self._answer_score(images, prompt, str(label)) for label in range(1, 11)]
+            scored = [
+                self._answer_score(images, prompt, human_label_to_output_code(label))
+                for label in range(1, 11)
+            ]
             logits = torch.stack([item[0] for item in scored], dim=1)
             target_rendered, target_mask = scored[target_index][1:]
         else:
@@ -66,13 +86,22 @@ class GenerativeProxy(BaseProxy):
             temperature=self.margin_temperature,
         )
         target_nll = -logits[:, target_index].mean()
+        objectives = {
+            "none": logits.sum() * 0.0,
+            "target_token_nll": target_nll,
+            "closedset_ce": output.cross_entropy,
+            "margin_only": output.margin_penalty,
+            "ce_margin": output.total,
+        }
+        if cls_loss_mode not in objectives:
+            raise ValueError(f"Unknown classification loss mode: {cls_loss_mode}")
         return ProxyLossOutput(
-            loss=output.total,
-            target_nll=target_nll.detach(),
+            loss=objectives[cls_loss_mode],
+            target_nll=target_nll,
             target_probability=output.target_probability.detach(),
             class_logits=output.logits,
-            classification_ce=output.cross_entropy.detach(),
-            margin_loss=output.margin_penalty.detach(),
+            classification_ce=output.cross_entropy,
+            margin_loss=output.margin_penalty,
             max_other_probability=output.max_other_probability.detach(),
             answer_token_ids=target_mask.answer_token_ids,
             label_positions=target_mask.label_positions,
@@ -84,7 +113,7 @@ class GenerativeProxy(BaseProxy):
         with torch.no_grad():
             visual_token_count = self._visual_token_count(self.visual_inputs(images.detach()))
         encodings = [
-            self._answer_encoding(prompt, str(label), visual_token_count)
+            self._answer_encoding(prompt, human_label_to_output_code(label), visual_token_count)
             for label in range(1, 11)
         ]
         rendered_prompts = tuple(item[0] for item in encodings)
@@ -116,8 +145,8 @@ class GenerativeProxy(BaseProxy):
                 candidate_ids: torch.Tensor = candidate_ids,
             ) -> torch.Tensor:
                 item_count = image_tensor.shape[0]
-                input_ids = representative_ids.unsqueeze(0).expand(item_count, -1).to(
-                    image_tensor.device
+                input_ids = (
+                    representative_ids.unsqueeze(0).expand(item_count, -1).to(image_tensor.device)
                 )
                 model_inputs = {
                     "input_ids": input_ids,
@@ -185,6 +214,7 @@ class GenerativeProxy(BaseProxy):
         full_text, full_ids, full_mm_types, mask = self._answer_encoding(
             prompt, answer, visual_token_count
         )
+
         def score(image_tensor: torch.Tensor) -> torch.Tensor:
             item_count = image_tensor.shape[0]
             input_ids = full_ids.unsqueeze(0).expand(item_count, -1).to(image_tensor.device)
@@ -198,9 +228,7 @@ class GenerativeProxy(BaseProxy):
             }
             if full_mm_types is not None:
                 model_inputs["mm_token_type_ids"] = (
-                    full_mm_types.unsqueeze(0)
-                    .expand(item_count, -1)
-                    .to(image_tensor.device)
+                    full_mm_types.unsqueeze(0).expand(item_count, -1).to(image_tensor.device)
                 )
             model_output = self.model(
                 **model_inputs,
@@ -253,13 +281,9 @@ class GenerativeProxy(BaseProxy):
             raise ValueError("A proxy batch must use equal visual token counts")
         return int(counts[0])
 
-    def free_generate_labels(
-        self, images: torch.Tensor, prompt: str
-    ) -> tuple[int | None, ...]:
+    def free_generate_labels(self, images: torch.Tensor, prompt: str) -> tuple[int | None, ...]:
         messages = classification_messages(prompt).prompt_only
-        rendered = render_chat_template(
-            self.processor, messages, add_generation_prompt=True
-        )
+        rendered = render_chat_template(self.processor, messages, add_generation_prompt=True)
         visual_inputs = self.visual_inputs(images)
         visual_token_count = self._visual_token_count(visual_inputs)
         input_ids, mm_types = self._multimodal_token_ids(rendered, visual_token_count)
@@ -267,8 +291,8 @@ class GenerativeProxy(BaseProxy):
         input_ids = input_ids.unsqueeze(0).expand(images.shape[0], -1)
         text_inputs = {"input_ids": input_ids, "attention_mask": torch.ones_like(input_ids)}
         if mm_types is not None:
-            text_inputs["mm_token_type_ids"] = mm_types.to(images.device).unsqueeze(0).expand(
-                images.shape[0], -1
+            text_inputs["mm_token_type_ids"] = (
+                mm_types.to(images.device).unsqueeze(0).expand(images.shape[0], -1)
             )
         generated = self.model.generate(
             **text_inputs,

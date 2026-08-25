@@ -137,6 +137,25 @@ def test_classifier_facing_semantic_embeddings_override_spatial_tokens() -> None
     torch.testing.assert_close(loss.semantic_reference, torch.tensor(0.0))
 
 
+def test_semantic_embedding_only_path_does_not_require_token_bank() -> None:
+    target_semantic = torch.tensor([[1.0, 0.0], [0.9, 0.1]])
+    source_semantic = torch.tensor([[0.0, 1.0], [0.1, 0.9]])
+    adversarial_semantic = torch.tensor([[1.0, 0.0]], requires_grad=True)
+    loss = primary_loss(
+        torch.tensor(0.0),
+        1.0,
+        source_cka_weight=0.0,
+        target_cka_weight=0.0,
+        semantic_target_weight=1.0,
+        semantic_adv=adversarial_semantic,
+        semantic_reference=target_semantic,
+        semantic_source_reference=source_semantic,
+        semantic_mode="prototype",
+    )
+    gradient = torch.autograd.grad(loss.total, adversarial_semantic)[0]
+    assert torch.isfinite(gradient).all()
+
+
 def test_zero_weight_cka_components_are_not_computed(monkeypatch) -> None:
     def unexpected(*args, **kwargs):
         raise AssertionError("zero-weight CKA component was evaluated")

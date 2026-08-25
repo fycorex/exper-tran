@@ -32,6 +32,10 @@ class TapContract:
     shape: tuple[int, ...] | None = None
     token_mask: str | None = None
     error: str | None = None
+    representation_type: str = "legacy_projected"
+    requested_layer: int = -1
+    resolved_layer: int | None = None
+    total_vision_layers: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

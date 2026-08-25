@@ -1,0 +1,8 @@
+pair_id: P20
+steps: [0, 25, 50, 99]
+cls_modes: [target_token_nll, closedset_ce, margin_only, ce_margin]
+semantic_modes: [target_only, prototype, mean_reference]
+representation_type: vision_encoder
+layer: -1
+pooling: mean
+tau: 0.1

@@ -41,3 +41,6 @@ records. See `docs/reproduction.md` before starting GPU work.
 - `experiments/2026-08-qwen-transfer-diagnostics`: audits Qwen preprocessing
   and answer scoring, performs resumable semantic and original token-CKA
   transfer searches, and provides controlled 8/50/500 workflows.
+- `experiments/2026-08-semantic-contrastive-v3`: tests zero-based answer codes,
+  explicit Vision Encoder representations, CLS ablations, and source-vs-target
+  prototype/mean-reference semantic contrast on controlled eight-image pairs.

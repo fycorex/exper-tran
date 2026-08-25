@@ -1,6 +1,6 @@
 CLASSIFICATION_PROMPT = """\
 Classify the main object in the image into exactly one of the following categories:
-1 ambulance; 2 cab; 3 limousine; 4 minivan; 5 sports car;
-6 fire engine; 7 garbage truck; 8 pickup truck; 9 tow truck; 10 moving van.
-Return only one integer from 1 to 10.
+0 ambulance; 1 cab; 2 limousine; 3 minivan; 4 sports car;
+5 fire engine; 6 garbage truck; 7 pickup truck; 8 tow truck; 9 moving van.
+Return only one integer from 0 to 9.
 Do not output reasoning, punctuation, or additional words."""

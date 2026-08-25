@@ -363,6 +363,7 @@ def attack_one_batch(
     timer = Timer()
     reset_peak_memory()
     proxy = load_proxy(pair.proxy_model, project_root / ".hf-cache", device, attack_config)
+    needs_token_reference = cka_source_weight > 0 or cka_target_weight > 0
     with torch.no_grad():
         clean_representation = proxy.image_embeddings(
             clean,
@@ -370,9 +371,20 @@ def attack_one_batch(
             layer=representation_layer,
             pooling=representation_pooling,
         )
-        z_clean = clean_representation.tokens.detach().float()
-        clean_mask = clean_representation.mask.detach()
-    needs_token_reference = cka_source_weight > 0 or cka_target_weight > 0
+        clean_semantic = (
+            clean_representation.semantic_embeddings
+            if clean_representation.semantic_embeddings is not None
+            else clean_representation.embeddings
+        ).detach().float()
+        z_clean = (
+            clean_representation.tokens.detach().float()
+            if needs_token_reference
+            else None
+        )
+        clean_mask = (
+            clean_representation.mask.detach() if needs_token_reference else None
+        )
+    del clean_representation
     if needs_token_reference:
         z_reference, reference_mask, semantic_reference_bank = _detached_embedding_bank(
             proxy,
@@ -648,10 +660,10 @@ def attack_one_batch(
     assert_parameter_gradients_none(proxy.model)
     representation = (
         representation_metrics(
-            clean_representation.tokens.float(),
+            z_clean,
             final_representation.tokens.float(),
             z_reference,
-            clean_representation.mask,
+            clean_mask,
             final_representation.mask,
             reference_mask,
             aligned_target,
@@ -666,11 +678,6 @@ def attack_one_batch(
             float("nan"),
             float("nan"),
         )
-    )
-    clean_semantic = (
-        clean_representation.semantic_embeddings
-        if clean_representation.semantic_embeddings is not None
-        else clean_representation.embeddings
     )
     adversarial_semantic = (
         final_representation.semantic_embeddings

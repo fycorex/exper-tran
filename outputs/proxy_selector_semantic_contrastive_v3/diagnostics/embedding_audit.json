@@ -1,0 +1,314 @@
+[
+  {
+    "cls_token_handling": "not present or mask-controlled",
+    "dtype": "bfloat16",
+    "exact_module_path": "model.model.visual.blocks.23",
+    "first_8_values": [
+      -0.006748794578015804,
+      -3.583424359021592e-06,
+      0.0030609287787228823,
+      0.0038722592871636152,
+      0.0021758410148322582,
+      -0.004978619050234556,
+      0.009735966101288795,
+      -0.00033421284751966596
+    ],
+    "gradient_max_abs": 0.14455987513065338,
+    "l2_norm": 0.9999999403953552,
+    "max": 0.9440937042236328,
+    "mean": 0.0008623159374110401,
+    "min": -0.03687866032123566,
+    "model_id": "Qwen/Qwen3.5-2B",
+    "pooled_embedding_shape": [
+      1,
+      1024
+    ],
+    "pooling": "masked mean over valid visual tokens",
+    "raw_token_shape": [
+      1,
+      256,
+      1024
+    ],
+    "representation_type": "vision_encoder",
+    "requested_layer": -1,
+    "requires_grad": true,
+    "resolved_layer": 23,
+    "revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+    "std": 0.03125336393713951,
+    "token_selection_rule": "valid visual tokens only",
+    "total_vision_layers": 24
+  },
+  {
+    "cls_token_handling": "not present or mask-controlled",
+    "dtype": "bfloat16",
+    "exact_module_path": "model.model.visual.blocks.23",
+    "first_8_values": [
+      -0.007021657191216946,
+      -0.00039764668326824903,
+      0.002324069617316127,
+      0.0033460010308772326,
+      0.0020273798145353794,
+      -0.006757933180779219,
+      0.010021519847214222,
+      0.0008571037324145436
+    ],
+    "gradient_max_abs": 0.23720800876617432,
+    "l2_norm": 0.9999999403953552,
+    "max": 0.9536267518997192,
+    "mean": 0.000878702849149704,
+    "min": -0.03744883835315704,
+    "model_id": "Qwen/Qwen3.5-4B",
+    "pooled_embedding_shape": [
+      1,
+      1024
+    ],
+    "pooling": "masked mean over valid visual tokens",
+    "raw_token_shape": [
+      1,
+      256,
+      1024
+    ],
+    "representation_type": "vision_encoder",
+    "requested_layer": -1,
+    "requires_grad": true,
+    "resolved_layer": 23,
+    "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "std": 0.0312529094517231,
+    "token_selection_rule": "valid visual tokens only",
+    "total_vision_layers": 24
+  },
+  {
+    "cls_token_handling": "excluded",
+    "dtype": "bfloat16",
+    "exact_module_path": "model.model.vision_tower.encoder.layer.23",
+    "first_8_values": [
+      0.021672392264008522,
+      0.005748780444264412,
+      -0.024419598281383514,
+      0.004604111425578594,
+      -0.014143017120659351,
+      0.0016534102614969015,
+      -0.00946259405463934,
+      0.006664515007287264
+    ],
+    "gradient_max_abs": 0.6616573929786682,
+    "l2_norm": 1.0,
+    "max": 0.041106320917606354,
+    "mean": -0.0036292672157287598,
+    "min": -0.9051530957221985,
+    "model_id": "OpenGVLab/InternVL3_5-2B-HF",
+    "pooled_embedding_shape": [
+      1,
+      1024
+    ],
+    "pooling": "masked mean over valid visual tokens",
+    "raw_token_shape": [
+      1,
+      1024,
+      1024
+    ],
+    "representation_type": "vision_encoder",
+    "requested_layer": -1,
+    "requires_grad": true,
+    "resolved_layer": 23,
+    "revision": "3f301ffcf3dcbb47893afae6650ea3e78d96fb6d",
+    "std": 0.031053707003593445,
+    "token_selection_rule": "valid visual tokens only",
+    "total_vision_layers": 24
+  },
+  {
+    "cls_token_handling": "excluded",
+    "dtype": "bfloat16",
+    "exact_module_path": "model.model.vision_tower.encoder.layer.23",
+    "first_8_values": [
+      0.010757033713161945,
+      0.004148324020206928,
+      -0.018653154373168945,
+      -0.004663288593292236,
+      -0.0028609130531549454,
+      0.005664607975631952,
+      0.01705104298889637,
+      0.009841540828347206
+    ],
+    "gradient_max_abs": 1.7754745483398438,
+    "l2_norm": 1.0,
+    "max": 0.02654927410185337,
+    "mean": -0.0017862869426608086,
+    "min": -0.9594358205795288,
+    "model_id": "OpenGVLab/InternVL3_5-4B-HF",
+    "pooled_embedding_shape": [
+      1,
+      1024
+    ],
+    "pooling": "masked mean over valid visual tokens",
+    "raw_token_shape": [
+      1,
+      1024,
+      1024
+    ],
+    "representation_type": "vision_encoder",
+    "requested_layer": -1,
+    "requires_grad": true,
+    "resolved_layer": 23,
+    "revision": "6bd4487402110ef9889ba50eb7aefeb302526fed",
+    "std": 0.031214147806167603,
+    "token_selection_rule": "valid visual tokens only",
+    "total_vision_layers": 24
+  },
+  {
+    "cls_token_handling": "not present or mask-controlled",
+    "dtype": "bfloat16",
+    "exact_module_path": "model.model.vision_tower.encoder.layers.15",
+    "first_8_values": [
+      -0.00011427334538893774,
+      0.0019096345640718937,
+      -0.006175839342176914,
+      0.0059591433964669704,
+      -0.002126330742612481,
+      0.011051502078771591,
+      -0.004848575685173273,
+      -0.0020315260626375675
+    ],
+    "gradient_max_abs": 0.8745167851448059,
+    "l2_norm": 0.9999999403953552,
+    "max": 0.03640494868159294,
+    "mean": -0.0020093489438295364,
+    "min": -0.9222586750984192,
+    "model_id": "google/gemma-4-E2B-it",
+    "pooled_embedding_shape": [
+      1,
+      768
+    ],
+    "pooling": "masked mean over valid visual tokens",
+    "raw_token_shape": [
+      1,
+      2520,
+      768
+    ],
+    "representation_type": "vision_encoder",
+    "requested_layer": -1,
+    "requires_grad": true,
+    "resolved_layer": 15,
+    "revision": "3e22461f65e89153144f8adb70e3b8c2cc9845a7",
+    "std": 0.03605188801884651,
+    "token_selection_rule": "valid visual tokens only",
+    "total_vision_layers": 16
+  },
+  {
+    "cls_token_handling": "not present or mask-controlled",
+    "dtype": "bfloat16",
+    "exact_module_path": "model.model.vision_tower.encoder.layers.15",
+    "first_8_values": [
+      -0.00011427334538893774,
+      0.0019096345640718937,
+      -0.006175839342176914,
+      0.0059591433964669704,
+      -0.002126330742612481,
+      0.011051502078771591,
+      -0.004848575685173273,
+      -0.0020315260626375675
+    ],
+    "gradient_max_abs": 0.8715000152587891,
+    "l2_norm": 0.9999999403953552,
+    "max": 0.03640494868159294,
+    "mean": -0.0020093489438295364,
+    "min": -0.9222586750984192,
+    "model_id": "google/gemma-4-E4B-it",
+    "pooled_embedding_shape": [
+      1,
+      768
+    ],
+    "pooling": "masked mean over valid visual tokens",
+    "raw_token_shape": [
+      1,
+      2520,
+      768
+    ],
+    "representation_type": "vision_encoder",
+    "requested_layer": -1,
+    "requires_grad": true,
+    "resolved_layer": 15,
+    "revision": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+    "std": 0.03605188801884651,
+    "token_selection_rule": "valid visual tokens only",
+    "total_vision_layers": 16
+  },
+  {
+    "cls_token_handling": "not present or mask-controlled",
+    "dtype": "float32",
+    "exact_module_path": "model.vision_model.encoder.layers.23",
+    "first_8_values": [
+      0.020090611651539803,
+      0.008778715506196022,
+      0.026923255994915962,
+      0.014564989134669304,
+      -0.014174625277519226,
+      -0.011296872980892658,
+      0.0004184198332950473,
+      -0.006320931948721409
+    ],
+    "gradient_max_abs": 5.441076755523682,
+    "l2_norm": 0.9999999403953552,
+    "max": 0.398716002702713,
+    "mean": 0.0026092869229614735,
+    "min": -0.4821942448616028,
+    "model_id": "openai/clip-vit-large-patch14",
+    "pooled_embedding_shape": [
+      1,
+      1024
+    ],
+    "pooling": "masked mean over real visual patch tokens",
+    "raw_token_shape": [
+      1,
+      256,
+      1024
+    ],
+    "representation_type": "vision_encoder",
+    "requested_layer": -1,
+    "requires_grad": true,
+    "resolved_layer": 23,
+    "revision": "32bd64288804d66eefd0ccbe215aa642df71cc41",
+    "std": 0.031156092882156372,
+    "token_selection_rule": "all spatial patch tokens; no synthetic global token",
+    "total_vision_layers": 24
+  },
+  {
+    "cls_token_handling": "not present or mask-controlled",
+    "dtype": "float32",
+    "exact_module_path": "model.vision_model.encoder.layers.26",
+    "first_8_values": [
+      -0.0013048206456005573,
+      0.010104839690029621,
+      -0.020891815423965454,
+      -0.008179410360753536,
+      0.009006298147141933,
+      -0.03088177740573883,
+      -0.0065633878111839294,
+      -0.020545480772852898
+    ],
+    "gradient_max_abs": 0.5282965302467346,
+    "l2_norm": 1.0,
+    "max": 0.27733710408210754,
+    "mean": -0.0022685332223773003,
+    "min": -0.444123774766922,
+    "model_id": "google/siglip2-so400m-patch14-384",
+    "pooled_embedding_shape": [
+      1,
+      1152
+    ],
+    "pooling": "masked mean over real visual patch tokens",
+    "raw_token_shape": [
+      1,
+      729,
+      1152
+    ],
+    "representation_type": "vision_encoder",
+    "requested_layer": -1,
+    "requires_grad": true,
+    "resolved_layer": 26,
+    "revision": "e8e487298228002f3d8a82e0cd5c8ea9c567f57f",
+    "std": 0.029388077557086945,
+    "token_selection_rule": "all spatial patch tokens; no synthetic global token",
+    "total_vision_layers": 27
+  }
+]

@@ -102,6 +102,35 @@ def main() -> None:
         write_json(state_path, state)
         print(f"trial={index}/{len(arms)} start {pair.pair_id} {name}", flush=True)
         try:
+            if "rho" in arm and "rho_cls_sem" in arm:
+                raise ValueError("Configure only one of rho or rho_cls_sem")
+            rho = arm.get("rho_cls_sem", arm.get("rho"))
+            if "push_pull_alpha" in arm and (
+                "target_logit_weight" in arm or "source_logit_weight" in arm
+            ):
+                raise ValueError(
+                    "push_pull_alpha cannot be combined with legacy target/source weights"
+                )
+            pull_weight = (
+                1.0
+                if "push_pull_alpha" in arm
+                else float(
+                    arm.get(
+                        "target_logit_weight",
+                        raw.get("semantic_target_logit_weight", 1.0),
+                    )
+                )
+            )
+            push_weight = (
+                float(arm["push_pull_alpha"])
+                if "push_pull_alpha" in arm
+                else float(
+                    arm.get(
+                        "source_logit_weight",
+                        raw.get("semantic_source_logit_weight", 1.0),
+                    )
+                )
+            )
             lambda_sem = float(arm["lambda_sem"])
             semantic_weight = 1.0 if lambda_sem > 0 else 0.0
             result = attack_one_batch(
@@ -123,7 +152,7 @@ def main() -> None:
                 cka_source_weight=0.0,
                 cka_target_weight=0.0,
                 semantic_target_weight=semantic_weight,
-                gradient_ratio=None if arm["rho"] is None else float(arm["rho"]),
+                gradient_ratio=None if rho is None else float(rho),
                 objective_tag=name,
                 progress_interval=max(1, min(10, steps)),
                 prompt=CLASSIFICATION_PROMPT,
@@ -133,18 +162,8 @@ def main() -> None:
                 semantic_temperature=float(
                     arm.get("semantic_temperature", raw["semantic_temperature"])
                 ),
-                semantic_target_logit_weight=float(
-                    arm.get(
-                        "target_logit_weight",
-                        raw.get("semantic_target_logit_weight", 1.0),
-                    )
-                ),
-                semantic_source_logit_weight=float(
-                    arm.get(
-                        "source_logit_weight",
-                        raw.get("semantic_source_logit_weight", 1.0),
-                    )
-                ),
+                semantic_target_logit_weight=pull_weight,
+                semantic_source_logit_weight=push_weight,
                 representation_type=str(raw["representation_type"]),
                 representation_layer=int(raw["representation_layer"]),
                 representation_pooling=str(raw["representation_pooling"]),

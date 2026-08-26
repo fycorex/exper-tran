@@ -9,14 +9,20 @@ from pathlib import Path
 
 import torch
 import torch.nn.functional as functional
-from common import DEFAULT_CONFIG, DEFAULT_OUTPUT, load_experiment, pair_specs, transitions
+from common import (
+    DEFAULT_CONFIG,
+    DEFAULT_OUTPUT,
+    class_names,
+    load_experiment,
+    pair_specs,
+    transitions,
+)
 from PIL import Image
 from torchvision.transforms.functional import pil_to_tensor
 
 from primary_ml_cka.config.schema import AttackConfig
 from primary_ml_cka.data.manifests import read_manifest
 from primary_ml_cka.domain.identifiers import get_pair
-from primary_ml_cka.domain.labels import CLASS_NAMES
 from primary_ml_cka.models.proxies.registry import load_proxy
 
 
@@ -37,6 +43,7 @@ def main() -> None:
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for the embedding-distance audit")
     raw = load_experiment(args.config)
+    names = class_names(raw)
     diagnostics = args.output_dir / "diagnostics"
     diagnostics.mkdir(parents=True, exist_ok=True)
     rows = []
@@ -98,7 +105,7 @@ def main() -> None:
                 "representation_type": spec["representation_type"],
                 "representation_layer": spec["representation_layer"],
                 "pooling": spec["pooling"],
-                "class_names": CLASS_NAMES,
+                "class_names": names,
                 "cosine_similarity": cosine.tolist(),
                 "cosine_distance": distance.tolist(),
                 "transition_distance": transition_lookup,
@@ -110,9 +117,9 @@ def main() -> None:
                         "proxy_model": pair.proxy_model,
                         "transition_id": transition.transition_id,
                         "source_label": transition.source,
-                        "source_name": transition.source_name,
+                        "source_name": names[transition.source - 1],
                         "target_label": transition.target,
-                        "target_name": transition.target_name,
+                        "target_name": names[transition.target - 1],
                         "prototype_cosine": float(
                             cosine[transition.source - 1, transition.target - 1]
                         ),

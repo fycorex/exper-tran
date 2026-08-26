@@ -5,7 +5,15 @@ from pathlib import Path
 EXPERIMENT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(EXPERIMENT_ROOT / "src"))
 
-from common import DEFAULT_CONFIG, load_experiment, pair_specs, transitions  # noqa: E402
+from common import (  # noqa: E402
+    DEFAULT_CONFIG,
+    class_names,
+    class_specs,
+    classification_prompt,
+    load_experiment,
+    pair_specs,
+    transitions,
+)
 
 
 class PrimaryConfigTest(unittest.TestCase):
@@ -21,6 +29,34 @@ class PrimaryConfigTest(unittest.TestCase):
             len({frozenset((item.source, item.target)) for item in items}),
             10,
         )
+
+    def test_catalog_is_semantically_diverse(self):
+        items = class_specs(self.raw)
+        self.assertEqual(
+            tuple(item["wnid"] for item in items),
+            (
+                "n01443537",
+                "n02279972",
+                "n07753275",
+                "n02676566",
+                "n03642806",
+                "n07920052",
+                "n09472597",
+                "n04099969",
+                "n04254680",
+                "n04146614",
+            ),
+        )
+        self.assertGreaterEqual(len({item["domain"] for item in items}), 8)
+        self.assertIn("volcano", class_names(self.raw))
+        self.assertIn("monarch butterfly", class_names(self.raw))
+
+    def test_prompt_uses_diverse_catalog_and_zero_based_codes(self):
+        prompt = classification_prompt(self.raw)
+        for code, name in enumerate(class_names(self.raw)):
+            self.assertIn(f"{code} {name}", prompt)
+        self.assertIn("Return only one integer from 0 to 9", prompt)
+        self.assertNotIn("pickup truck", prompt)
 
     def test_primary_pairs_are_small_to_large(self):
         self.assertEqual(set(pair_specs(self.raw)), {"P14", "P16", "P19"})

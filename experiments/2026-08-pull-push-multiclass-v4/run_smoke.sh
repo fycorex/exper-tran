@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 PYTHON=".venv-primary-ml-cka/bin/python"
-OUTPUT_DIR="${V4_OUTPUT_DIR:-outputs/pull_push_multiclass_v4}"
+OUTPUT_DIR="${V4_OUTPUT_DIR:-outputs/pull_push_multiclass_v4_diverse10}"
 CONFIG="experiments/2026-08-pull-push-multiclass-v4/config/primary.yaml"
 export PYTHONPATH=src
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True

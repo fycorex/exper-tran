@@ -12,6 +12,7 @@ import torch
 from common import (
     DEFAULT_CONFIG,
     DEFAULT_OUTPUT,
+    classification_prompt,
     load_experiment,
     pair_specs,
     transition_dir,
@@ -27,7 +28,6 @@ from primary_ml_cka.models.backends.target_transformers_generation import (
 from primary_ml_cka.models.backends.transformers_backend import load_processor
 from primary_ml_cka.models.common.loading import local_snapshot
 from primary_ml_cka.models.targets.generation import TransformersTargetGenerator
-from primary_ml_cka.prompts.classification import CLASSIFICATION_PROMPT
 
 
 def safe_model_id(model_id: str) -> str:
@@ -62,6 +62,7 @@ def main() -> None:
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is required for clean screening")
     raw = load_experiment(args.config)
+    prompt = classification_prompt(raw)
     specs = pair_specs(raw)
     pair_ids = tuple(specs)
     models = tuple(
@@ -103,7 +104,7 @@ def main() -> None:
                 for index, record in enumerate(candidates, 1):
                     output = generator.generate_label(
                         args.output_dir / "canonical_images" / record.relative_path,
-                        CLASSIFICATION_PROMPT,
+                        prompt,
                     )
                     lines.append(
                         json.dumps(

@@ -5,11 +5,10 @@ from pathlib import Path
 
 from primary_ml_cka.config.loader import load_config
 from primary_ml_cka.domain.identifiers import get_pair
-from primary_ml_cka.domain.labels import CLASS_NAMES
 
 EXPERIMENT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONFIG = EXPERIMENT_ROOT / "config" / "primary.yaml"
-DEFAULT_OUTPUT = Path("outputs/pull_push_multiclass_v4")
+DEFAULT_OUTPUT = Path("outputs/pull_push_multiclass_v4_diverse10")
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,14 +16,6 @@ class Transition:
     transition_id: str
     source: int
     target: int
-
-    @property
-    def source_name(self) -> str:
-        return CLASS_NAMES[self.source - 1]
-
-    @property
-    def target_name(self) -> str:
-        return CLASS_NAMES[self.target - 1]
 
 
 def load_experiment(path: Path = DEFAULT_CONFIG) -> dict:
@@ -44,7 +35,38 @@ def pair_specs(raw: dict) -> dict[str, dict]:
     return {str(item["pair_id"]): item for item in raw["pairs"]}
 
 
+def class_specs(raw: dict) -> tuple[dict, ...]:
+    return tuple(sorted(raw["classes"], key=lambda item: int(item["label"])))
+
+
+def class_names(raw: dict) -> tuple[str, ...]:
+    return tuple(str(item["name"]) for item in class_specs(raw))
+
+
+def classification_prompt(raw: dict) -> str:
+    options = "; ".join(
+        f"{index} {name}" for index, name in enumerate(class_names(raw))
+    )
+    return (
+        "Classify the main object in the image into exactly one of the following "
+        f"categories:\n{options}.\n"
+        "Return only one integer from 0 to 9.\n"
+        "Do not output reasoning, punctuation, or additional words."
+    )
+
+
 def validate_experiment(raw: dict) -> None:
+    classes = class_specs(raw)
+    labels = [int(item["label"]) for item in classes]
+    wnids = [str(item["wnid"]) for item in classes]
+    names = [str(item["name"]) for item in classes]
+    domains = [str(item["domain"]) for item in classes]
+    if labels != list(range(1, 11)):
+        raise ValueError("Diverse class labels must be exactly 1..10")
+    if len(set(wnids)) != 10 or len(set(names)) != 10:
+        raise ValueError("Diverse class WNIDs and names must be unique")
+    if len(set(domains)) < 8:
+        raise ValueError("The catalog must span at least eight semantic domains")
     items = tuple(raw["transitions"])
     if len(items) != 10:
         raise ValueError("V4 requires exactly ten transitions")

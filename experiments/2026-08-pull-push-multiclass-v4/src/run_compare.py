@@ -14,6 +14,7 @@ import torch
 from common import (
     DEFAULT_CONFIG,
     DEFAULT_OUTPUT,
+    classification_prompt,
     load_experiment,
     pair_specs,
     transition_dir,
@@ -26,7 +27,6 @@ from primary_ml_cka.data.manifests import read_manifest
 from primary_ml_cka.domain.identifiers import get_pair
 from primary_ml_cka.evaluation.target_generation import evaluate_local_frozen_batch
 from primary_ml_cka.experiment.attack_generation import attack_one_batch
-from primary_ml_cka.prompts.classification import CLASSIFICATION_PROMPT
 
 
 def main() -> None:
@@ -43,6 +43,7 @@ def main() -> None:
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA is unavailable; CPU attacks are forbidden")
     raw = load_experiment(args.config)
+    prompt = classification_prompt(raw)
     specs = pair_specs(raw)
     chosen_pairs = tuple(args.pairs or specs)
     chosen_transitions = tuple(args.transitions or (t.transition_id for t in transitions(raw)))
@@ -185,7 +186,7 @@ def main() -> None:
                         gradient_ratio=float(raw["rho"]),
                         objective_tag=arm_name,
                         progress_interval=max(1, min(10, steps)),
-                        prompt=CLASSIFICATION_PROMPT,
+                        prompt=prompt,
                         cls_loss_mode="margin_only",
                         lambda_cls=1.0,
                         semantic_mode=str(arm["semantic_mode"]),
@@ -210,7 +211,7 @@ def main() -> None:
                         hf_home=Path(".hf-cache"),
                         artifact_dir=artifact_dir,
                         image_count=len(source),
-                        prompt=CLASSIFICATION_PROMPT,
+                        prompt=prompt,
                         source_human_label=transition.source,
                         target_human_label=transition.target,
                     )

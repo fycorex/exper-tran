@@ -5,13 +5,27 @@ reference_count: 48
 semantic_temperature: 0.1
 rho: 0.25
 
+# Local labels 1..10 map to model-facing answer codes 0..9. The ten classes
+# deliberately span distinct semantic domains rather than vehicle subtypes.
+classes:
+  - {label: 1, wnid: n01443537, name: goldfish, domain: animal}
+  - {label: 2, wnid: n02279972, name: monarch butterfly, domain: insect}
+  - {label: 3, wnid: n07753275, name: pineapple, domain: food}
+  - {label: 4, wnid: n02676566, name: acoustic guitar, domain: instrument}
+  - {label: 5, wnid: n03642806, name: laptop, domain: electronics}
+  - {label: 6, wnid: n07920052, name: espresso, domain: beverage}
+  - {label: 7, wnid: n09472597, name: volcano, domain: natural scene}
+  - {label: 8, wnid: n04099969, name: rocking chair, domain: furniture}
+  - {label: 9, wnid: n04254680, name: soccer ball, domain: sports equipment}
+  - {label: 10, wnid: n04146614, name: school bus, domain: transport}
+
 pairs:
   - {pair_id: P14, representation_type: vision_encoder, representation_layer: 17, pooling: mean}
   - {pair_id: P16, representation_type: vision_encoder, representation_layer: 17, pooling: mean}
   - {pair_id: P19, representation_type: vision_encoder, representation_layer: 15, pooling: mean}
 
-# A step-3 cycle modulo ten: every class appears exactly once as source and
-# once as target, without duplicating an undirected edge.
+# A step-3 cycle over the diverse catalog: every class appears exactly once as
+# source and target, without duplicating an undirected edge.
 transitions:
   - {id: T01, source: 1, target: 4}
   - {id: T02, source: 2, target: 5}

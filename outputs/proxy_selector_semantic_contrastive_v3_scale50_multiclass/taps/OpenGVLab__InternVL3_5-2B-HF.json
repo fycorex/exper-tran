@@ -9,12 +9,12 @@
     1,
     10
   ],
-  "classification_loss": 7.808176517486572,
+  "classification_loss": 8.208656311035156,
   "dtype": "bfloat16",
   "error": null,
   "extraction": "post-pixel-shuffle InternVL visual soft tokens passed to the language model",
   "free_generation_probe_label": 2,
-  "max_other_probability": 0.21137994527816772,
+  "max_other_probability": 0.20587658882141113,
   "model_id": "OpenGVLab/InternVL3_5-2B-HF",
   "module_path": "model.get_image_features.pooler_output",
   "normalization": "per-image L2; FP32 before CKA",
@@ -30,7 +30,7 @@
   ],
   "status": "validated",
   "target_human_label": 7,
-  "target_probability": 0.09984882175922394,
+  "target_probability": 0.08582215011119843,
   "token_level_attack_cka": true,
   "token_mask": "non-CLS tokens from one valid 448x448 tile per image",
   "total_vision_layers": null

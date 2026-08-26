@@ -1,0 +1,4 @@
+pair_id,pair_type,proxy_model,target_model,image_count,proxy_hits,proxy_denominator,proxy_rate_percent,eligible_batches,batch_count,target_hits,target_valid_denominator,target_valid_rate_percent,target_denominator_matches_cohort,tasr_percent,target_hits_among_proxy_hits,conditional_tasr_percent,untargeted_hits,asr_percent
+P20,Intra-Family,Qwen/Qwen3.5-4B,Qwen/Qwen3.5-2B,50,46,50,92.0,5,7,37,50,100.0,True,74.0,37,80.43478260869566,40,80.0
+P21,Intra-Family,OpenGVLab/InternVL3_5-4B-HF,OpenGVLab/InternVL3_5-2B-HF,50,50,50,100.0,7,7,8,49,98.0,False,16.0,8,16.0,18,36.0
+P22,Intra-Family,google/gemma-4-E4B-it,google/gemma-4-E2B-it,50,50,50,100.0,13,13,23,50,100.0,True,46.0,23,46.0,46,92.0

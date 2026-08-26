@@ -10,8 +10,10 @@ MULTI_OUTPUT="${MULTI_SCALE50_OUTPUT_DIR:-outputs/proxy_selector_semantic_contra
 run_one() {
   local mode="$1"
   local output="$2"
+  local pairs="${3:-P20 P19 P22 P14 P16 P21 P02 P06 P11}"
   V3_SCALE50_OUTPUT_DIR="$output" \
   V3_SCALE50_SEMANTIC_MODE="$mode" \
+  V3_SCALE50_PAIR_IDS="$pairs" \
     bash experiments/2026-08-semantic-contrastive-v3/run_scale50_multiclass.sh
 }
 
@@ -19,8 +21,8 @@ run_one() {
 # They differ only in the representation objective:
 #   prototype             = binary target-vs-source contrastive baseline
 #   multiclass_prototype  = target-vs-all-nine-non-target prototype loss
-run_one prototype "$BINARY_OUTPUT"
-run_one multiclass_prototype "$MULTI_OUTPUT"
+run_one prototype "$BINARY_OUTPUT" "P20 P19 P22 P14 P16 P21 P02 P06 P11"
+run_one multiclass_prototype "$MULTI_OUTPUT" "P20 P21 P22"
 
 env PYTHONPATH=src "$PYTHON" \
   experiments/2026-08-semantic-contrastive-v3/src/compare_scale50.py \

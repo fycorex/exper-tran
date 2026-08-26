@@ -9,12 +9,12 @@
     1,
     10
   ],
-  "classification_loss": 15.367924690246582,
+  "classification_loss": 14.234774589538574,
   "dtype": "bfloat16",
   "error": null,
   "extraction": "pooled Gemma visual soft tokens passed to the language model",
   "free_generation_probe_label": 1,
-  "max_other_probability": 0.7368189096450806,
+  "max_other_probability": 0.6158530116081238,
   "model_id": "google/gemma-4-E2B-it",
   "module_path": "model.embed_vision",
   "normalization": "per-image L2; FP32 before CKA",
@@ -30,7 +30,7 @@
   ],
   "status": "validated",
   "target_human_label": 7,
-  "target_probability": 0.018445901572704315,
+  "target_probability": 0.023879213258624077,
   "token_level_attack_cka": true,
   "token_mask": "derived from non-padding image_position_ids and pooling kernel",
   "total_vision_layers": null

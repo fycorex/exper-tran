@@ -210,6 +210,15 @@ def run_scaled(context: CommandContext) -> str:
     semantic_source_logit_weight = float(
         os.environ.get("PRIMARY_ML_CKA_SEMANTIC_SOURCE_WEIGHT", "1")
     )
+    representation_type = os.environ.get(
+        "PRIMARY_ML_CKA_REPRESENTATION_TYPE", "legacy_projected"
+    )
+    representation_layer = int(
+        os.environ.get("PRIMARY_ML_CKA_REPRESENTATION_LAYER", "-1")
+    )
+    representation_pooling = os.environ.get(
+        "PRIMARY_ML_CKA_REPRESENTATION_POOLING", "mean"
+    )
     class_references = None
     if semantic_mode == "multiclass_prototype":
         manifests_dir = context.output_dir / "evaluation" / "manifests"
@@ -285,6 +294,9 @@ def run_scaled(context: CommandContext) -> str:
                         cls_loss_mode=cls_loss_mode,
                         semantic_target_logit_weight=semantic_target_logit_weight,
                         semantic_source_logit_weight=semantic_source_logit_weight,
+                        representation_type=representation_type,
+                        representation_layer=representation_layer,
+                        representation_pooling=representation_pooling,
                     )
                 attacks.append((batch_index, result))
             rates = _evaluate_pending_batches(

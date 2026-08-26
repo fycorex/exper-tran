@@ -5,12 +5,12 @@
     1,
     10
   ],
-  "classification_loss": 15.043220520019531,
+  "classification_loss": 16.330347061157227,
   "dtype": "float32",
   "error": null,
   "extraction": "final visual patch tokens (CLS excluded when present)",
   "free_generation_probe_label": 10,
-  "max_other_probability": 0.4859420657157898,
+  "max_other_probability": 0.5203543305397034,
   "model_id": "openai/clip-vit-large-patch14",
   "module_path": "vision_model.last_hidden_state",
   "normalization": "per-image L2; FP32 before CKA",
@@ -26,7 +26,7 @@
   ],
   "status": "validated",
   "target_human_label": 7,
-  "target_probability": 0.015573607757687569,
+  "target_probability": 0.010613699443638325,
   "token_level_attack_cka": true,
   "token_mask": "all spatial patch tokens; no synthetic global token",
   "total_vision_layers": 24

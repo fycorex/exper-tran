@@ -11,6 +11,7 @@ from primary_ml_cka.infrastructure.atomic_io import atomic_text_write
 def _arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--pair-ids", nargs="*", default=None)
     return parser.parse_args()
 
 
@@ -19,7 +20,10 @@ def main() -> None:
     output_dir = args.output_dir.resolve()
     expected = len(read_manifest(output_dir / "evaluation/manifests/common_clean_scale50.jsonl"))
     rows = []
+    selected_pairs = set(args.pair_ids) if args.pair_ids else None
     for pair in MODEL_PAIRS:
+        if selected_pairs is not None and pair.pair_id not in selected_pairs:
+            continue
         logs = sorted((output_dir / "logs" / pair.pair_id / "scale_50").glob("*.json"))
         if not logs:
             raise RuntimeError(f"{pair.pair_id} has no completed attack batches")

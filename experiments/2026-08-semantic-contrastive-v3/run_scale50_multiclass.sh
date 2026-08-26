@@ -34,7 +34,8 @@ for tap_spec in \
   bash scripts/run_experiment.sh models inspect-taps --pair-id "$pair_id" --output-dir "$OUTPUT_DIR"
 done
 
-for pair_id in P20 P19 P22 P14 P16 P21 P02 P06 P11; do
+pair_ids="${V3_SCALE50_PAIR_IDS:-P20 P19 P22 P14 P16 P21 P02 P06 P11}"
+for pair_id in $pair_ids; do
   mode="${V3_SCALE50_SEMANTIC_MODE:-multiclass_prototype}"
   case "$pair_id" in
     P20|P14) recipe_pair=P20 ;;
@@ -68,4 +69,4 @@ done
 
 env PYTHONPATH=src "$PYTHON" \
   experiments/2026-08-qwen-transfer-diagnostics/src/summarize_scale50_semantic.py \
-  --output-dir "$OUTPUT_DIR"
+  --output-dir "$OUTPUT_DIR" --pair-ids $pair_ids

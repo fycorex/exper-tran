@@ -1,0 +1,49 @@
+{
+  "git_commit": "d805c3f56200d20066caef95e2a2deb9ebe628da",
+  "python": "3.11.0rc1 (main, Aug 12 2022, 10:02:14) [GCC 11.2.0]",
+  "platform": "Linux-6.8.0-40-generic-x86_64-with-glibc2.35",
+  "torch": "2.5.1+cu124",
+  "torch_cuda": "12.4",
+  "cuda_available": true,
+  "transformers": "5.14.1",
+  "bitsandbytes": "0.49.0",
+  "vllm": "unavailable: ModuleNotFoundError: No module named 'vllm'",
+  "model_revisions": {
+    "Qwen/Qwen3.5-2B": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+    "Qwen/Qwen3.5-4B": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "google/gemma-4-E2B-it": "3e22461f65e89153144f8adb70e3b8c2cc9845a7",
+    "google/gemma-4-E4B-it": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+    "OpenGVLab/InternVL3_5-2B-HF": "3f301ffcf3dcbb47893afae6650ea3e78d96fb6d",
+    "OpenGVLab/InternVL3_5-4B-HF": "6bd4487402110ef9889ba50eb7aefeb302526fed",
+    "openai/clip-vit-large-patch14": "32bd64288804d66eefd0ccbe215aa642df71cc41",
+    "openai/clip-vit-base-patch32": "c7244be81152024ce0e99ac8d2e373a8953d9f9a",
+    "google/siglip2-so400m-patch14-384": "e8e487298228002f3d8a82e0cd5c8ea9c567f57f"
+  },
+  "processor_revisions": {
+    "Qwen/Qwen3.5-2B": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+    "Qwen/Qwen3.5-4B": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+    "google/gemma-4-E2B-it": "3e22461f65e89153144f8adb70e3b8c2cc9845a7",
+    "google/gemma-4-E4B-it": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+    "OpenGVLab/InternVL3_5-2B-HF": "3f301ffcf3dcbb47893afae6650ea3e78d96fb6d",
+    "OpenGVLab/InternVL3_5-4B-HF": "6bd4487402110ef9889ba50eb7aefeb302526fed",
+    "openai/clip-vit-large-patch14": "32bd64288804d66eefd0ccbe215aa642df71cc41",
+    "openai/clip-vit-base-patch32": "c7244be81152024ce0e99ac8d2e373a8953d9f9a",
+    "google/siglip2-so400m-patch14-384": "e8e487298228002f3d8a82e0cd5c8ea9c567f57f"
+  },
+  "dtypes": {
+    "generative_proxy_compute": "bfloat16",
+    "proxy_visual": "bfloat16",
+    "cka": "float32"
+  },
+  "gpu": [
+    {
+      "index": 0,
+      "name": "NVIDIA RTX A4000",
+      "total_memory_bytes": 15823929344,
+      "capability": [
+        8,
+        6
+      ]
+    }
+  ]
+}

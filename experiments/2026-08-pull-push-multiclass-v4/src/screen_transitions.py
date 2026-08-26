@@ -91,6 +91,8 @@ def main() -> None:
             print(f"screen model={model_index}/{len(models)} resume {model_id}", flush=True)
             continue
         model = None
+        processor = None
+        generator = None
         try:
             snapshot = local_snapshot(Path(".hf-cache"), model_id)
             processor = load_processor(snapshot)
@@ -123,8 +125,12 @@ def main() -> None:
                     "".join(f"{line}\n" for line in lines),
                 )
         finally:
+            if generator is not None:
+                del generator
             if model is not None:
                 del model
+            if processor is not None:
+                del processor
             gc.collect()
             torch.cuda.empty_cache()
 

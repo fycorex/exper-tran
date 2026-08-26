@@ -1,3 +1,4 @@
+import ast
 import sys
 import unittest
 from pathlib import Path
@@ -91,6 +92,21 @@ class PrimaryConfigTest(unittest.TestCase):
             arms["multiclass_small_steps"]["semantic_mode"],
             "multiclass_prototype",
         )
+
+    def test_screening_releases_generator_model_and_processor(self):
+        source = (EXPERIMENT_ROOT / "src" / "screen_transitions.py").read_text(
+            encoding="utf-8"
+        )
+        tree = ast.parse(source)
+        deleted = {
+            target.id
+            for node in tree.body
+            for descendant in ast.walk(node)
+            if isinstance(descendant, ast.Delete)
+            for target in descendant.targets
+            if isinstance(target, ast.Name)
+        }
+        self.assertTrue({"generator", "model", "processor"} <= deleted)
 
 
 if __name__ == "__main__":

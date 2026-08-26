@@ -1,0 +1,2 @@
+pair_id,pair_type,proxy_model,target_model,image_count,proxy_hits,proxy_denominator,proxy_rate_percent,eligible_batches,batch_count,target_hits,target_valid_denominator,target_valid_rate_percent,target_denominator_matches_cohort,tasr_percent,target_hits_among_proxy_hits,conditional_tasr_percent,untargeted_hits,asr_percent
+P21,Intra-Family,OpenGVLab/InternVL3_5-4B-HF,OpenGVLab/InternVL3_5-2B-HF,50,50,50,100.0,7,7,21,49,98.0,False,42.0,21,42.0,29,58.0

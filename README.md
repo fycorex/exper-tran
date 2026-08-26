@@ -44,3 +44,6 @@ records. See `docs/reproduction.md` before starting GPU work.
 - `experiments/2026-08-semantic-contrastive-v3`: tests zero-based answer codes,
   explicit Vision Encoder representations, CLS ablations, and source-vs-target
   prototype/mean-reference semantic contrast on controlled eight-image pairs.
+- `experiments/2026-08-pull-push-multiclass-v4`: compares binary prototype
+  pull+push against 10-class prototype loss across ten balanced class
+  transitions, with smaller-step schedules on the three small-to-large pairs.

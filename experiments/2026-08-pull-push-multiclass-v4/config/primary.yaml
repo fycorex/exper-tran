@@ -1,0 +1,43 @@
+seed: 42
+candidate_count: 50
+attack_count: 8
+reference_count: 48
+semantic_temperature: 0.1
+rho: 0.25
+
+pairs:
+  - {pair_id: P14, representation_type: vision_encoder, representation_layer: 17, pooling: mean}
+  - {pair_id: P16, representation_type: vision_encoder, representation_layer: 17, pooling: mean}
+  - {pair_id: P19, representation_type: vision_encoder, representation_layer: 15, pooling: mean}
+
+# A step-3 cycle modulo ten: every class appears exactly once as source and
+# once as target, without duplicating an undirected edge.
+transitions:
+  - {id: T01, source: 1, target: 4}
+  - {id: T02, source: 2, target: 5}
+  - {id: T03, source: 3, target: 6}
+  - {id: T04, source: 4, target: 7}
+  - {id: T05, source: 5, target: 8}
+  - {id: T06, source: 6, target: 9}
+  - {id: T07, source: 7, target: 10}
+  - {id: T08, source: 8, target: 1}
+  - {id: T09, source: 9, target: 2}
+  - {id: T10, source: 10, target: 3}
+
+arms:
+  - name: pull_push_standard
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+  - name: multiclass_standard
+    semantic_mode: multiclass_prototype
+    steps: 50
+    step_size: 0.00392156862745098
+  - name: pull_push_small_steps
+    semantic_mode: prototype
+    steps: 100
+    step_size: 0.00196078431372549
+  - name: multiclass_small_steps
+    semantic_mode: multiclass_prototype
+    steps: 100
+    step_size: 0.00196078431372549

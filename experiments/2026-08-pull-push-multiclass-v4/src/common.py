@@ -67,6 +67,14 @@ def validate_experiment(raw: dict) -> None:
         raise ValueError("Diverse class WNIDs and names must be unique")
     if len(set(domains)) < 8:
         raise ValueError("The catalog must span at least eight semantic domains")
+    candidate_split = str(raw.get("candidate_split", "val"))
+    candidate_offset = int(raw.get("candidate_offset", 0))
+    if candidate_split not in {"train", "val"}:
+        raise ValueError("candidate_split must be train or val")
+    if candidate_offset < 0:
+        raise ValueError("candidate_offset must be non-negative")
+    if candidate_split == "train" and candidate_offset < int(raw["reference_count"]):
+        raise ValueError("Train candidates must start after the reference bank")
     items = tuple(raw["transitions"])
     if len(items) != 10:
         raise ValueError("V4 requires exactly ten transitions")

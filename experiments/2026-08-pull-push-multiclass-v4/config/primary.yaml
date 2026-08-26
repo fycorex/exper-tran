@@ -2,6 +2,8 @@ seed: 42
 candidate_count: 50
 attack_count: 8
 reference_count: 48
+candidate_split: train
+candidate_offset: 48
 semantic_temperature: 0.1
 rho: 0.25
 

@@ -44,24 +44,46 @@ performed only after adversarial PNGs have been frozen.
 
 ## Inputs and environment
 
-- A full ImageNet-1K-style tree at `IMAGENET_ROOT`, with both `train/<WNID>`
-  and `val/<WNID>` directories for every class listed above. The repository's
-  local `data/imagenet_vehicle_official` subset is insufficient for this
-  diverse-class experiment.
+- Authorized ImageNet access. The included preparation script streams only
+  the first 98 usable training images for each selected WNID (48 references +
+  50 disjoint attack candidates), rather than downloading or extracting the
+  full ImageNet-1K dataset. The local vehicle subset is not used.
 - Pinned local model snapshots under `.hf-cache`.
 - Existing `.venv-primary-ml-cka` environment.
 - One CUDA GPU; the scripts refuse CPU attack execution.
 
 ## Reproduction
 
-Prepare canonical data and pair-specific clean-valid eight-image cohorts:
+Prepare the minimal raw subset and canonical manifests:
 
 ```bash
-export IMAGENET_ROOT=/path/to/ILSVRC2012
+bash experiments/2026-08-pull-push-multiclass-v4/prepare_required_imagenet.sh
+```
+
+The official per-synset endpoint currently works without authentication. If
+an authenticated session is required later, export the path to a Netscape
+cookie jar before running the same command; the cookie file remains local and
+must never be committed:
+
+```bash
+export IMAGENET_COOKIE_FILE=/secure/path/imagenet-cookies.txt
+bash experiments/2026-08-pull-push-multiclass-v4/prepare_required_imagenet.sh
+```
+
+The prepared layout is `data/imagenet_diverse10_minimal/train/<WNID>`. Source
+references use the first 48 deterministic files and candidates use the next
+50, with a hard overlap check. To use an already prepared tree instead:
+
+```bash
+export IMAGENET_ROOT=/path/to/minimal-or-full/imagenet
 
 PYTHONPATH=src .venv-primary-ml-cka/bin/python \
   experiments/2026-08-pull-push-multiclass-v4/src/prepare_data.py
+```
 
+Then screen pair-specific clean-valid eight-image cohorts:
+
+```bash
 PYTHONPATH=src .venv-primary-ml-cka/bin/python \
   experiments/2026-08-pull-push-multiclass-v4/src/screen_transitions.py --resume
 ```

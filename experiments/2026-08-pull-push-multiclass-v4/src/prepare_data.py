@@ -69,6 +69,8 @@ def main() -> None:
     canonical_root = output_dir / "canonical_images"
     candidate_count = int(raw["candidate_count"])
     reference_count = int(raw["reference_count"])
+    candidate_split = str(raw.get("candidate_split", "val"))
+    candidate_offset = int(raw.get("candidate_offset", 0))
 
     classes = {int(item["label"]): item for item in class_specs(raw)}
     class_banks = {}
@@ -99,11 +101,11 @@ def main() -> None:
         item = classes[transition.source]
         candidates = images_for_class(
             imagenet_root,
-            "val",
+            candidate_split,
             local_label=transition.source,
             wnid=str(item["wnid"]),
             class_name=str(item["name"]),
-        )[:candidate_count]
+        )[candidate_offset : candidate_offset + candidate_count]
         if len(candidates) != candidate_count:
             raise RuntimeError(f"{transition.transition_id} candidate bank is incomplete")
         canonical = canonicalize_records(
@@ -117,10 +119,17 @@ def main() -> None:
         write_manifest(manifest_dir / "candidates.jsonl", canonical)
         write_manifest(manifest_dir / "source_references.jsonl", class_banks[transition.source])
         write_manifest(manifest_dir / "target_references.jsonl", class_banks[transition.target])
+        reference_ids = {record.image_id for record in class_banks[transition.source]}
+        candidate_ids = {record.image_id for record in canonical}
+        if reference_ids & candidate_ids:
+            raise RuntimeError(
+                f"{transition.transition_id} source candidates overlap source references"
+            )
 
     print(
         f"prepared transitions=10 candidates={candidate_count} "
-        f"references_per_class={reference_count}",
+        f"references_per_class={reference_count} candidate_split={candidate_split} ",
+        f"candidate_offset={candidate_offset}",
         flush=True,
     )
 

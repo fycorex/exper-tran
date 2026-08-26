@@ -6,6 +6,7 @@ cd "$ROOT"
 
 PYTHON=".venv-primary-ml-cka/bin/python"
 OUTPUT_DIR="${V4_OUTPUT_DIR:-outputs/pull_push_multiclass_v4_diverse10}"
+export IMAGENET_ROOT="${V4_IMAGENET_ROOT:-data/imagenet_diverse10_minimal}"
 CONFIG="experiments/2026-08-pull-push-multiclass-v4/config/primary.yaml"
 read -r -a PAIRS <<< "${V4_PAIRS:-P14 P16 P19}"
 read -r -a TUNING_TRANSITIONS <<< "${V4_TUNING_TRANSITIONS:-T02 T04 T08}"

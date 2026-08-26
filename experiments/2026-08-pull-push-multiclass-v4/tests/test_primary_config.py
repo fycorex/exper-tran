@@ -61,6 +61,17 @@ class PrimaryConfigTest(unittest.TestCase):
     def test_primary_pairs_are_small_to_large(self):
         self.assertEqual(set(pair_specs(self.raw)), {"P14", "P16", "P19"})
 
+    def test_minimal_train_subset_keeps_candidates_disjoint(self):
+        self.assertEqual(self.raw["candidate_split"], "train")
+        self.assertGreaterEqual(
+            self.raw["candidate_offset"],
+            self.raw["reference_count"],
+        )
+        self.assertEqual(
+            self.raw["candidate_offset"] + self.raw["candidate_count"],
+            98,
+        )
+
     def test_small_step_schedule_preserves_nominal_path_length(self):
         arms = {arm["name"]: arm for arm in self.raw["arms"]}
         for prefix in ("pull_push", "multiclass"):

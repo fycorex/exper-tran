@@ -1,0 +1,13 @@
+pair_id: P21
+seed: 42
+steps: 30
+reference_count: 48
+representation_type: vision_encoder
+representation_layer: 17
+representation_pooling: mean
+semantic_temperature: 0.1
+arms:
+  - {name: local_r0325_a050, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho_cls_sem: 0.325, push_pull_alpha: 0.50}
+  - {name: local_r0375_a050, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho_cls_sem: 0.375, push_pull_alpha: 0.50}
+  - {name: local_r035_a045, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho_cls_sem: 0.35, push_pull_alpha: 0.45}
+  - {name: local_r035_a055, cls_loss_mode: ce_margin, lambda_cls: 1, semantic_mode: prototype, lambda_sem: 1, rho_cls_sem: 0.35, push_pull_alpha: 0.55}

@@ -1,0 +1,10 @@
+pair_id,pair_type,proxy_model,target_model,image_count,proxy_hits,proxy_denominator,proxy_rate_percent,eligible_batches,batch_count,target_hits,target_valid_denominator,target_valid_rate_percent,target_denominator_matches_cohort,tasr_percent,target_hits_among_proxy_hits,conditional_tasr_percent,untargeted_hits,asr_percent
+P02,Cross-Family,Qwen/Qwen3.5-4B,google/gemma-4-E4B-it,50,40,50,80.0,1,7,0,50,100.0,True,0.0,0,0.0,4,8.0
+P06,Cross-Family,openai/clip-vit-large-patch14,OpenGVLab/InternVL3_5-2B-HF,50,50,50,100.0,7,7,1,49,98.0,False,2.0,1,2.0,3,6.0
+P11,Cross-Family,google/siglip2-so400m-patch14-384,google/gemma-4-E2B-it,50,48,50,96.0,5,7,0,50,100.0,True,0.0,0,0.0,1,2.0
+P14,Intra-Family,Qwen/Qwen3.5-2B,Qwen/Qwen3.5-4B,50,49,50,98.0,6,7,7,50,100.0,True,14.0,7,14.285714285714286,27,54.0
+P20,Intra-Family,Qwen/Qwen3.5-4B,Qwen/Qwen3.5-2B,50,50,50,100.0,7,7,21,50,100.0,True,42.0,21,42.0,33,66.0
+P16,Intra-Family,OpenGVLab/InternVL3_5-2B-HF,OpenGVLab/InternVL3_5-4B-HF,50,50,50,100.0,7,7,4,50,100.0,True,8.0,4,8.0,12,24.0
+P21,Intra-Family,OpenGVLab/InternVL3_5-4B-HF,OpenGVLab/InternVL3_5-2B-HF,50,50,50,100.0,7,7,9,49,98.0,False,18.0,9,18.0,21,42.0
+P19,Intra-Family,google/gemma-4-E2B-it,google/gemma-4-E4B-it,50,50,50,100.0,13,13,12,50,100.0,True,24.0,12,24.0,23,46.0
+P22,Intra-Family,google/gemma-4-E4B-it,google/gemma-4-E2B-it,50,49,50,98.0,12,13,6,50,100.0,True,12.0,6,12.244897959183673,35,70.0

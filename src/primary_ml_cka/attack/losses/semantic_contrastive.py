@@ -5,7 +5,12 @@ from dataclasses import dataclass
 import torch
 import torch.nn.functional as functional
 
-SEMANTIC_MODES = ("target_only", "prototype", "mean_reference")
+SEMANTIC_MODES = (
+    "target_only",
+    "prototype",
+    "mean_reference",
+    "multiclass_prototype",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +36,8 @@ def semantic_representation_loss(
     tau: float = 0.1,
     target_logit_weight: float = 1.0,
     source_logit_weight: float = 1.0,
+    class_references: torch.Tensor | None = None,
+    target_class_index: int | None = None,
 ) -> SemanticContrastiveOutput:
     """Compute target-only or source-vs-target semantic loss.
 
@@ -44,10 +51,50 @@ def semantic_representation_loss(
     logit_weights = torch.tensor((target_logit_weight, source_logit_weight))
     if not torch.isfinite(logit_weights).all() or (logit_weights < 0).any():
         raise ValueError("Semantic logit weights must be finite and non-negative")
+    if mode != "target_only" and target_logit_weight == 0 and source_logit_weight == 0:
+        raise ValueError("At least one semantic logit weight must be positive")
     adv = _normalized_rows(adversarial, "adversarial")
     target = _normalized_rows(target_references, "target_references")
     if adv.shape[1] != target.shape[1]:
         raise ValueError("Adversarial and target reference dimensions must match")
+
+    if mode == "multiclass_prototype":
+        if class_references is None or class_references.ndim != 3:
+            raise ValueError(
+                "multiclass_prototype requires class_references with shape [C,K,D]"
+            )
+        if class_references.shape[0] < 2 or class_references.shape[1] < 1:
+            raise ValueError("multiclass class_references must contain at least two classes")
+        if class_references.shape[2] != adv.shape[1]:
+            raise ValueError("Adversarial and multiclass reference dimensions must match")
+        if (
+            target_class_index is None
+            or not 0 <= target_class_index < class_references.shape[0]
+        ):
+            raise ValueError("target_class_index is outside the multiclass reference bank")
+        normalized_references = functional.normalize(class_references.float(), dim=-1)
+        centers = functional.normalize(normalized_references.mean(dim=1), dim=-1)
+        similarities = adv @ centers.T
+        weights = similarities.new_full(
+            (similarities.shape[1],), float(source_logit_weight)
+        )
+        weights[target_class_index] = float(target_logit_weight)
+        logits = similarities * weights.unsqueeze(0) / tau
+        labels = torch.full(
+            (adv.shape[0],),
+            target_class_index,
+            dtype=torch.long,
+            device=adv.device,
+        )
+        other_mask = torch.arange(similarities.shape[1], device=adv.device) != target_class_index
+        target_similarity = similarities[:, target_class_index]
+        strongest_competitor = similarities[:, other_mask].max(dim=-1).values
+        return SemanticContrastiveOutput(
+            functional.cross_entropy(logits, labels),
+            target_similarity.mean(),
+            strongest_competitor.mean(),
+            (target_similarity - strongest_competitor).mean(),
+        )
 
     if mode == "target_only":
         target_center = functional.normalize(target.mean(dim=0, keepdim=True), dim=-1)
@@ -62,8 +109,6 @@ def semantic_representation_loss(
 
     if source_references is None:
         raise ValueError(f"semantic mode {mode!r} requires source references")
-    if target_logit_weight == 0 and source_logit_weight == 0:
-        raise ValueError("At least one semantic logit weight must be positive")
     source = _normalized_rows(source_references, "source_references")
     if source.shape[1] != adv.shape[1]:
         raise ValueError("Adversarial and source reference dimensions must match")

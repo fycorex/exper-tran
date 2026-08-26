@@ -57,7 +57,12 @@ def validate_attack_config(
         raise ValueError(f"Unknown cls_loss_mode: {config.cls_loss_mode}")
     if not math.isfinite(config.lambda_cls) or config.lambda_cls < 0:
         raise ValueError("lambda_cls must be finite and non-negative")
-    if config.semantic_mode not in {"target_only", "prototype", "mean_reference"}:
+    if config.semantic_mode not in {
+        "target_only",
+        "prototype",
+        "mean_reference",
+        "multiclass_prototype",
+    }:
         raise ValueError(f"Unknown semantic_mode: {config.semantic_mode}")
     if not math.isfinite(config.semantic_temperature) or config.semantic_temperature <= 0:
         raise ValueError("semantic_temperature must be finite and positive")

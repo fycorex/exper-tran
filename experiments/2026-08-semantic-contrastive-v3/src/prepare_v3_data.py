@@ -85,9 +85,33 @@ def main() -> None:
     if len(source_ids) != args.reference_count or len(target_ids) != args.reference_count:
         raise RuntimeError("Semantic reference bank contains duplicate or missing IDs")
 
+    class_reference_banks = []
+    for human_label in range(1, 11):
+        if human_label == 7:
+            records = target_records
+        elif human_label == 8:
+            records = source_records
+        else:
+            originals = _images(imagenet_root, "train", human_label)[: args.reference_count]
+            records = canonicalize_records(
+                originals,
+                imagenet_root,
+                canonical_root,
+                f"class_references/class_{human_label:02d}",
+                224,
+            )
+        record_ids = {record.image_id for record in records}
+        if len(record_ids) != args.reference_count:
+            raise RuntimeError(f"Class {human_label} reference bank is incomplete")
+        if attack_ids & record_ids:
+            raise RuntimeError(f"Class {human_label} reference bank overlaps attacked images")
+        class_reference_banks.append(records)
+
     write_manifest(manifests / "attack_images.jsonl", attack_records)
     write_manifest(manifests / "source_references.jsonl", source_records)
     write_manifest(manifests / "target_references.jsonl", target_records)
+    for human_label, records in enumerate(class_reference_banks, start=1):
+        write_manifest(manifests / f"class_references_{human_label:02d}.jsonl", records)
     print(
         f"prepared attack={len(attack_records)} source_refs={len(source_records)} "
         f"target_refs={len(target_records)} output={output_dir}",

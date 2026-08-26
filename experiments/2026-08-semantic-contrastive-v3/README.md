@@ -69,6 +69,30 @@ V3_TIME_BUDGET_SECONDS=600 \
 Results are written under `outputs/proxy_selector_semantic_contrastive_v3/`.
 Every trial has an independent state JSON and is resumable.
 
+The P22 third-class diagnosis is followed by an optional ten-class prototype
+objective. It builds one fixed reference centroid for each of the ten vehicle
+classes and minimizes a ten-way proxy-only prototype CE, so the target
+prototype must beat every non-target prototype rather than only the pickup
+truck prototype:
+
+```bash
+bash experiments/2026-08-semantic-contrastive-v3/run_p22_multiclass.sh
+```
+
+The script prepares disjoint 48-image class banks, runs an 8-reference
+one-step smoke, then runs the `rho_0=0.15/0.25/0.35` margin trajectories and
+the `rho_0=0.25` CE-plus-margin trajectory. It evaluates every saved checkpoint
+from step 15 through step 50 and is resumable at both the trial and checkpoint
+levels.
+
+The matching Qwen 4B-to-2B diagnostic keeps the previously audited P20 Vision
+Encoder layer 17, runs 100 steps, and evaluates fixed checkpoints without using
+the target for attack generation or checkpoint selection:
+
+```bash
+bash experiments/2026-08-semantic-contrastive-v3/run_p20_multiclass.sh
+```
+
 ## Loss arms
 
 1. classification only (`ce_margin`)
@@ -115,6 +139,24 @@ For P22 at 30 steps and target/source weights 1/.25, splitting the
 classification term produced 0/8 for CE+margin, 1/8 for closed-set CE, 2/8 for
 margin-only, and 1/8 for target-token NLL in the follow-up rerun. None exceeded
 the existing 2/8 best.
+
+The subsequent ten-class prototype diagnostic directly contrasted the target
+prototype against all nine non-target class prototypes. This removed the
+binary objective's assumption that pickup truck was the only relevant
+negative, but it did not improve P22 TASR:
+
+| Classification | Initial rho | Best strict step | Proxy | TASR | ASR |
+|---|---:|---:|---:|---:|---:|
+| margin-only | .15 | 32 | 8/8 | 1/8 | 8/8 |
+| margin-only | .25 | 40 | 8/8 | 2/8 | 8/8 |
+| margin-only | .35 | 45 | 8/8 | 2/8 | 7/8 |
+| CE + margin | .25 | 26 | 8/8 | 1/8 | 8/8 |
+
+Here "strict" requires proxy closed-set and free-generation 8/8, minimum
+target margin at least 8, and minimum closed-set target probability at least
+0.999. At the best checkpoints, target class 9 remains the dominant wrong
+output. Thus the P22 limitation is not explained solely by binary source-class
+repulsion, insufficient proxy convergence, or a narrow nearby rho choice.
 
 The passed attack seed now initializes Python, NumPy, CPU Torch, and CUDA Torch
 before proxy materialization. Exact bitwise reproducibility is nevertheless not

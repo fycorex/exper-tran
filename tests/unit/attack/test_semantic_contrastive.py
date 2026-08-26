@@ -24,6 +24,58 @@ def test_target_only_matches_centroid_cosine_attraction() -> None:
     torch.testing.assert_close(output.loss, torch.tensor(0.0))
 
 
+def test_multiclass_prototype_prefers_target_over_every_competitor() -> None:
+    references = torch.tensor(
+        [
+            [[1.0, 0.0, 0.0], [0.9, 0.1, 0.0]],
+            [[0.0, 1.0, 0.0], [0.1, 0.9, 0.0]],
+            [[0.0, 0.0, 1.0], [0.0, 0.1, 0.9]],
+        ]
+    )
+    near_target = torch.tensor([[0.05, 1.0, 0.05]], requires_grad=True)
+    near_competitor = torch.tensor([[1.0, 0.05, 0.05]])
+    target_output = semantic_representation_loss(
+        near_target,
+        references[1],
+        mode="multiclass_prototype",
+        class_references=references,
+        target_class_index=1,
+    )
+    competitor_output = semantic_representation_loss(
+        near_competitor,
+        references[1],
+        mode="multiclass_prototype",
+        class_references=references,
+        target_class_index=1,
+    )
+    assert target_output.loss < competitor_output.loss
+    assert target_output.semantic_gap > 0
+    gradient = torch.autograd.grad(target_output.loss, near_target)[0]
+    assert torch.isfinite(gradient).all()
+
+
+@pytest.mark.parametrize(
+    ("class_references", "target_index"),
+    [
+        (None, 1),
+        (torch.ones(3, 2), 1),
+        (torch.ones(3, 2, 4), None),
+        (torch.ones(3, 2, 4), 3),
+    ],
+)
+def test_multiclass_prototype_validates_bank_and_target(
+    class_references: torch.Tensor | None, target_index: int | None
+) -> None:
+    with pytest.raises(ValueError):
+        semantic_representation_loss(
+            torch.ones(1, 4),
+            torch.ones(2, 4),
+            mode="multiclass_prototype",
+            class_references=class_references,
+            target_class_index=target_index,
+        )
+
+
 def test_target_dominant_weight_increases_target_gradient_share() -> None:
     target = torch.tensor([[1.0, 0.0, 0.0]])
     source = torch.tensor([[0.0, 1.0, 0.0]])

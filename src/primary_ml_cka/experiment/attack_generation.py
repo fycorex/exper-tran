@@ -108,6 +108,8 @@ class AttackRunResult:
     semantic_gap_clean: float = float("nan")
     semantic_gap_adversarial: float = float("nan")
     semantic_gap_gain: float = float("nan")
+    semantic_negative_kind: str = "source"
+    class_reference_ids: tuple[tuple[str, ...], ...] = ()
     gradient_trace: tuple[dict[str, object], ...] = ()
     failure_reason: str = ""
 
@@ -194,6 +196,36 @@ def _detached_semantic_bank(
     return torch.cat(chunks)
 
 
+def _detached_multiclass_semantic_bank(
+    proxy: object,
+    canonical_root: Path,
+    class_records: tuple[tuple[ImageRecord, ...], ...],
+    canvas_size: int,
+    *,
+    representation_type: str,
+    layer: int,
+    pooling: str,
+) -> torch.Tensor:
+    """Extract an equally sized detached semantic bank for every class."""
+    banks = []
+    expected_count = len(class_records[0])
+    if expected_count < 1 or any(len(records) != expected_count for records in class_records):
+        raise ValueError("Every multiclass semantic bank must have the same positive size")
+    for records in class_records:
+        images = _cuda_images(canonical_root, records, canvas_size)
+        banks.append(
+            _detached_semantic_bank(
+                proxy,
+                images,
+                representation_type=representation_type,
+                layer=layer,
+                pooling=pooling,
+            )
+        )
+        del images
+    return torch.stack(banks)
+
+
 def _save_png_batch(
     root: Path,
     clean: torch.Tensor,
@@ -277,6 +309,7 @@ def attack_one_batch(
     source_records: tuple[ImageRecord, ...],
     reference_records: tuple[ImageRecord, ...],
     source_reference_records: tuple[ImageRecord, ...] | None = None,
+    class_reference_records: tuple[tuple[ImageRecord, ...], ...] | None = None,
     source_batch_index: int,
     lambda_cka: float,
     seed: int,
@@ -325,7 +358,10 @@ def attack_one_batch(
         raise ValueError(f"Unknown target CKA mode: {target_cka_mode}")
     if target_alignment_temperature <= 0:
         raise ValueError("target_alignment_temperature must be positive")
-    if semantic_mode != "target_only" and not source_reference_records:
+    if semantic_mode == "multiclass_prototype":
+        if class_reference_records is None or len(class_reference_records) != 10:
+            raise ValueError("multiclass_prototype requires ten class reference banks")
+    elif semantic_mode != "target_only" and not source_reference_records:
         raise ValueError(f"semantic mode {semantic_mode!r} requires source references")
     resolved_checkpoint_steps = tuple(sorted(set(checkpoint_steps)))
     if any(step < 1 or step > steps for step in resolved_checkpoint_steps):
@@ -353,17 +389,35 @@ def attack_one_batch(
         if source_reference_records
         else ()
     )
+    class_references = (
+        tuple(
+            fixed_reference_batch(
+                records,
+                0,
+                batch_size,
+                reference_count=reference_bank_size,
+            )
+            for records in class_reference_records
+        )
+        if class_reference_records is not None
+        else ()
+    )
     clean = _cuda_images(canonical_root, source_records, attack_config.canvas_size)
-    reference_images = _cuda_images(canonical_root, references, attack_config.canvas_size)
+    needs_token_reference = cka_source_weight > 0 or cka_target_weight > 0
+    uses_multiclass_semantic = semantic_mode == "multiclass_prototype"
+    reference_images = (
+        _cuda_images(canonical_root, references, attack_config.canvas_size)
+        if needs_token_reference or not uses_multiclass_semantic
+        else None
+    )
     source_reference_images = (
         _cuda_images(canonical_root, source_references, attack_config.canvas_size)
-        if source_references
+        if source_references and not uses_multiclass_semantic
         else None
     )
     timer = Timer()
     reset_peak_memory()
     proxy = load_proxy(pair.proxy_model, project_root / ".hf-cache", device, attack_config)
-    needs_token_reference = cka_source_weight > 0 or cka_target_weight > 0
     with torch.no_grad():
         clean_representation = proxy.image_embeddings(
             clean,
@@ -385,7 +439,9 @@ def attack_one_batch(
             clean_representation.mask.detach() if needs_token_reference else None
         )
     del clean_representation
+    semantic_class_reference = None
     if needs_token_reference:
+        assert reference_images is not None
         z_reference, reference_mask, semantic_reference_bank = _detached_embedding_bank(
             proxy,
             reference_images,
@@ -396,6 +452,24 @@ def attack_one_batch(
     else:
         z_reference = None
         reference_mask = None
+        semantic_reference_bank = None
+    if uses_multiclass_semantic:
+        semantic_class_reference = _detached_multiclass_semantic_bank(
+            proxy,
+            canonical_root,
+            class_references,
+            attack_config.canvas_size,
+            representation_type=representation_type,
+            layer=representation_layer,
+            pooling=representation_pooling,
+        )
+        z_reference = None
+        reference_mask = None
+        semantic_reference_bank = semantic_class_reference[
+            human_label_to_index(data_config.target_human_label)
+        ]
+    elif semantic_reference_bank is None:
+        assert reference_images is not None
         semantic_reference_bank = _detached_semantic_bank(
             proxy,
             reference_images,
@@ -404,7 +478,12 @@ def attack_one_batch(
             pooling=representation_pooling,
         )
     semantic_source_reference = None
-    if source_reference_images is not None:
+    if uses_multiclass_semantic:
+        assert semantic_class_reference is not None
+        semantic_source_reference = semantic_class_reference[
+            human_label_to_index(data_config.source_human_label)
+        ]
+    elif source_reference_images is not None:
         semantic_source_reference = _detached_semantic_bank(
             proxy,
             source_reference_images,
@@ -470,6 +549,8 @@ def attack_one_batch(
             ),
             semantic_reference=semantic_reference,
             semantic_source_reference=semantic_source_reference,
+            semantic_class_reference=semantic_class_reference,
+            semantic_target_class_index=human_label_to_index(data_config.target_human_label),
             semantic_mode=semantic_mode,
             semantic_temperature=semantic_temperature,
             semantic_target_logit_weight=semantic_target_logit_weight,
@@ -539,6 +620,10 @@ def attack_one_batch(
                 ),
                 semantic_reference=semantic_reference,
                 semantic_source_reference=semantic_source_reference,
+                semantic_class_reference=semantic_class_reference,
+                semantic_target_class_index=human_label_to_index(
+                    data_config.target_human_label
+                ),
                 semantic_mode=semantic_mode,
                 semantic_temperature=semantic_temperature,
                 semantic_target_logit_weight=semantic_target_logit_weight,
@@ -649,6 +734,8 @@ def attack_one_batch(
             ),
             semantic_reference=semantic_reference,
             semantic_source_reference=semantic_source_reference,
+            semantic_class_reference=semantic_class_reference,
+            semantic_target_class_index=human_label_to_index(data_config.target_human_label),
             semantic_mode=semantic_mode,
             semantic_temperature=semantic_temperature,
             semantic_target_logit_weight=semantic_target_logit_weight,
@@ -692,6 +779,8 @@ def attack_one_batch(
         tau=semantic_temperature,
         target_logit_weight=semantic_target_logit_weight,
         source_logit_weight=semantic_source_logit_weight,
+        class_references=semantic_class_reference,
+        target_class_index=human_label_to_index(data_config.target_human_label),
     )
     adversarial_semantic_metrics = semantic_representation_loss(
         adversarial_semantic,
@@ -701,6 +790,8 @@ def attack_one_batch(
         tau=semantic_temperature,
         target_logit_weight=semantic_target_logit_weight,
         source_logit_weight=semantic_source_logit_weight,
+        class_references=semantic_class_reference,
+        target_class_index=human_label_to_index(data_config.target_human_label),
     )
     artifact_dir = output_dir / "attacks" / pair.pair_id / phase / f"batch_{source_batch_index:02d}"
     if objective_tag is not None:
@@ -867,6 +958,14 @@ def attack_one_batch(
         semantic_gap_adversarial=float(adversarial_semantic_metrics.semantic_gap),
         semantic_gap_gain=float(
             adversarial_semantic_metrics.semantic_gap - clean_semantic_metrics.semantic_gap
+        ),
+        semantic_negative_kind=(
+            "strongest_non_target"
+            if semantic_mode == "multiclass_prototype"
+            else "source"
+        ),
+        class_reference_ids=tuple(
+            tuple(record.image_id for record in records) for records in class_references
         ),
         gradient_trace=tuple(gradient_trace_rows),
         failure_reason=(

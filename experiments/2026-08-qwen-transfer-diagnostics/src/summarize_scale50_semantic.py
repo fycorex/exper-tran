@@ -54,11 +54,6 @@ def main() -> None:
             untargeted_hits += int(rates["untargeted_hit_count"])
             conditional_hits += sum(p and t for p, t in zip(proxy_mask, target_mask, strict=True))
             eligible_batches += int(all(proxy_mask))
-        if proxy_denominator != expected or target_valid != expected:
-            raise RuntimeError(
-                f"{pair.pair_id} denominator mismatch proxy={proxy_denominator} "
-                f"target={target_valid} expected={expected}"
-            )
         rows.append(
             {
                 "pair_id": pair.pair_id,
@@ -67,10 +62,14 @@ def main() -> None:
                 "target_model": pair.target_model,
                 "image_count": expected,
                 "proxy_hits": proxy_hits,
+                "proxy_denominator": proxy_denominator,
                 "proxy_rate_percent": 100 * proxy_hits / expected,
                 "eligible_batches": eligible_batches,
                 "batch_count": len(logs),
                 "target_hits": target_hits,
+                "target_valid_denominator": target_valid,
+                "target_valid_rate_percent": 100 * target_valid / expected,
+                "target_denominator_matches_cohort": target_valid == expected,
                 "tasr_percent": 100 * target_hits / expected,
                 "target_hits_among_proxy_hits": conditional_hits,
                 "conditional_tasr_percent": (

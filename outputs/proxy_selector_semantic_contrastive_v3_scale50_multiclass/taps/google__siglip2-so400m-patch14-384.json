@@ -1,0 +1,33 @@
+{
+  "answer_label_positions": [],
+  "answer_token_ids": [],
+  "classification_logits_shape": [
+    1,
+    10
+  ],
+  "classification_loss": 13.474726676940918,
+  "dtype": "float32",
+  "error": null,
+  "extraction": "final visual patch tokens (CLS excluded when present)",
+  "free_generation_probe_label": 2,
+  "max_other_probability": 0.6212228536605835,
+  "model_id": "google/siglip2-so400m-patch14-384",
+  "module_path": "vision_model.last_hidden_state",
+  "normalization": "per-image L2; FP32 before CKA",
+  "pooling": "masked mean over real visual patch tokens",
+  "representation_type": "legacy_projected",
+  "requested_layer": -1,
+  "resolved_layer": null,
+  "revision": "e8e487298228002f3d8a82e0cd5c8ea9c567f57f",
+  "shape": [
+    8,
+    729,
+    1152
+  ],
+  "status": "validated",
+  "target_human_label": 7,
+  "target_probability": 0.030943144112825394,
+  "token_level_attack_cka": true,
+  "token_mask": "all spatial patch tokens; no synthetic global token",
+  "total_vision_layers": 27
+}

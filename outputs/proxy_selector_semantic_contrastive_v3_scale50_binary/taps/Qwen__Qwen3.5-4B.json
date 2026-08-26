@@ -1,0 +1,37 @@
+{
+  "answer_label_positions": [
+    167
+  ],
+  "answer_token_ids": [
+    21
+  ],
+  "classification_logits_shape": [
+    1,
+    10
+  ],
+  "classification_loss": 5.836858749389648,
+  "dtype": "bfloat16",
+  "error": null,
+  "extraction": "post-merger Qwen visual soft tokens passed to the language model",
+  "free_generation_probe_label": 1,
+  "max_other_probability": 0.23511157929897308,
+  "model_id": "Qwen/Qwen3.5-4B",
+  "module_path": "model.get_image_features.pooler_output",
+  "normalization": "per-image L2; FP32 before CKA",
+  "pooling": "masked mean over projected proxy image tokens",
+  "representation_type": "legacy_projected",
+  "requested_layer": -1,
+  "resolved_layer": null,
+  "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "shape": [
+    8,
+    64,
+    2560
+  ],
+  "status": "validated",
+  "target_human_label": 7,
+  "target_probability": 0.20748522877693176,
+  "token_level_attack_cka": true,
+  "token_mask": "grid_thw image patches only",
+  "total_vision_layers": null
+}

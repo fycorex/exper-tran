@@ -199,13 +199,40 @@ def run_scaled(context: CommandContext) -> str:
     references = read_manifest(
         context.output_dir / "evaluation" / "manifests" / "target_training_references.jsonl"
     )
+    source_references = read_manifest(
+        context.output_dir / "evaluation" / "manifests" / "source_references.jsonl"
+    )
+    semantic_mode = os.environ.get("PRIMARY_ML_CKA_SEMANTIC_MODE", "target_only")
+    cls_loss_mode = os.environ.get("PRIMARY_ML_CKA_CLS_LOSS_MODE", "ce_margin")
+    semantic_target_logit_weight = float(
+        os.environ.get("PRIMARY_ML_CKA_SEMANTIC_TARGET_WEIGHT", "1")
+    )
+    semantic_source_logit_weight = float(
+        os.environ.get("PRIMARY_ML_CKA_SEMANTIC_SOURCE_WEIGHT", "1")
+    )
+    class_references = None
+    if semantic_mode == "multiclass_prototype":
+        manifests_dir = context.output_dir / "evaluation" / "manifests"
+        class_references = tuple(
+            read_manifest(manifests_dir / f"class_references_{label:02d}.jsonl")
+            for label in range(1, 11)
+        )
+        if any(len(records) < attack_config.reference_bank_size for records in class_references):
+            raise RuntimeError("A multiclass semantic reference bank is incomplete")
+    elif semantic_mode not in {"target_only", "prototype"}:
+        raise ValueError(f"Unsupported scaled semantic mode: {semantic_mode}")
     rows = []
     summaries = []
     for pair in pairs:
         attacks: list[tuple[int, AttackRunResult]] = []
         try:
             require_proxy_tap(context, pair.proxy_model)
-            records = load_phase_records(context.output_dir, pair.target_model, "main")
+            source_manifest_name = os.environ.get("PRIMARY_ML_CKA_SOURCE_MANIFEST")
+            records = (
+                read_manifest(context.output_dir / "evaluation" / "manifests" / source_manifest_name)
+                if source_manifest_name
+                else load_phase_records(context.output_dir, pair.target_model, "main")
+            )
             if len(records) < context.image_count:
                 raise RuntimeError(
                     f"{pair.target_model} has only {len(records)} clean-valid main images; "
@@ -233,6 +260,8 @@ def run_scaled(context: CommandContext) -> str:
                         phase=phase,
                         source_records=source,
                         reference_records=references,
+                        source_reference_records=source_references,
+                        class_reference_records=class_references,
                         source_batch_index=batch_index,
                         reference_batch_index=_reference_batch_index(fixed_reference_bank),
                         lambda_cka=lambda_cka,
@@ -252,6 +281,10 @@ def run_scaled(context: CommandContext) -> str:
                         early_stop_proxy_gate=False,
                         progress_interval=10,
                         prompt=prompt,
+                        semantic_mode=semantic_mode,
+                        cls_loss_mode=cls_loss_mode,
+                        semantic_target_logit_weight=semantic_target_logit_weight,
+                        semantic_source_logit_weight=semantic_source_logit_weight,
                     )
                 attacks.append((batch_index, result))
             rates = _evaluate_pending_batches(

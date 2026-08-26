@@ -60,6 +60,17 @@ def main() -> None:
     source = read_manifest(manifests / "attack_images.jsonl")
     source_references = read_manifest(manifests / "source_references.jsonl")
     target_references = read_manifest(manifests / "target_references.jsonl")
+    needs_multiclass_references = any(
+        str(arm["semantic_mode"]) == "multiclass_prototype" for arm in raw["arms"]
+    )
+    class_references = (
+        tuple(
+            read_manifest(manifests / f"class_references_{label:02d}.jsonl")
+            for label in range(1, 11)
+        )
+        if needs_multiclass_references
+        else None
+    )
     if len(source) != 8:
         raise RuntimeError(f"Expected exactly eight attack images, got {len(source)}")
     attacked_ids = {record.image_id for record in source}
@@ -67,6 +78,14 @@ def main() -> None:
         raise RuntimeError("Source reference bank overlaps attacked images")
     if attacked_ids & {record.image_id for record in target_references}:
         raise RuntimeError("Target reference bank overlaps attacked images")
+    if class_references is not None:
+        if any(len(records) < int(raw["reference_count"]) for records in class_references):
+            raise RuntimeError("A multiclass semantic reference bank is incomplete")
+        if any(
+            attacked_ids & {record.image_id for record in records}
+            for records in class_references
+        ):
+            raise RuntimeError("A multiclass semantic reference bank overlaps attacked images")
 
     selected = set(args.arms or ())
     arms = [arm for arm in raw["arms"] if not selected or str(arm["name"]) in selected]
@@ -141,6 +160,11 @@ def main() -> None:
                 source_records=source,
                 reference_records=target_references,
                 source_reference_records=source_references,
+                class_reference_records=(
+                    class_references
+                    if str(arm["semantic_mode"]) == "multiclass_prototype"
+                    else None
+                ),
                 source_batch_index=0,
                 reference_batch_index=0,
                 lambda_cka=lambda_sem,

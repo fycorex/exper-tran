@@ -66,6 +66,8 @@ def primary_loss(
     semantic_adv: torch.Tensor | None = None,
     semantic_reference: torch.Tensor | None = None,
     semantic_source_reference: torch.Tensor | None = None,
+    semantic_class_reference: torch.Tensor | None = None,
+    semantic_target_class_index: int | None = None,
     semantic_mode: str = "target_only",
     semantic_temperature: float = 0.1,
     semantic_target_logit_weight: float = 1.0,
@@ -122,6 +124,8 @@ def primary_loss(
             tau=semantic_temperature,
             target_logit_weight=semantic_target_logit_weight,
             source_logit_weight=semantic_source_logit_weight,
+            class_references=semantic_class_reference,
+            target_class_index=semantic_target_class_index,
         ).loss
         if semantic_target_weight > 0
         and semantic_adv is not None

@@ -1,0 +1,40 @@
+arms:
+  - name: pull_push_rho010_balanced
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+    rho: 0.1
+    target_logit_weight: 1.0
+    source_logit_weight: 1.0
+
+  - name: pull_push_rho050_balanced
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+    rho: 0.5
+    target_logit_weight: 1.0
+    source_logit_weight: 1.0
+
+  - name: pull_push_rho100_balanced
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+    rho: 1.0
+    target_logit_weight: 1.0
+    source_logit_weight: 1.0
+
+  - name: pull_push_rho025_push050
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+    rho: 0.25
+    target_logit_weight: 1.0
+    source_logit_weight: 0.5
+
+  - name: pull_push_rho025_push200
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+    rho: 0.25
+    target_logit_weight: 1.0
+    source_logit_weight: 2.0

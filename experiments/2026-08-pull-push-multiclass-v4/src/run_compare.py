@@ -22,6 +22,7 @@ from common import (
 )
 
 from primary_ml_cka.artifacts.writers import write_json
+from primary_ml_cka.config.loader import load_config
 from primary_ml_cka.config.schema import AttackConfig, DataConfig
 from primary_ml_cka.data.manifests import read_manifest
 from primary_ml_cka.domain.identifiers import get_pair
@@ -36,6 +37,11 @@ def main() -> None:
     parser.add_argument("--pairs", nargs="+")
     parser.add_argument("--transitions", nargs="+")
     parser.add_argument("--arms", nargs="+")
+    parser.add_argument(
+        "--arm-config",
+        type=Path,
+        help="Optional YAML whose arms are merged with the primary arms",
+    )
     parser.add_argument("--steps", type=int, help="Smoke-only step override")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--fail-on-error", action="store_true")
@@ -48,6 +54,9 @@ def main() -> None:
     chosen_pairs = tuple(args.pairs or specs)
     chosen_transitions = tuple(args.transitions or (t.transition_id for t in transitions(raw)))
     arms_by_name = {str(arm["name"]): arm for arm in raw["arms"]}
+    if args.arm_config is not None:
+        extra = load_config(args.arm_config)
+        arms_by_name.update({str(arm["name"]): arm for arm in extra["arms"]})
     chosen_arms = tuple(args.arms or arms_by_name)
     unknown = set(chosen_pairs) - set(specs)
     if unknown:
@@ -97,6 +106,18 @@ def main() -> None:
                 arm = arms_by_name[arm_name]
                 steps = int(args.steps or arm["steps"])
                 step_size = float(arm["step_size"])
+                rho = float(arm.get("rho", raw["rho"]))
+                semantic_temperature = float(
+                    arm.get("semantic_temperature", raw["semantic_temperature"])
+                )
+                target_weight = float(arm.get("target_logit_weight", 1.0))
+                source_weight = float(arm.get("source_logit_weight", 1.0))
+                if rho <= 0 or semantic_temperature <= 0:
+                    raise ValueError("rho and semantic temperature must be positive")
+                if target_weight < 0 or source_weight < 0:
+                    raise ValueError("Pull/push weights must be non-negative")
+                if target_weight == 0 and source_weight == 0:
+                    raise ValueError("At least one pull/push weight must be positive")
                 phase = f"v4_{transition_id}_{steps}steps"
                 state_path = (
                     args.output_dir / "states" / pair_id / transition_id / f"{arm_name}.json"
@@ -120,7 +141,10 @@ def main() -> None:
                     "semantic_mode": arm["semantic_mode"],
                     "steps": steps,
                     "step_size": step_size,
-                    "rho": float(raw["rho"]),
+                    "rho": rho,
+                    "semantic_temperature": semantic_temperature,
+                    "target_logit_weight": target_weight,
+                    "source_logit_weight": source_weight,
                 }
                 write_json(state_path, state)
                 print(
@@ -144,7 +168,7 @@ def main() -> None:
                         reference_bank_size=reference_count,
                         cls_loss_mode="margin_only",
                         semantic_mode=str(arm["semantic_mode"]),
-                        semantic_temperature=float(raw["semantic_temperature"]),
+                        semantic_temperature=semantic_temperature,
                         representation_type=str(spec["representation_type"]),
                         representation_layer=int(spec["representation_layer"]),
                         representation_pooling=str(spec["pooling"]),
@@ -183,16 +207,16 @@ def main() -> None:
                         cka_source_weight=0.0,
                         cka_target_weight=0.0,
                         semantic_target_weight=1.0,
-                        gradient_ratio=float(raw["rho"]),
+                        gradient_ratio=rho,
                         objective_tag=arm_name,
                         progress_interval=max(1, min(10, steps)),
                         prompt=prompt,
                         cls_loss_mode="margin_only",
                         lambda_cls=1.0,
                         semantic_mode=str(arm["semantic_mode"]),
-                        semantic_temperature=float(raw["semantic_temperature"]),
-                        semantic_target_logit_weight=1.0,
-                        semantic_source_logit_weight=1.0,
+                        semantic_temperature=semantic_temperature,
+                        semantic_target_logit_weight=target_weight,
+                        semantic_source_logit_weight=source_weight,
                         representation_type=str(spec["representation_type"]),
                         representation_layer=int(spec["representation_layer"]),
                         representation_pooling=str(spec["pooling"]),

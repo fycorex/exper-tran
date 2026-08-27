@@ -16,6 +16,8 @@ from common import (  # noqa: E402
     transitions,
 )
 
+from primary_ml_cka.config.loader import load_config  # noqa: E402
+
 
 class PrimaryConfigTest(unittest.TestCase):
     def setUp(self):
@@ -107,6 +109,17 @@ class PrimaryConfigTest(unittest.TestCase):
             if isinstance(target, ast.Name)
         }
         self.assertTrue({"generator", "model", "processor"} <= deleted)
+
+    def test_pull_push_search_varies_two_independent_ratios(self):
+        search = load_config(EXPERIMENT_ROOT / "config" / "pull_push_search.yaml")
+        arms = {arm["name"]: arm for arm in search["arms"]}
+        self.assertEqual(
+            {arms[name]["rho"] for name in arms if "balanced" in name},
+            {0.1, 0.5, 1.0},
+        )
+        self.assertEqual(arms["pull_push_rho025_push050"]["source_logit_weight"], 0.5)
+        self.assertEqual(arms["pull_push_rho025_push200"]["source_logit_weight"], 2.0)
+        self.assertTrue(all(arm["target_logit_weight"] == 1.0 for arm in arms.values()))
 
 
 if __name__ == "__main__":

@@ -101,6 +101,20 @@ Run the resumable primary comparison:
 bash experiments/2026-08-pull-push-multiclass-v4/run_primary.sh
 ```
 
+After the primary matrix, run the focused pull+push hyperparameter search:
+
+```bash
+bash experiments/2026-08-pull-push-multiclass-v4/run_pull_push_search.sh
+```
+
+This reuses the three tuning transitions and tests two independent quantities:
+the initial auxiliary/classification gradient ratio (`rho=0.1,0.5,1.0`) and
+the source-push/target-pull logit ratio (`0.5,1,2`, with target pull fixed at
+one). The existing `rho=0.25`, balanced 50-step trial is the baseline and is
+not rerun. Because effective lambda is calibrated from `rho`, multiplying both
+semantic logits by the same constant is not treated as another independent
+hyperparameter.
+
 The first phase compares both losses and both schedules on three fixed
 transitions. The second phase applies both small-step objectives to all ten
 transitions. Use `V4_PAIRS`, `V4_TRANSITIONS`, or `V4_ARMS` to narrow a run.

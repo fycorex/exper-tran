@@ -115,6 +115,17 @@ not rerun. Because effective lambda is calibrated from `rho`, multiplying both
 semantic logits by the same constant is not treated as another independent
 hyperparameter.
 
+Freeze the per-family choices selected on T02/T04/T08 and evaluate them on the
+seven held-out transitions:
+
+```bash
+bash experiments/2026-08-pull-push-multiclass-v4/run_selected_pull_push_heldout.sh
+```
+
+The frozen choices are P14 `rho=0.5`, P16 `rho=1.0`, and P19 `rho=0.5`, all
+with balanced target pull and source push. This stage must not retune on the
+held-out results.
+
 The first phase compares both losses and both schedules on three fixed
 transitions. The second phase applies both small-step objectives to all ten
 transitions. Use `V4_PAIRS`, `V4_TRANSITIONS`, or `V4_ARMS` to narrow a run.

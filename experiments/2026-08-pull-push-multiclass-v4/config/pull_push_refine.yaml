@@ -1,0 +1,12 @@
+arms:
+  - {name: p14_rho065_balanced, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.65, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: p14_rho050_push075, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, target_logit_weight: 1.0, source_logit_weight: 0.75}
+  - {name: p14_rho050_push125, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, target_logit_weight: 1.0, source_logit_weight: 1.25}
+
+  - {name: p16_rho075_balanced, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.75, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: p16_rho125_balanced, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.25, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: p16_rho100_push075, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, target_logit_weight: 1.0, source_logit_weight: 0.75}
+
+  - {name: p19_rho035_balanced, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.35, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: p19_rho065_balanced, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.65, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: p19_rho050_push075, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, target_logit_weight: 1.0, source_logit_weight: 0.75}

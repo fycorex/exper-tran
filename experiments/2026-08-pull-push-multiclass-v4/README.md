@@ -126,6 +126,17 @@ The frozen choices are P14 `rho=0.5`, P16 `rho=1.0`, and P19 `rho=0.5`, all
 with balanced target pull and source push. This stage must not retune on the
 held-out results.
 
+For the independent 50-image confirmation cohort, a final narrow refinement
+around those settings is available:
+
+```bash
+bash experiments/2026-08-pull-push-multiclass-v4/run_pull_push_refine.sh
+```
+
+It runs only 27 tuning trials: three nearby configurations per family on
+T02/T04/T08. The subsequent 50-image cohort is treated as confirmation data,
+not as another source of hyperparameter updates.
+
 The first phase compares both losses and both schedules on three fixed
 transitions. The second phase applies both small-step objectives to all ten
 transitions. Use `V4_PAIRS`, `V4_TRANSITIONS`, or `V4_ARMS` to narrow a run.

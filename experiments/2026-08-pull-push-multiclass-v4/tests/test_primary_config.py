@@ -121,6 +121,13 @@ class PrimaryConfigTest(unittest.TestCase):
         self.assertEqual(arms["pull_push_rho025_push200"]["source_logit_weight"], 2.0)
         self.assertTrue(all(arm["target_logit_weight"] == 1.0 for arm in arms.values()))
 
+    def test_refinement_has_three_local_arms_per_family(self):
+        refine = load_config(EXPERIMENT_ROOT / "config" / "pull_push_refine.yaml")
+        names = [arm["name"] for arm in refine["arms"]]
+        self.assertEqual(len(names), 9)
+        for pair in ("p14", "p16", "p19"):
+            self.assertEqual(sum(name.startswith(f"{pair}_") for name in names), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

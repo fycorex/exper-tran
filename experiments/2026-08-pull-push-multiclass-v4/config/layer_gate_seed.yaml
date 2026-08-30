@@ -1,0 +1,10 @@
+arms:
+  - {name: p16_layer11_standard, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.25, representation_layer: 11}
+  - {name: p16_layer23_standard, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.25, representation_layer: 23}
+  - {name: p16_layer17_gate_standard, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.25, representation_layer: 17, early_stop_proxy_gate: true}
+  - {name: p16_layer17_gate_small, semantic_mode: prototype, steps: 100, step_size: 0.00196078431372549, rho: 1.0, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.25, representation_layer: 17, early_stop_proxy_gate: true}
+  - {name: p19_layer7_standard, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.5, representation_layer: 7}
+  - {name: p19_layer11_standard, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.5, representation_layer: 11}
+  - {name: p19_layer15_gate_small, semantic_mode: prototype, steps: 100, step_size: 0.00196078431372549, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.5, representation_layer: 15, early_stop_proxy_gate: true}
+  - {name: p19_layer15_small_seed43, semantic_mode: prototype, steps: 100, step_size: 0.00196078431372549, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.5, representation_layer: 15, seed: 43}
+  - {name: p19_layer15_small_seed44, semantic_mode: prototype, steps: 100, step_size: 0.00196078431372549, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.5, representation_layer: 15, seed: 44}

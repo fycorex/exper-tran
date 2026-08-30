@@ -112,6 +112,21 @@ def main() -> None:
                 )
                 target_weight = float(arm.get("target_logit_weight", 1.0))
                 source_weight = float(arm.get("source_logit_weight", 1.0))
+                gradient_trace_steps = tuple(
+                    int(value) for value in arm.get("gradient_trace_steps", ())
+                )
+                checkpoint_steps = tuple(
+                    int(value) for value in arm.get("checkpoint_steps", ())
+                )
+                trial_seed = int(arm.get("seed", raw["seed"]))
+                representation_type = str(
+                    arm.get("representation_type", spec["representation_type"])
+                )
+                representation_layer = int(
+                    arm.get("representation_layer", spec["representation_layer"])
+                )
+                representation_pooling = str(arm.get("pooling", spec["pooling"]))
+                early_stop_proxy_gate = bool(arm.get("early_stop_proxy_gate", False))
                 if rho <= 0 or semantic_temperature <= 0:
                     raise ValueError("rho and semantic temperature must be positive")
                 if target_weight < 0 or source_weight < 0:
@@ -145,6 +160,13 @@ def main() -> None:
                     "semantic_temperature": semantic_temperature,
                     "target_logit_weight": target_weight,
                     "source_logit_weight": source_weight,
+                    "gradient_trace_steps": gradient_trace_steps,
+                    "checkpoint_steps": checkpoint_steps,
+                    "seed": trial_seed,
+                    "representation_type": representation_type,
+                    "representation_layer": representation_layer,
+                    "representation_pooling": representation_pooling,
+                    "early_stop_proxy_gate": early_stop_proxy_gate,
                 }
                 write_json(state_path, state)
                 print(
@@ -169,9 +191,9 @@ def main() -> None:
                         cls_loss_mode="margin_only",
                         semantic_mode=str(arm["semantic_mode"]),
                         semantic_temperature=semantic_temperature,
-                        representation_type=str(spec["representation_type"]),
-                        representation_layer=int(spec["representation_layer"]),
-                        representation_pooling=str(spec["pooling"]),
+                        representation_type=representation_type,
+                        representation_layer=representation_layer,
+                        representation_pooling=representation_pooling,
                     )
                     data_config = DataConfig(
                         transition.source,
@@ -199,7 +221,7 @@ def main() -> None:
                         source_batch_index=0,
                         reference_batch_index=0,
                         lambda_cka=1.0,
-                        seed=int(raw["seed"]),
+                        seed=trial_seed,
                         steps=steps,
                         attack_config=attack_config,
                         data_config=data_config,
@@ -209,6 +231,7 @@ def main() -> None:
                         semantic_target_weight=1.0,
                         gradient_ratio=rho,
                         objective_tag=arm_name,
+                        early_stop_proxy_gate=early_stop_proxy_gate,
                         progress_interval=max(1, min(10, steps)),
                         prompt=prompt,
                         cls_loss_mode="margin_only",
@@ -217,9 +240,11 @@ def main() -> None:
                         semantic_temperature=semantic_temperature,
                         semantic_target_logit_weight=target_weight,
                         semantic_source_logit_weight=source_weight,
-                        representation_type=str(spec["representation_type"]),
-                        representation_layer=int(spec["representation_layer"]),
-                        representation_pooling=str(spec["pooling"]),
+                        representation_type=representation_type,
+                        representation_layer=representation_layer,
+                        representation_pooling=representation_pooling,
+                        gradient_trace_steps=gradient_trace_steps,
+                        checkpoint_steps=checkpoint_steps,
                     )
                     artifact_dir = (
                         args.output_dir

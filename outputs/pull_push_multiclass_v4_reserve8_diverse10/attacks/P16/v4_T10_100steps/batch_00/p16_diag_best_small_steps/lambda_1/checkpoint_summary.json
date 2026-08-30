@@ -1,0 +1,149 @@
+[
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T10_100steps/batch_00/p16_diag_best_small_steps/lambda_1/checkpoint_step_010",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": false,
+    "proxy_free_hit_count": null,
+    "proxy_hit_count": 4,
+    "proxy_hit_mask": [
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true
+    ],
+    "proxy_min_margin": -11.375,
+    "proxy_min_probability": 1.1476873623905703e-05,
+    "step": 10
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T10_100steps/batch_00/p16_diag_best_small_steps/lambda_1/checkpoint_step_020",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": false,
+    "proxy_free_hit_count": null,
+    "proxy_hit_count": 6,
+    "proxy_hit_mask": [
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      true
+    ],
+    "proxy_min_margin": -5.75,
+    "proxy_min_probability": 0.003114959690719843,
+    "step": 20
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T10_100steps/batch_00/p16_diag_best_small_steps/lambda_1/checkpoint_step_030",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": false,
+    "proxy_free_hit_count": null,
+    "proxy_hit_count": 7,
+    "proxy_hit_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true
+    ],
+    "proxy_min_margin": -2.625,
+    "proxy_min_probability": 0.057601198554039,
+    "step": 30
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T10_100steps/batch_00/p16_diag_best_small_steps/lambda_1/checkpoint_step_040",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": false,
+    "proxy_free_hit_count": null,
+    "proxy_hit_count": 7,
+    "proxy_hit_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true
+    ],
+    "proxy_min_margin": -1.0,
+    "proxy_min_probability": 0.2337191253900528,
+    "step": 40
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T10_100steps/batch_00/p16_diag_best_small_steps/lambda_1/checkpoint_step_050",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": true,
+    "proxy_free_hit_count": 8,
+    "proxy_hit_count": 8,
+    "proxy_hit_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "proxy_min_margin": 7.75,
+    "proxy_min_probability": 0.9995344877243042,
+    "step": 50
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T10_100steps/batch_00/p16_diag_best_small_steps/lambda_1/checkpoint_step_075",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": true,
+    "proxy_free_hit_count": 8,
+    "proxy_hit_count": 8,
+    "proxy_hit_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "proxy_min_margin": 10.125,
+    "proxy_min_probability": 0.9999494552612305,
+    "step": 75
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T10_100steps/batch_00/p16_diag_best_small_steps/lambda_1/checkpoint_step_100",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": true,
+    "proxy_free_hit_count": 8,
+    "proxy_hit_count": 8,
+    "proxy_hit_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "proxy_min_margin": 10.875,
+    "proxy_min_probability": 0.999972939491272,
+    "step": 100
+  }
+]

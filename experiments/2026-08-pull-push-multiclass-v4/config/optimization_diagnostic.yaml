@@ -1,0 +1,61 @@
+arms:
+  - name: p16_diag_best_standard
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+    rho: 1.0
+    semantic_temperature: 0.1
+    target_logit_weight: 1.0
+    source_logit_weight: 0.25
+    gradient_trace_steps: [0, 10, 20, 30, 40, 49]
+    checkpoint_steps: [10, 20, 30, 40, 50]
+  - name: p16_diag_best_small_steps
+    semantic_mode: prototype
+    steps: 100
+    step_size: 0.00196078431372549
+    rho: 1.0
+    semantic_temperature: 0.1
+    target_logit_weight: 1.0
+    source_logit_weight: 0.25
+    gradient_trace_steps: [0, 10, 20, 30, 40, 50, 75, 99]
+    checkpoint_steps: [10, 20, 30, 40, 50, 75, 100]
+  - name: p16_diag_lower_aux
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+    rho: 0.5
+    semantic_temperature: 0.1
+    target_logit_weight: 1.0
+    source_logit_weight: 0.25
+    gradient_trace_steps: [0, 10, 20, 30, 40, 49]
+    checkpoint_steps: [10, 20, 30, 40, 50]
+  - name: p19_diag_best_standard
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+    rho: 0.5
+    semantic_temperature: 0.1
+    target_logit_weight: 1.0
+    source_logit_weight: 0.5
+    gradient_trace_steps: [0, 10, 20, 30, 40, 49]
+    checkpoint_steps: [10, 20, 30, 40, 50]
+  - name: p19_diag_best_small_steps
+    semantic_mode: prototype
+    steps: 100
+    step_size: 0.00196078431372549
+    rho: 0.5
+    semantic_temperature: 0.1
+    target_logit_weight: 1.0
+    source_logit_weight: 0.5
+    gradient_trace_steps: [0, 10, 20, 30, 40, 50, 75, 99]
+    checkpoint_steps: [10, 20, 30, 40, 50, 75, 100]
+  - name: p19_diag_weaker_push
+    semantic_mode: prototype
+    steps: 50
+    step_size: 0.00392156862745098
+    rho: 0.5
+    semantic_temperature: 0.1
+    target_logit_weight: 1.0
+    source_logit_weight: 0.25
+    gradient_trace_steps: [0, 10, 20, 30, 40, 49]
+    checkpoint_steps: [10, 20, 30, 40, 50]

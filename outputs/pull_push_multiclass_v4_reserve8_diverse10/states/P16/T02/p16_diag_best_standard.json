@@ -1,0 +1,920 @@
+{
+  "arm": "p16_diag_best_standard",
+  "asr_hits": 1,
+  "asr_percent": 12.5,
+  "attack": {
+    "batch_id": "00",
+    "cka_adv_reference": NaN,
+    "cka_adv_source": NaN,
+    "cka_clean_reference": NaN,
+    "cka_source_weight": 0.0,
+    "cka_target_weight": 0.0,
+    "class_reference_ids": [],
+    "cls_loss_mode": "margin_only",
+    "effective_lambda_cka": 2960.77880859375,
+    "elapsed_seconds": 156.67040503799217,
+    "failure_reason": "",
+    "final_total": 0.9390547275543213,
+    "grad_cka_weighted_l1": 0.008784334175288677,
+    "grad_component_cosine": -0.08155935257673264,
+    "grad_ml_l1": 0.008784334175288677,
+    "gradient_ratio": 1.0,
+    "gradient_trace": [
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 19.2956600189209,
+          "max_abs": 2.4123189449310303,
+          "mean_abs": 0.004393372219055891,
+          "rms": 0.01758352667093277,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": -0.010230734944343567,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 38.461456298828125,
+          "max_abs": 4.779607772827148,
+          "mean_abs": 0.008786221966147423,
+          "rms": 0.0350487157702446,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 38.533973693847656,
+          "max_abs": 4.85502290725708,
+          "mean_abs": 0.008783889003098011,
+          "rms": 0.035114798694849014,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.00735940458253026,
+          "max_abs": 0.00040796137182042,
+          "mean_abs": 2.967302179968101e-06,
+          "rms": 6.706393378408393e-06,
+          "zero_fraction": 0.0
+        },
+        "step": 0,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 19.292394638061523,
+          "max_abs": 2.387991189956665,
+          "mean_abs": 0.0043912786059081554,
+          "rms": 0.017580552026629448,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 9.741283416748047,
+          "max_abs": 1.1718034744262695,
+          "mean_abs": 0.002742404816672206,
+          "rms": 0.008876925334334373,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": 0.07394613325595856,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 21.428625106811523,
+          "max_abs": 2.3759257793426514,
+          "mean_abs": 0.0066698589362204075,
+          "rms": 0.01952723041176796,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 21.472623825073242,
+          "max_abs": 2.3790435791015625,
+          "mean_abs": 0.00667613185942173,
+          "rms": 0.019567325711250305,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.000662809528876096,
+          "max_abs": 5.0996444770134985e-05,
+          "mean_abs": 3.19054095143656e-07,
+          "rms": 6.039974209670618e-07,
+          "zero_fraction": 0.0
+        },
+        "step": 10,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 9.760761260986328,
+          "max_abs": 1.1820751428604126,
+          "mean_abs": 0.0027415775693953037,
+          "rms": 0.008894674479961395,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 9.071962356567383,
+          "max_abs": 0.876704216003418,
+          "mean_abs": 0.0022235556971281767,
+          "rms": 0.008266993798315525,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": 0.006742135621607304,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 20.076507568359375,
+          "max_abs": 1.7552326917648315,
+          "mean_abs": 0.005837840959429741,
+          "rms": 0.018295088782906532,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 20.04653549194336,
+          "max_abs": 1.7647262811660767,
+          "mean_abs": 0.0058228569105267525,
+          "rms": 0.01826777681708336,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.0004217050736770034,
+          "max_abs": 1.9781205992330797e-05,
+          "mean_abs": 1.9633819192677038e-07,
+          "rms": 3.8428655102507037e-07,
+          "zero_fraction": 0.0
+        },
+        "step": 20,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 9.140395164489746,
+          "max_abs": 0.8892034292221069,
+          "mean_abs": 0.0022311664652079344,
+          "rms": 0.008329354226589203,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 0.6758390069007874,
+          "max_abs": 0.16044177114963531,
+          "mean_abs": 0.0001543601683806628,
+          "rms": 0.000615870812907815,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": -0.025285139679908752,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 2.6821320056915283,
+          "max_abs": 0.584277868270874,
+          "mean_abs": 0.0005709444521926343,
+          "rms": 0.0024441422428935766,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 2.6742279529571533,
+          "max_abs": 0.5804840922355652,
+          "mean_abs": 0.0005699326284229755,
+          "rms": 0.002436939626932144,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.00016058461915235966,
+          "max_abs": 9.061024684342556e-06,
+          "mean_abs": 6.982042322078996e-08,
+          "rms": 1.463356937847493e-07,
+          "zero_fraction": 0.0
+        },
+        "step": 30,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 0.6772868633270264,
+          "max_abs": 0.16197878122329712,
+          "mean_abs": 0.0001542311511002481,
+          "rms": 0.0006171901477500796,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 0.5094559192657471,
+          "max_abs": 0.12286345660686493,
+          "mean_abs": 3.690978337544948e-05,
+          "rms": 0.00046425111941061914,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": 0.07948310673236847,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 0.4369390606880188,
+          "max_abs": 0.10544963926076889,
+          "mean_abs": 2.5980869395425543e-05,
+          "rms": 0.00039816880598664284,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 0.4364793598651886,
+          "max_abs": 0.105010487139225,
+          "mean_abs": 2.5960900529753417e-05,
+          "rms": 0.00039774991455487907,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 5.243951454758644e-05,
+          "max_abs": 3.2054520033852896e-06,
+          "mean_abs": 2.1427542407082e-08,
+          "rms": 4.778647522130086e-08,
+          "zero_fraction": 0.0
+        },
+        "step": 40,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 0.5266239643096924,
+          "max_abs": 0.12668076157569885,
+          "mean_abs": 3.766330337384716e-05,
+          "rms": 0.0004798958543688059,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 0.019529731944203377,
+          "max_abs": 0.0012677698396146297,
+          "mean_abs": 6.770932031940902e-06,
+          "rms": 1.779682861524634e-05,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": 0.024189326912164688,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 0.0030305832624435425,
+          "max_abs": 0.0002263776259496808,
+          "mean_abs": 8.274213314507506e-07,
+          "rms": 2.7616749775916105e-06,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 0.0030426988378167152,
+          "max_abs": 0.00022892367269378155,
+          "mean_abs": 8.292729489767225e-07,
+          "rms": 2.7727155611501075e-06,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 2.3581806090078317e-05,
+          "max_abs": 1.3542606893679476e-06,
+          "mean_abs": 1.1717171233271984e-08,
+          "rms": 2.148935784873629e-08,
+          "zero_fraction": 0.0
+        },
+        "step": 49,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 0.019480295479297638,
+          "max_abs": 0.0012796547962352633,
+          "mean_abs": 6.762298198736971e-06,
+          "rms": 1.7751779523678124e-05,
+          "zero_fraction": 0.0
+        }
+      }
+    ],
+    "initial_total": 64.95826721191406,
+    "lambda_cka": 1.0,
+    "lambda_cls": 1.0,
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "loss_cka": 0.00031714976648800075,
+    "loss_total": 0.9390547275543213,
+    "pair_id": "P16",
+    "peak_allocated_vram_gb": 7.710869789123535,
+    "peak_reserved_vram_gb": 8.4921875,
+    "phase": "v4_T02_50steps",
+    "proxy_classification_ce": 0.0007824831991456449,
+    "proxy_free_target_hit_count": 8,
+    "proxy_margin_loss": 4.4404499931260943e-05,
+    "proxy_max_other_probability": 0.000605217763222754,
+    "proxy_min_target_logit_margin": 6.125,
+    "proxy_min_target_probability": 0.9976062774658203,
+    "proxy_representation_shift": NaN,
+    "proxy_tap_path": "model.model.vision_tower.encoder.layer.17",
+    "proxy_target_all_hit": true,
+    "proxy_target_hit_count": 8,
+    "proxy_target_hit_denominator": 8,
+    "proxy_target_hit_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "proxy_target_nll": 0.0007827809895388782,
+    "proxy_target_probability": 0.9992181062698364,
+    "proxy_target_probability_margin": 0.9986128807067871,
+    "reference_cka_gain": NaN,
+    "representation_layer": 17,
+    "representation_pooling": "mean",
+    "representation_type": "vision_encoder",
+    "semantic_gap_adversarial": 0.3167457580566406,
+    "semantic_gap_clean": -0.22540323436260223,
+    "semantic_gap_gain": 0.542149007320404,
+    "semantic_mode": "prototype",
+    "semantic_negative_kind": "source",
+    "semantic_source_logit_weight": 0.25,
+    "semantic_target_logit_weight": 1.0,
+    "semantic_target_weight": 1.0,
+    "semantic_temperature": 0.1,
+    "source_cka_drop": NaN,
+    "source_human_label": 2,
+    "source_image_ids": [
+      "train/n02279972/n02279972_1126.JPEG",
+      "train/n02279972/n02279972_11325.JPEG",
+      "train/n02279972/n02279972_1048.JPEG",
+      "train/n02279972/n02279972_10509.JPEG",
+      "train/n02279972/n02279972_10913.JPEG",
+      "train/n02279972/n02279972_10595.JPEG",
+      "train/n02279972/n02279972_1027.JPEG",
+      "train/n02279972/n02279972_11414.JPEG"
+    ],
+    "source_reference_ids": [
+      "train/n02279972/n02279972_11424.JPEG",
+      "train/n02279972/n02279972_1061.JPEG",
+      "train/n02279972/n02279972_11188.JPEG",
+      "train/n02279972/n02279972_10366.JPEG",
+      "train/n02279972/n02279972_11393.JPEG",
+      "train/n02279972/n02279972_1039.JPEG",
+      "train/n02279972/n02279972_10090.JPEG",
+      "train/n02279972/n02279972_11589.JPEG",
+      "train/n02279972/n02279972_11128.JPEG",
+      "train/n02279972/n02279972_10941.JPEG",
+      "train/n02279972/n02279972_10877.JPEG",
+      "train/n02279972/n02279972_1021.JPEG",
+      "train/n02279972/n02279972_11201.JPEG",
+      "train/n02279972/n02279972_11374.JPEG",
+      "train/n02279972/n02279972_10786.JPEG",
+      "train/n02279972/n02279972_1103.JPEG",
+      "train/n02279972/n02279972_10983.JPEG",
+      "train/n02279972/n02279972_11036.JPEG",
+      "train/n02279972/n02279972_1015.JPEG",
+      "train/n02279972/n02279972_11451.JPEG",
+      "train/n02279972/n02279972_11012.JPEG",
+      "train/n02279972/n02279972_11663.JPEG",
+      "train/n02279972/n02279972_10552.JPEG",
+      "train/n02279972/n02279972_10761.JPEG",
+      "train/n02279972/n02279972_11364.JPEG",
+      "train/n02279972/n02279972_11.JPEG",
+      "train/n02279972/n02279972_11371.JPEG",
+      "train/n02279972/n02279972_10515.JPEG",
+      "train/n02279972/n02279972_1158.JPEG",
+      "train/n02279972/n02279972_1133.JPEG",
+      "train/n02279972/n02279972_10818.JPEG",
+      "train/n02279972/n02279972_11057.JPEG",
+      "train/n02279972/n02279972_10995.JPEG",
+      "train/n02279972/n02279972_10790.JPEG",
+      "train/n02279972/n02279972_10390.JPEG",
+      "train/n02279972/n02279972_11041.JPEG",
+      "train/n02279972/n02279972_10376.JPEG",
+      "train/n02279972/n02279972_10982.JPEG",
+      "train/n02279972/n02279972_10645.JPEG",
+      "train/n02279972/n02279972_10626.JPEG",
+      "train/n02279972/n02279972_11667.JPEG",
+      "train/n02279972/n02279972_11535.JPEG",
+      "train/n02279972/n02279972_1080.JPEG",
+      "train/n02279972/n02279972_10992.JPEG",
+      "train/n02279972/n02279972_11305.JPEG",
+      "train/n02279972/n02279972_1141.JPEG",
+      "train/n02279972/n02279972_1070.JPEG",
+      "train/n02279972/n02279972_1093.JPEG"
+    ],
+    "source_repulsion_achieved": null,
+    "source_similarity_adversarial": 0.6530455350875854,
+    "source_similarity_clean": 0.9083189368247986,
+    "status": "ok",
+    "target_alignment_temperature": 0.07,
+    "target_attraction_achieved": null,
+    "target_cka_mode": "spatial_index_legacy",
+    "target_human_label": 5,
+    "target_reference_ids": [
+      "train/n03642806/n03642806_12095.JPEG",
+      "train/n03642806/n03642806_11709.JPEG",
+      "train/n03642806/n03642806_11708.JPEG",
+      "train/n03642806/n03642806_12356.JPEG",
+      "train/n03642806/n03642806_12470.JPEG",
+      "train/n03642806/n03642806_12506.JPEG",
+      "train/n03642806/n03642806_12191.JPEG",
+      "train/n03642806/n03642806_11252.JPEG",
+      "train/n03642806/n03642806_1017.JPEG",
+      "train/n03642806/n03642806_10106.JPEG",
+      "train/n03642806/n03642806_11144.JPEG",
+      "train/n03642806/n03642806_12346.JPEG",
+      "train/n03642806/n03642806_10423.JPEG",
+      "train/n03642806/n03642806_12485.JPEG",
+      "train/n03642806/n03642806_12477.JPEG",
+      "train/n03642806/n03642806_12328.JPEG",
+      "train/n03642806/n03642806_126.JPEG",
+      "train/n03642806/n03642806_1221.JPEG",
+      "train/n03642806/n03642806_11907.JPEG",
+      "train/n03642806/n03642806_11883.JPEG",
+      "train/n03642806/n03642806_11143.JPEG",
+      "train/n03642806/n03642806_1219.JPEG",
+      "train/n03642806/n03642806_12057.JPEG",
+      "train/n03642806/n03642806_12149.JPEG",
+      "train/n03642806/n03642806_11832.JPEG",
+      "train/n03642806/n03642806_11495.JPEG",
+      "train/n03642806/n03642806_11613.JPEG",
+      "train/n03642806/n03642806_12139.JPEG",
+      "train/n03642806/n03642806_12278.JPEG",
+      "train/n03642806/n03642806_11860.JPEG",
+      "train/n03642806/n03642806_1260.JPEG",
+      "train/n03642806/n03642806_12425.JPEG",
+      "train/n03642806/n03642806_10145.JPEG",
+      "train/n03642806/n03642806_12163.JPEG",
+      "train/n03642806/n03642806_12115.JPEG",
+      "train/n03642806/n03642806_1066.JPEG",
+      "train/n03642806/n03642806_1101.JPEG",
+      "train/n03642806/n03642806_11986.JPEG",
+      "train/n03642806/n03642806_1112.JPEG",
+      "train/n03642806/n03642806_11909.JPEG",
+      "train/n03642806/n03642806_11196.JPEG",
+      "train/n03642806/n03642806_11845.JPEG",
+      "train/n03642806/n03642806_12157.JPEG",
+      "train/n03642806/n03642806_12510.JPEG",
+      "train/n03642806/n03642806_12576.JPEG",
+      "train/n03642806/n03642806_11932.JPEG",
+      "train/n03642806/n03642806_11851.JPEG",
+      "train/n03642806/n03642806_12437.JPEG"
+    ],
+    "target_similarity_adversarial": 0.9697912931442261,
+    "target_similarity_clean": 0.6829156875610352
+  },
+  "checkpoint_steps": [
+    10,
+    20,
+    30,
+    40,
+    50
+  ],
+  "checkpoint_target_evaluations": [
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        }
+      ],
+      "arm": "p16_diag_best_standard",
+      "asr_percent": 0.0,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 2,
+      "step": 10,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T02",
+      "untargeted_hits": 0
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        }
+      ],
+      "arm": "p16_diag_best_standard",
+      "asr_percent": 0.0,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 3,
+      "step": 20,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T02",
+      "untargeted_hits": 0
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        }
+      ],
+      "arm": "p16_diag_best_standard",
+      "asr_percent": 0.0,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 7,
+      "step": 30,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T02",
+      "untargeted_hits": 0
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 4,
+          "parser_status": "ok",
+          "raw_output": "3"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        }
+      ],
+      "arm": "p16_diag_best_standard",
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 8,
+      "step": 40,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T02",
+      "untargeted_hits": 1
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 4,
+          "parser_status": "ok",
+          "raw_output": "3"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 2,
+          "parser_status": "ok",
+          "raw_output": "1"
+        }
+      ],
+      "arm": "p16_diag_best_standard",
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 8,
+      "step": 50,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T02",
+      "untargeted_hits": 1
+    }
+  ],
+  "clean_valid_count": 8,
+  "gradient_trace_steps": [
+    0,
+    10,
+    20,
+    30,
+    40,
+    49
+  ],
+  "pair_id": "P16",
+  "rho": 1.0,
+  "semantic_mode": "prototype",
+  "semantic_temperature": 0.1,
+  "source_human_label": 2,
+  "source_logit_weight": 0.25,
+  "status": "complete",
+  "step_size": 0.00392156862745098,
+  "steps": 50,
+  "target_human_label": 5,
+  "target_logit_weight": 1.0,
+  "target_outputs": {
+    "adversarial_outputs": [
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 4,
+        "parser_status": "ok",
+        "raw_output": "3"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      }
+    ],
+    "clean_outputs": [
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 2,
+        "parser_status": "ok",
+        "raw_output": "1"
+      }
+    ],
+    "rates": {
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "targeted_hit_count": 0,
+      "tasr_percent": 0.0,
+      "untargeted_hit_count": 1
+    }
+  },
+  "tasr_hits": 0,
+  "tasr_percent": 0.0,
+  "transition_id": "T02"
+}

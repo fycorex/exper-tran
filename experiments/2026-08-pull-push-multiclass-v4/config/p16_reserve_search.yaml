@@ -1,0 +1,6 @@
+arms:
+  - {name: p16_reserve_baseline, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: p16_reserve_push025, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, target_logit_weight: 1.0, source_logit_weight: 0.25}
+  - {name: p16_reserve_push050, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, target_logit_weight: 1.0, source_logit_weight: 0.5}
+  - {name: p16_reserve_rho075_push050, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.75, target_logit_weight: 1.0, source_logit_weight: 0.5}
+  - {name: p16_reserve_rho125_push050, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.25, target_logit_weight: 1.0, source_logit_weight: 0.5}

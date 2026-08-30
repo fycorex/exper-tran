@@ -1,0 +1,1140 @@
+{
+  "arm": "p16_diag_best_small_steps",
+  "asr_hits": 1,
+  "asr_percent": 12.5,
+  "attack": {
+    "batch_id": "00",
+    "cka_adv_reference": NaN,
+    "cka_adv_source": NaN,
+    "cka_clean_reference": NaN,
+    "cka_source_weight": 0.0,
+    "cka_target_weight": 0.0,
+    "class_reference_ids": [],
+    "cls_loss_mode": "margin_only",
+    "effective_lambda_cka": 3584.76513671875,
+    "elapsed_seconds": 270.9998685779865,
+    "failure_reason": "",
+    "final_total": 0.9441308379173279,
+    "grad_cka_weighted_l1": 0.01908027194440365,
+    "grad_component_cosine": -0.11675120145082474,
+    "grad_ml_l1": 0.01908027194440365,
+    "gradient_ratio": 1.0,
+    "gradient_trace": [
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 59.969669342041016,
+          "max_abs": 8.610357284545898,
+          "mean_abs": 0.009503559209406376,
+          "rms": 0.054648470133543015,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": 0.0012893788516521454,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 121.03417205810547,
+          "max_abs": 17.66622543334961,
+          "mean_abs": 0.019130172207951546,
+          "rms": 0.1102946326136589,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 119.36738586425781,
+          "max_abs": 17.390213012695312,
+          "mean_abs": 0.019050536677241325,
+          "rms": 0.10877573490142822,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.027959026396274567,
+          "max_abs": 0.0051532345823943615,
+          "mean_abs": 5.320886884874199e-06,
+          "rms": 2.547817894082982e-05,
+          "zero_fraction": 0.0
+        },
+        "step": 0,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 60.05303192138672,
+          "max_abs": 8.588658332824707,
+          "mean_abs": 0.009545642882585526,
+          "rms": 0.05472443625330925,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 9.5253267288208,
+          "max_abs": 0.9357573390007019,
+          "mean_abs": 0.002980401273816824,
+          "rms": 0.0086801303550601,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": -0.0442575141787529,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 21.144262313842773,
+          "max_abs": 1.8892985582351685,
+          "mean_abs": 0.00680810259655118,
+          "rms": 0.019268101081252098,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 21.231975555419922,
+          "max_abs": 1.9275507926940918,
+          "mean_abs": 0.006822197698056698,
+          "rms": 0.019348029047250748,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.0008465776918455958,
+          "max_abs": 3.497447323752567e-05,
+          "mean_abs": 4.496023962019535e-07,
+          "rms": 7.714595540164737e-07,
+          "zero_fraction": 0.0
+        },
+        "step": 10,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 9.563334465026855,
+          "max_abs": 0.9571374654769897,
+          "mean_abs": 0.002985695144161582,
+          "rms": 0.008714765310287476,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 3.373509168624878,
+          "max_abs": 0.3505200147628784,
+          "mean_abs": 0.0007751341909170151,
+          "rms": 0.003074172418564558,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": -0.0004378538578748703,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 11.341405868530273,
+          "max_abs": 1.5898727178573608,
+          "mean_abs": 0.002353576011955738,
+          "rms": 0.010335066355764866,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 11.384869575500488,
+          "max_abs": 1.5941356420516968,
+          "mean_abs": 0.0023561592679470778,
+          "rms": 0.010374672710895538,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.00045085212332196534,
+          "max_abs": 6.584191578440368e-05,
+          "mean_abs": 1.7797019324916619e-07,
+          "rms": 4.1084734903051867e-07,
+          "zero_fraction": 0.0
+        },
+        "step": 20,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 3.354111433029175,
+          "max_abs": 0.3338513672351837,
+          "mean_abs": 0.0007727158372290432,
+          "rms": 0.0030564959160983562,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 1.936223030090332,
+          "max_abs": 0.20559430122375488,
+          "mean_abs": 0.0003468985087238252,
+          "rms": 0.0017644190229475498,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": 0.04105500131845474,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 4.86344051361084,
+          "max_abs": 0.5328208804130554,
+          "mean_abs": 0.000855942431371659,
+          "rms": 0.004431900102645159,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 4.850217342376709,
+          "max_abs": 0.5312236547470093,
+          "mean_abs": 0.0008544051088392735,
+          "rms": 0.004419850185513496,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.00021253078011795878,
+          "max_abs": 1.8211638234788552e-05,
+          "mean_abs": 7.81825804097025e-08,
+          "rms": 1.9367260506442108e-07,
+          "zero_fraction": 0.0
+        },
+        "step": 30,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 1.9092769622802734,
+          "max_abs": 0.19783489406108856,
+          "mean_abs": 0.000344209314789623,
+          "rms": 0.00173986388836056,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 2.7557880878448486,
+          "max_abs": 0.25621679425239563,
+          "mean_abs": 0.0004218510293867439,
+          "rms": 0.002511262893676758,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": 0.012822862714529037,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 6.016035079956055,
+          "max_abs": 0.6723755598068237,
+          "mean_abs": 0.0009859268320724368,
+          "rms": 0.005482223350554705,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 5.998780250549316,
+          "max_abs": 0.6699568033218384,
+          "mean_abs": 0.0009845959721133113,
+          "rms": 0.0054664998315274715,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.00014686000940855592,
+          "max_abs": 8.014882041607052e-06,
+          "mean_abs": 4.295288036360034e-08,
+          "rms": 1.3382890529101132e-07,
+          "zero_fraction": 0.0
+        },
+        "step": 40,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 2.771617889404297,
+          "max_abs": 0.2561938762664795,
+          "mean_abs": 0.0004235177766531706,
+          "rms": 0.002525688149034977,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 0.005674327258020639,
+          "max_abs": 0.0005600475124083459,
+          "mean_abs": 1.2341295132500818e-06,
+          "rms": 5.1708357204915956e-06,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": -0.003890441730618477,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 0.0002508960897102952,
+          "max_abs": 2.642943218233995e-05,
+          "mean_abs": 4.802337372211696e-08,
+          "rms": 2.2863370929826488e-07,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 0.00025109644047915936,
+          "max_abs": 2.6378944312455133e-05,
+          "mean_abs": 4.809525933069381e-08,
+          "rms": 2.288162903596458e-07,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 0.00011949707550229505,
+          "max_abs": 7.4601680353225674e-06,
+          "mean_abs": 3.101839496366665e-08,
+          "rms": 1.0889392143553778e-07,
+          "zero_fraction": 0.0
+        },
+        "step": 50,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 0.005655195098370314,
+          "max_abs": 0.0005573068046942353,
+          "mean_abs": 1.231047804139962e-06,
+          "rms": 5.153401161805959e-06,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 0.0009216465405188501,
+          "max_abs": 0.00010861040937015787,
+          "mean_abs": 1.562220433015682e-07,
+          "rms": 8.398674253839999e-07,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": -0.0009935288690030575,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 3.553988562998711e-06,
+          "max_abs": 4.152144867930474e-07,
+          "mean_abs": 5.455342844129518e-10,
+          "rms": 3.238637802382982e-09,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 3.550506789906649e-06,
+          "max_abs": 4.1417240481678164e-07,
+          "mean_abs": 5.455149665323233e-10,
+          "rms": 3.2354650070232083e-09,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 1.3648429558088537e-05,
+          "max_abs": 6.799072025387431e-07,
+          "mean_abs": 6.738312130494251e-09,
+          "rms": 1.2437383567487359e-08,
+          "zero_fraction": 0.0
+        },
+        "step": 75,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 0.0009250483708456159,
+          "max_abs": 0.00010740576544776559,
+          "mean_abs": 1.5692289423441252e-07,
+          "rms": 8.42967438074993e-07,
+          "zero_fraction": 0.0
+        }
+      },
+      {
+        "closedset_ce": {
+          "finite": true,
+          "l2_norm": 0.00020015246991533786,
+          "max_abs": 9.70689143287018e-06,
+          "mean_abs": 5.873704722603179e-08,
+          "rms": 1.8239263965824648e-07,
+          "zero_fraction": 0.0
+        },
+        "cls_rep_cosine": -0.0018966938368976116,
+        "cls_total": {
+          "finite": true,
+          "l2_norm": 2.6936953645417816e-07,
+          "max_abs": 1.4603880771346667e-08,
+          "mean_abs": 5.4665869053671656e-11,
+          "rms": 2.454679792762704e-10,
+          "zero_fraction": 0.0
+        },
+        "margin": {
+          "finite": true,
+          "l2_norm": 2.694948477710568e-07,
+          "max_abs": 1.4616944987722036e-08,
+          "mean_abs": 5.4655745207465856e-11,
+          "rms": 2.455821657143531e-10,
+          "zero_fraction": 0.0
+        },
+        "representation": {
+          "finite": true,
+          "l2_norm": 1.1463851478765719e-05,
+          "max_abs": 5.634869353343674e-07,
+          "mean_abs": 5.476854969543865e-09,
+          "rms": 1.044664621474567e-08,
+          "zero_fraction": 0.0
+        },
+        "step": 99,
+        "target_token": {
+          "finite": true,
+          "l2_norm": 0.00020189277711324394,
+          "max_abs": 9.857322766038124e-06,
+          "mean_abs": 5.907118350023666e-08,
+          "rms": 1.8397852841189888e-07,
+          "zero_fraction": 0.0
+        }
+      }
+    ],
+    "initial_total": 73.11770629882812,
+    "lambda_cka": 1.0,
+    "lambda_cls": 1.0,
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "loss_cka": 0.0002633731346577406,
+    "loss_total": 0.9441308379173279,
+    "pair_id": "P16",
+    "peak_allocated_vram_gb": 7.709359169006348,
+    "peak_reserved_vram_gb": 8.48828125,
+    "phase": "v4_T10_100steps",
+    "proxy_classification_ce": 7.614435162395239e-06,
+    "proxy_free_target_hit_count": 8,
+    "proxy_margin_loss": 2.73533995454045e-09,
+    "proxy_max_other_probability": 4.356208592071198e-06,
+    "proxy_min_target_logit_margin": 10.875,
+    "proxy_min_target_probability": 0.999972939491272,
+    "proxy_representation_shift": NaN,
+    "proxy_tap_path": "model.model.vision_tower.encoder.layer.17",
+    "proxy_target_all_hit": true,
+    "proxy_target_hit_count": 8,
+    "proxy_target_hit_denominator": 8,
+    "proxy_target_hit_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "proxy_target_nll": 7.644238394277636e-06,
+    "proxy_target_probability": 0.9999923706054688,
+    "proxy_target_probability_margin": 0.9999880194664001,
+    "reference_cka_gain": NaN,
+    "representation_layer": 17,
+    "representation_pooling": "mean",
+    "representation_type": "vision_encoder",
+    "semantic_gap_adversarial": 0.3478930592536926,
+    "semantic_gap_clean": -0.20960545539855957,
+    "semantic_gap_gain": 0.5574985146522522,
+    "semantic_mode": "prototype",
+    "semantic_negative_kind": "source",
+    "semantic_source_logit_weight": 0.25,
+    "semantic_target_logit_weight": 1.0,
+    "semantic_target_weight": 1.0,
+    "semantic_temperature": 0.1,
+    "source_cka_drop": NaN,
+    "source_human_label": 10,
+    "source_image_ids": [
+      "train/n04146614/n04146614_10043.JPEG",
+      "train/n04146614/n04146614_10243.JPEG",
+      "train/n04146614/n04146614_10181.JPEG",
+      "train/n04146614/n04146614_10671.JPEG",
+      "train/n04146614/n04146614_10007.JPEG",
+      "train/n04146614/n04146614_10276.JPEG",
+      "train/n04146614/n04146614_10227.JPEG",
+      "train/n04146614/n04146614_10157.JPEG"
+    ],
+    "source_reference_ids": [
+      "train/n04146614/n04146614_10377.JPEG",
+      "train/n04146614/n04146614_10744.JPEG",
+      "train/n04146614/n04146614_10797.JPEG",
+      "train/n04146614/n04146614_1066.JPEG",
+      "train/n04146614/n04146614_10065.JPEG",
+      "train/n04146614/n04146614_10616.JPEG",
+      "train/n04146614/n04146614_10067.JPEG",
+      "train/n04146614/n04146614_10659.JPEG",
+      "train/n04146614/n04146614_1070.JPEG",
+      "train/n04146614/n04146614_10077.JPEG",
+      "train/n04146614/n04146614_10255.JPEG",
+      "train/n04146614/n04146614_10568.JPEG",
+      "train/n04146614/n04146614_10121.JPEG",
+      "train/n04146614/n04146614_11196.JPEG",
+      "train/n04146614/n04146614_10120.JPEG",
+      "train/n04146614/n04146614_10169.JPEG",
+      "train/n04146614/n04146614_10604.JPEG",
+      "train/n04146614/n04146614_10419.JPEG",
+      "train/n04146614/n04146614_10525.JPEG",
+      "train/n04146614/n04146614_10470.JPEG",
+      "train/n04146614/n04146614_10129.JPEG",
+      "train/n04146614/n04146614_10876.JPEG",
+      "train/n04146614/n04146614_10702.JPEG",
+      "train/n04146614/n04146614_11095.JPEG",
+      "train/n04146614/n04146614_10314.JPEG",
+      "train/n04146614/n04146614_10228.JPEG",
+      "train/n04146614/n04146614_11025.JPEG",
+      "train/n04146614/n04146614_10180.JPEG",
+      "train/n04146614/n04146614_10618.JPEG",
+      "train/n04146614/n04146614_10270.JPEG",
+      "train/n04146614/n04146614_10112.JPEG",
+      "train/n04146614/n04146614_10306.JPEG",
+      "train/n04146614/n04146614_10161.JPEG",
+      "train/n04146614/n04146614_10149.JPEG",
+      "train/n04146614/n04146614_10125.JPEG",
+      "train/n04146614/n04146614_1021.JPEG",
+      "train/n04146614/n04146614_10196.JPEG",
+      "train/n04146614/n04146614_10283.JPEG",
+      "train/n04146614/n04146614_10395.JPEG",
+      "train/n04146614/n04146614_10997.JPEG",
+      "train/n04146614/n04146614_1095.JPEG",
+      "train/n04146614/n04146614_11091.JPEG",
+      "train/n04146614/n04146614_10530.JPEG",
+      "train/n04146614/n04146614_10953.JPEG",
+      "train/n04146614/n04146614_10829.JPEG",
+      "train/n04146614/n04146614_10424.JPEG",
+      "train/n04146614/n04146614_10143.JPEG",
+      "train/n04146614/n04146614_10359.JPEG"
+    ],
+    "source_repulsion_achieved": null,
+    "source_similarity_adversarial": 0.6350787878036499,
+    "source_similarity_clean": 0.8529804944992065,
+    "status": "ok",
+    "target_alignment_temperature": 0.07,
+    "target_attraction_achieved": null,
+    "target_cka_mode": "spatial_index_legacy",
+    "target_human_label": 3,
+    "target_reference_ids": [
+      "train/n07753275/n07753275_12403.JPEG",
+      "train/n07753275/n07753275_10255.JPEG",
+      "train/n07753275/n07753275_11557.JPEG",
+      "train/n07753275/n07753275_10367.JPEG",
+      "train/n07753275/n07753275_13518.JPEG",
+      "train/n07753275/n07753275_12394.JPEG",
+      "train/n07753275/n07753275_11009.JPEG",
+      "train/n07753275/n07753275_12440.JPEG",
+      "train/n07753275/n07753275_10102.JPEG",
+      "train/n07753275/n07753275_11389.JPEG",
+      "train/n07753275/n07753275_1270.JPEG",
+      "train/n07753275/n07753275_13661.JPEG",
+      "train/n07753275/n07753275_14349.JPEG",
+      "train/n07753275/n07753275_1445.JPEG",
+      "train/n07753275/n07753275_12955.JPEG",
+      "train/n07753275/n07753275_13871.JPEG",
+      "train/n07753275/n07753275_12163.JPEG",
+      "train/n07753275/n07753275_14247.JPEG",
+      "train/n07753275/n07753275_13699.JPEG",
+      "train/n07753275/n07753275_12434.JPEG",
+      "train/n07753275/n07753275_13549.JPEG",
+      "train/n07753275/n07753275_1178.JPEG",
+      "train/n07753275/n07753275_1282.JPEG",
+      "train/n07753275/n07753275_13610.JPEG",
+      "train/n07753275/n07753275_11674.JPEG",
+      "train/n07753275/n07753275_11853.JPEG",
+      "train/n07753275/n07753275_1390.JPEG",
+      "train/n07753275/n07753275_14486.JPEG",
+      "train/n07753275/n07753275_11364.JPEG",
+      "train/n07753275/n07753275_12621.JPEG",
+      "train/n07753275/n07753275_13996.JPEG",
+      "train/n07753275/n07753275_10532.JPEG",
+      "train/n07753275/n07753275_14104.JPEG",
+      "train/n07753275/n07753275_13229.JPEG",
+      "train/n07753275/n07753275_11285.JPEG",
+      "train/n07753275/n07753275_11342.JPEG",
+      "train/n07753275/n07753275_10762.JPEG",
+      "train/n07753275/n07753275_1199.JPEG",
+      "train/n07753275/n07753275_10612.JPEG",
+      "train/n07753275/n07753275_10232.JPEG",
+      "train/n07753275/n07753275_11526.JPEG",
+      "train/n07753275/n07753275_12230.JPEG",
+      "train/n07753275/n07753275_12562.JPEG",
+      "train/n07753275/n07753275_12797.JPEG",
+      "train/n07753275/n07753275_12153.JPEG",
+      "train/n07753275/n07753275_14045.JPEG",
+      "train/n07753275/n07753275_1383.JPEG",
+      "train/n07753275/n07753275_11909.JPEG"
+    ],
+    "target_similarity_adversarial": 0.9829718470573425,
+    "target_similarity_clean": 0.6433749794960022
+  },
+  "checkpoint_steps": [
+    10,
+    20,
+    30,
+    40,
+    50,
+    75,
+    100
+  ],
+  "checkpoint_target_evaluations": [
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 8,
+          "parser_status": "ok",
+          "raw_output": "7"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        }
+      ],
+      "arm": "p16_diag_best_small_steps",
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 4,
+      "step": 10,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T10",
+      "untargeted_hits": 1
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 8,
+          "parser_status": "ok",
+          "raw_output": "7"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        }
+      ],
+      "arm": "p16_diag_best_small_steps",
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 6,
+      "step": 20,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T10",
+      "untargeted_hits": 1
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 8,
+          "parser_status": "ok",
+          "raw_output": "7"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        }
+      ],
+      "arm": "p16_diag_best_small_steps",
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 7,
+      "step": 30,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T10",
+      "untargeted_hits": 1
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 8,
+          "parser_status": "ok",
+          "raw_output": "7"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        }
+      ],
+      "arm": "p16_diag_best_small_steps",
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 7,
+      "step": 40,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T10",
+      "untargeted_hits": 1
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 8,
+          "parser_status": "ok",
+          "raw_output": "7"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        }
+      ],
+      "arm": "p16_diag_best_small_steps",
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 8,
+      "step": 50,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T10",
+      "untargeted_hits": 1
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 3,
+          "parser_status": "ok",
+          "raw_output": "2"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        }
+      ],
+      "arm": "p16_diag_best_small_steps",
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 8,
+      "step": 75,
+      "targeted_hits": 1,
+      "tasr_percent": 12.5,
+      "transition_id": "T10",
+      "untargeted_hits": 1
+    },
+    {
+      "adversarial_outputs": [
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 8,
+          "parser_status": "ok",
+          "raw_output": "7"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        },
+        {
+          "backend": "transformers",
+          "parsed_label": 10,
+          "parser_status": "ok",
+          "raw_output": "9"
+        }
+      ],
+      "arm": "p16_diag_best_small_steps",
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "linf_png": 0.0627451241016388,
+      "pair_id": "P16",
+      "proxy_denominator": 8,
+      "proxy_hits": 8,
+      "step": 100,
+      "targeted_hits": 0,
+      "tasr_percent": 0.0,
+      "transition_id": "T10",
+      "untargeted_hits": 1
+    }
+  ],
+  "clean_valid_count": 8,
+  "gradient_trace_steps": [
+    0,
+    10,
+    20,
+    30,
+    40,
+    50,
+    75,
+    99
+  ],
+  "pair_id": "P16",
+  "rho": 1.0,
+  "semantic_mode": "prototype",
+  "semantic_temperature": 0.1,
+  "source_human_label": 10,
+  "source_logit_weight": 0.25,
+  "status": "complete",
+  "step_size": 0.00196078431372549,
+  "steps": 100,
+  "target_human_label": 3,
+  "target_logit_weight": 1.0,
+  "target_outputs": {
+    "adversarial_outputs": [
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 8,
+        "parser_status": "ok",
+        "raw_output": "7"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      }
+    ],
+    "clean_outputs": [
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      },
+      {
+        "backend": "transformers",
+        "parsed_label": 10,
+        "parser_status": "ok",
+        "raw_output": "9"
+      }
+    ],
+    "rates": {
+      "asr_percent": 12.5,
+      "clean_valid_count": 8,
+      "targeted_hit_count": 0,
+      "tasr_percent": 0.0,
+      "untargeted_hit_count": 1
+    }
+  },
+  "tasr_hits": 0,
+  "tasr_percent": 0.0,
+  "transition_id": "T10"
+}

@@ -1,0 +1,32 @@
+arms:
+  # P16: dense search below the newly successful push=0.25 point.
+  - {name: p16_ext_push010, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.1}
+  - {name: p16_ext_push020, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.2}
+  - {name: p16_ext_push035, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.35}
+  - {name: p16_ext_rho075_push025, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.75, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.25}
+  - {name: p16_ext_rho125_push025, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.25, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.25}
+  - {name: p16_ext_tau005_push025, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, semantic_temperature: 0.05, target_logit_weight: 1.0, source_logit_weight: 0.25}
+  - {name: p16_ext_tau020_push025, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, semantic_temperature: 0.2, target_logit_weight: 1.0, source_logit_weight: 0.25}
+
+  # P14: broad but bounded search around rho=0.5, push=0.75.
+  - {name: p14_ext_baseline, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.75}
+  - {name: p14_ext_push025, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.25}
+  - {name: p14_ext_push050, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.5}
+  - {name: p14_ext_rho035_push050, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.35, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.5}
+  - {name: p14_ext_rho075_push050, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.75, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.5}
+  - {name: p14_ext_tau020_push050, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.2, target_logit_weight: 1.0, source_logit_weight: 0.5}
+
+  # P19: only the two weak transitions are searched.
+  - {name: p19_ext_baseline, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: p19_ext_push050, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.5}
+  - {name: p19_ext_push075, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 0.75}
+  - {name: p19_ext_push125, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 1.25}
+  - {name: p19_ext_push150, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 1.5}
+  - {name: p19_ext_rho035, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.35, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: p19_ext_rho065, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.65, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 1.0}
+
+  # Multiclass follow-up: the non-target weight applies to all nine competitors.
+  - {name: multi_ext_rho025, semantic_mode: multiclass_prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.25, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: multi_ext_rho050, semantic_mode: multiclass_prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: multi_ext_rho100, semantic_mode: multiclass_prototype, steps: 50, step_size: 0.00392156862745098, rho: 1.0, semantic_temperature: 0.1, target_logit_weight: 1.0, source_logit_weight: 1.0}
+  - {name: multi_ext_tau020_rho050, semantic_mode: multiclass_prototype, steps: 50, step_size: 0.00392156862745098, rho: 0.5, semantic_temperature: 0.2, target_logit_weight: 1.0, source_logit_weight: 1.0}

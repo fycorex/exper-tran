@@ -1,0 +1,107 @@
+[
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T02_50steps/batch_00/p16_diag_best_standard/lambda_1/checkpoint_step_010",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": false,
+    "proxy_free_hit_count": null,
+    "proxy_hit_count": 2,
+    "proxy_hit_mask": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true
+    ],
+    "proxy_min_margin": -11.625,
+    "proxy_min_probability": 8.938633072830271e-06,
+    "step": 10
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T02_50steps/batch_00/p16_diag_best_standard/lambda_1/checkpoint_step_020",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": false,
+    "proxy_free_hit_count": null,
+    "proxy_hit_count": 3,
+    "proxy_hit_mask": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true
+    ],
+    "proxy_min_margin": -4.625,
+    "proxy_min_probability": 0.009461015462875366,
+    "step": 20
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T02_50steps/batch_00/p16_diag_best_standard/lambda_1/checkpoint_step_030",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": false,
+    "proxy_free_hit_count": null,
+    "proxy_hit_count": 7,
+    "proxy_hit_mask": [
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "proxy_min_margin": 2.625,
+    "proxy_min_probability": 0.8783007860183716,
+    "step": 30
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T02_50steps/batch_00/p16_diag_best_standard/lambda_1/checkpoint_step_040",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": true,
+    "proxy_free_hit_count": 8,
+    "proxy_hit_count": 8,
+    "proxy_hit_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "proxy_min_margin": 4.875,
+    "proxy_min_probability": 0.9921802282333374,
+    "step": 40
+  },
+  {
+    "artifact_dir": "/home/ubuntu/exper-tran/outputs/pull_push_multiclass_v4_reserve8_diverse10/attacks/P16/v4_T02_50steps/batch_00/p16_diag_best_standard/lambda_1/checkpoint_step_050",
+    "linf_float": 0.0627451092004776,
+    "linf_png": 0.0627451241016388,
+    "proxy_all_hit": true,
+    "proxy_free_hit_count": 8,
+    "proxy_hit_count": 8,
+    "proxy_hit_mask": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "proxy_min_margin": 6.125,
+    "proxy_min_probability": 0.9976062774658203,
+    "step": 50
+  }
+]

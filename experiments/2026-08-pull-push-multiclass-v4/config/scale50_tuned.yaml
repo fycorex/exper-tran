@@ -1,0 +1,74 @@
+seed: 42
+candidate_count: 64
+attack_count: 50
+reference_count: 48
+candidate_split: train
+candidate_offset: 48
+semantic_temperature: 0.1
+rho: 0.5
+common_across_pairs: true
+
+# Reuse the original common-clean cohort while keeping tuned artifacts separate.
+state_namespace: states_scale50_tuned
+objective_tag: tuned_pull_push
+summary_filename: scale50_tuned_results.csv
+
+classes:
+  - {label: 1, wnid: n01443537, name: goldfish, domain: animal}
+  - {label: 2, wnid: n02279972, name: monarch butterfly, domain: insect}
+  - {label: 3, wnid: n07753275, name: pineapple, domain: food}
+  - {label: 4, wnid: n02676566, name: acoustic guitar, domain: instrument}
+  - {label: 5, wnid: n03642806, name: laptop, domain: electronics}
+  - {label: 6, wnid: n07920052, name: espresso, domain: beverage}
+  - {label: 7, wnid: n09472597, name: volcano, domain: natural scene}
+  - {label: 8, wnid: n04099969, name: rocking chair, domain: furniture}
+  - {label: 9, wnid: n04254680, name: soccer ball, domain: sports equipment}
+  - {label: 10, wnid: n04146614, name: school bus, domain: transport}
+
+# Frozen from the independent reserve-8 aggregate searches. The original
+# all-transition layers stay fixed because layer 11 was tested only on T10.
+pairs:
+  - pair_id: P16
+    representation_type: vision_encoder
+    representation_layer: 17
+    pooling: mean
+    selected_rho: 1.0
+    target_logit_weight: 1.0
+    source_logit_weight: 0.25
+    semantic_temperature: 0.1
+  - pair_id: P19
+    representation_type: vision_encoder
+    representation_layer: 15
+    pooling: mean
+    selected_rho: 0.5
+    target_logit_weight: 1.0
+    source_logit_weight: 0.5
+    semantic_temperature: 0.1
+  - pair_id: P14
+    representation_type: vision_encoder
+    representation_layer: 17
+    pooling: mean
+    selected_rho: 0.5
+    target_logit_weight: 1.0
+    source_logit_weight: 0.5
+    semantic_temperature: 0.2
+
+transitions:
+  - {id: T01, source: 1, target: 4}
+  - {id: T02, source: 2, target: 5}
+  - {id: T03, source: 3, target: 6}
+  - {id: T04, source: 4, target: 7}
+  - {id: T05, source: 5, target: 8}
+  - {id: T06, source: 6, target: 9}
+  - {id: T07, source: 7, target: 10}
+  - {id: T08, source: 8, target: 1}
+  - {id: T09, source: 9, target: 2}
+  - {id: T10, source: 10, target: 3}
+
+arms:
+  # Retained for the shared schema validator. The tuned runner uses the
+  # per-family settings above and the standard 50-step prototype recipe.
+  - {name: pull_push_standard, semantic_mode: prototype, steps: 50, step_size: 0.00392156862745098}
+  - {name: multiclass_standard, semantic_mode: multiclass_prototype, steps: 50, step_size: 0.00392156862745098}
+  - {name: pull_push_small_steps, semantic_mode: prototype, steps: 100, step_size: 0.00196078431372549}
+  - {name: multiclass_small_steps, semantic_mode: multiclass_prototype, steps: 100, step_size: 0.00196078431372549}

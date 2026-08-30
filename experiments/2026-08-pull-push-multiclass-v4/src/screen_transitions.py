@@ -53,6 +53,11 @@ def read_predictions(path: Path) -> dict[str, int | None]:
     return values
 
 
+def predictions_complete(path: Path, expected_ids: set[str]) -> bool:
+    """Return true only when a resumed screen covers the current manifest."""
+    return path.is_file() and set(read_predictions(path)) == expected_ids
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
@@ -77,16 +82,21 @@ def main() -> None:
     )
 
     for model_index, model_id in enumerate(models, 1):
-        pending = [
-            transition
-            for transition in transitions(raw)
+        pending = []
+        for transition in transitions(raw):
+            candidates = read_manifest(
+                transition_dir(args.output_dir, transition.transition_id)
+                / "candidates.jsonl"
+            )
+            path = prediction_path(args.output_dir, model_id, transition.transition_id)
             if not (
                 args.resume
-                and prediction_path(
-                    args.output_dir, model_id, transition.transition_id
-                ).is_file()
-            )
-        ]
+                and predictions_complete(
+                    path,
+                    {record.image_id for record in candidates},
+                )
+            ):
+                pending.append(transition)
         if not pending:
             print(f"screen model={model_index}/{len(models)} resume {model_id}", flush=True)
             continue
@@ -137,25 +147,50 @@ def main() -> None:
     rows = []
     failures = []
     attack_count = int(raw["attack_count"])
-    for pair_id in pair_ids:
-        pair = get_pair(pair_id)
-        for transition in transitions(raw):
-            candidates = read_manifest(
-                transition_dir(args.output_dir, transition.transition_id) / "candidates.jsonl"
+    common_across_pairs = bool(raw.get("common_across_pairs", False))
+    for transition in transitions(raw):
+        candidates = read_manifest(
+            transition_dir(args.output_dir, transition.transition_id) / "candidates.jsonl"
+        )
+        common_selected = None
+        common_valid_count = None
+        if common_across_pairs:
+            predictions = tuple(
+                read_predictions(
+                    prediction_path(args.output_dir, model_id, transition.transition_id)
+                )
+                for model_id in models
             )
-            proxy_predictions = read_predictions(
-                prediction_path(args.output_dir, pair.proxy_model, transition.transition_id)
-            )
-            target_predictions = read_predictions(
-                prediction_path(args.output_dir, pair.target_model, transition.transition_id)
-            )
-            valid = tuple(
+            common_valid = tuple(
                 record
                 for record in candidates
-                if proxy_predictions.get(record.image_id) == transition.source
-                and target_predictions.get(record.image_id) == transition.source
+                if all(
+                    model_predictions.get(record.image_id) == transition.source
+                    for model_predictions in predictions
+                )
             )
-            selected = valid[:attack_count]
+            common_selected = common_valid[:attack_count]
+            common_valid_count = len(common_valid)
+        for pair_id in pair_ids:
+            pair = get_pair(pair_id)
+            if common_selected is None:
+                proxy_predictions = read_predictions(
+                    prediction_path(args.output_dir, pair.proxy_model, transition.transition_id)
+                )
+                target_predictions = read_predictions(
+                    prediction_path(args.output_dir, pair.target_model, transition.transition_id)
+                )
+                valid = tuple(
+                    record
+                    for record in candidates
+                    if proxy_predictions.get(record.image_id) == transition.source
+                    and target_predictions.get(record.image_id) == transition.source
+                )
+                selected = valid[:attack_count]
+                valid_count = len(valid)
+            else:
+                selected = common_selected
+                valid_count = int(common_valid_count)
             write_manifest(
                 transition_dir(args.output_dir, transition.transition_id)
                 / f"{pair_id}_attack_images.jsonl",
@@ -167,7 +202,7 @@ def main() -> None:
                     "transition_id": transition.transition_id,
                     "source": transition.source,
                     "target": transition.target,
-                    "common_clean_count": len(valid),
+                    "common_clean_count": valid_count,
                     "selected_count": len(selected),
                 }
             )
